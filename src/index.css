@@ -70,8 +70,48 @@ All colors MUST be HSL.
     background: linear-gradient(135deg, hsl(142 86% 47%) 0%, hsl(158 64% 52%) 100%);
   }
   
+  .gradient-tertiary {
+    background: linear-gradient(135deg, hsl(260 86% 47%) 0%, hsl(280 64% 52%) 100%);
+  }
+  
+  .gradient-quaternary {
+    background: linear-gradient(135deg, hsl(45 86% 47%) 0%, hsl(65 64% 52%) 100%);
+  }
+  
+  .gradient-quinary {
+    background: linear-gradient(135deg, hsl(15 86% 47%) 0%, hsl(35 64% 52%) 100%);
+  }
+  
   .gradient-card {
     background: linear-gradient(135deg, hsl(220 23% 11%) 0%, hsl(220 17% 15%) 100%);
+  }
+  
+  .gradient-bitcoin {
+    background: linear-gradient(135deg, #f7931a 0%, #ffb347 100%);
+  }
+  
+  .gradient-ethereum {
+    background: linear-gradient(135deg, #627eea 0%, #8a9cff 100%);
+  }
+  
+  .gradient-usdt {
+    background: linear-gradient(135deg, #26a17b 0%, #4fc3a3 100%);
+  }
+  
+  .gradient-usdc {
+    background: linear-gradient(135deg, #2775ca 0%, #4a9eff 100%);
+  }
+  
+  .gradient-standard {
+    background: linear-gradient(135deg, hsl(210 15% 25%) 0%, hsl(210 15% 35%) 100%);
+  }
+  
+  .gradient-gold {
+    background: linear-gradient(135deg, #ffd700 0%, #ffed4a 100%);
+  }
+  
+  .gradient-platinum {
+    background: linear-gradient(135deg, #e5e7eb 0%, #f3f4f6 100%);
   }
   
   .card-hover {
@@ -84,5 +124,13 @@ All colors MUST be HSL.
   
   .crypto-ethereum {
     color: #627eea;
+  }
+  
+  .crypto-usdt {
+    color: #26a17b;
+  }
+  
+  .crypto-usdc {
+    color: #2775ca;
   }
 }

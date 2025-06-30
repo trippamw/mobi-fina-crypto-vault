@@ -4,11 +4,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Wallet, Bitcoin, CreditCard, Euro, ArrowUpRight, ArrowDownLeft, TrendingUp, PiggyBank, Eye, EyeOff } from 'lucide-react';
+import { Wallet, Bitcoin, CreditCard, Euro, ArrowUpRight, ArrowDownLeft, TrendingUp, PiggyBank, Eye, EyeOff, Users } from 'lucide-react';
 import { WalletCard } from '@/components/WalletCard';
 import { ExchangeSection } from '@/components/ExchangeSection';
 import { InvestmentSection } from '@/components/InvestmentSection';
 import { TransactionHistory } from '@/components/TransactionHistory';
+import { VirtualCardsSection } from '@/components/VirtualCardsSection';
+import { VillageBankSection } from '@/components/VillageBankSection';
 
 const Index = () => {
   const [balanceVisible, setBalanceVisible] = useState(true);
@@ -21,6 +23,34 @@ const Index = () => {
       gradient: 'gradient-primary',
       change: '+5.2%',
       isDefault: true
+    },
+    {
+      currency: 'USD',
+      balance: 5420,
+      icon: 'dollar',
+      gradient: 'gradient-secondary',
+      change: '+2.1%'
+    },
+    {
+      currency: 'GBP',
+      balance: 3250,
+      icon: 'pound',
+      gradient: 'gradient-tertiary',
+      change: '+1.8%'
+    },
+    {
+      currency: 'EUR',
+      balance: 4180,
+      icon: 'euro',
+      gradient: 'gradient-quaternary',
+      change: '+2.5%'
+    },
+    {
+      currency: 'ZAR',
+      balance: 82500,
+      icon: 'rand',
+      gradient: 'gradient-quinary',
+      change: '+3.1%'
     },
     {
       currency: 'BTC',
@@ -39,11 +69,18 @@ const Index = () => {
       usdValue: 3150
     },
     {
-      currency: 'USD',
-      balance: 5420,
-      icon: 'dollar',
-      gradient: 'gradient-secondary',
-      change: '+2.1%'
+      currency: 'USDT',
+      balance: 8750,
+      icon: 'usdt',
+      gradient: 'gradient-usdt',
+      change: '+0.1%'
+    },
+    {
+      currency: 'USDC',
+      balance: 6430,
+      icon: 'usdc',
+      gradient: 'gradient-usdc',
+      change: '+0.1%'
     }
   ];
 
@@ -51,7 +88,9 @@ const Index = () => {
     { icon: ArrowUpRight, label: 'Send', color: 'text-blue-400' },
     { icon: ArrowDownLeft, label: 'Receive', color: 'text-green-400' },
     { icon: Bitcoin, label: 'Exchange', color: 'text-yellow-400' },
-    { icon: PiggyBank, label: 'Save', color: 'text-purple-400' }
+    { icon: PiggyBank, label: 'Save', color: 'text-purple-400' },
+    { icon: CreditCard, label: 'Cards', color: 'text-pink-400' },
+    { icon: Users, label: 'Village Bank', color: 'text-orange-400' }
   ];
 
   return (
@@ -85,10 +124,12 @@ const Index = () => {
 
       <div className="container mx-auto px-4 py-6">
         <Tabs defaultValue="dashboard" className="w-full">
-          <TabsList className="grid w-full grid-cols-4 mb-8 bg-card/50">
+          <TabsList className="grid w-full grid-cols-6 mb-8 bg-card/50">
             <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
             <TabsTrigger value="exchange">Exchange</TabsTrigger>
+            <TabsTrigger value="cards">Cards</TabsTrigger>
             <TabsTrigger value="invest">Invest</TabsTrigger>
+            <TabsTrigger value="village">Village Bank</TabsTrigger>
             <TabsTrigger value="history">History</TabsTrigger>
           </TabsList>
 
@@ -108,14 +149,14 @@ const Index = () => {
                 <div className="text-3xl font-bold mb-2">
                   {balanceVisible ? (
                     <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-                      MWK 1,847,230
+                      MWK 2,847,230
                     </span>
                   ) : (
                     <span className="text-muted-foreground">••••••••</span>
                   )}
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  ≈ $1,850 USD • Updated now
+                  ≈ $2,850 USD • Updated now
                 </p>
               </CardContent>
             </Card>
@@ -123,7 +164,7 @@ const Index = () => {
             {/* Quick Actions */}
             <Card className="gradient-card border-border/50">
               <CardContent className="pt-6">
-                <div className="grid grid-cols-4 gap-4">
+                <div className="grid grid-cols-3 md:grid-cols-6 gap-4">
                   {quickActions.map((action, index) => (
                     <Button
                       key={index}
@@ -139,7 +180,7 @@ const Index = () => {
             </Card>
 
             {/* Wallets Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {wallets.map((wallet, index) => (
                 <WalletCard
                   key={index}
@@ -181,8 +222,16 @@ const Index = () => {
             <ExchangeSection />
           </TabsContent>
 
+          <TabsContent value="cards">
+            <VirtualCardsSection />
+          </TabsContent>
+
           <TabsContent value="invest">
             <InvestmentSection />
+          </TabsContent>
+
+          <TabsContent value="village">
+            <VillageBankSection />
           </TabsContent>
 
           <TabsContent value="history">

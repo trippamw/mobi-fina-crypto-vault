@@ -24,8 +24,18 @@ export const WalletCard: React.FC<WalletCardProps> = ({ wallet, balanceVisible }
         return <Bitcoin className="w-6 h-6 crypto-bitcoin" />;
       case 'ethereum':
         return <div className="w-6 h-6 crypto-ethereum flex items-center justify-center font-bold">Ξ</div>;
+      case 'usdt':
+        return <div className="w-6 h-6 crypto-usdt flex items-center justify-center font-bold text-sm">₮</div>;
+      case 'usdc':
+        return <div className="w-6 h-6 crypto-usdc flex items-center justify-center font-bold text-sm">$</div>;
       case 'dollar':
-        return <Euro className="w-6 h-6 text-green-400" />;
+        return <div className="w-6 h-6 text-green-400 flex items-center justify-center font-bold">$</div>;
+      case 'pound':
+        return <div className="w-6 h-6 text-purple-400 flex items-center justify-center font-bold">£</div>;
+      case 'euro':
+        return <Euro className="w-6 h-6 text-yellow-400" />;
+      case 'rand':
+        return <div className="w-6 h-6 text-orange-400 flex items-center justify-center font-bold">R</div>;
       default:
         return <Wallet className="w-6 h-6 text-primary" />;
     }
@@ -36,11 +46,36 @@ export const WalletCard: React.FC<WalletCardProps> = ({ wallet, balanceVisible }
       return `${balance.toFixed(6)} BTC`;
     } else if (currency === 'ETH') {
       return `${balance.toFixed(4)} ETH`;
+    } else if (currency === 'USDT' || currency === 'USDC') {
+      return `${balance.toLocaleString()} ${currency}`;
     } else if (currency === 'MWK') {
       return `MWK ${balance.toLocaleString()}`;
-    } else {
+    } else if (currency === 'USD') {
       return `$${balance.toLocaleString()}`;
+    } else if (currency === 'GBP') {
+      return `£${balance.toLocaleString()}`;
+    } else if (currency === 'EUR') {
+      return `€${balance.toLocaleString()}`;
+    } else if (currency === 'ZAR') {
+      return `R${balance.toLocaleString()}`;
+    } else {
+      return `${balance.toLocaleString()} ${currency}`;
     }
+  };
+
+  const getCurrencyName = (currency: string) => {
+    const names: { [key: string]: string } = {
+      'MWK': 'Malawian Kwacha',
+      'USD': 'US Dollar',
+      'GBP': 'British Pound',
+      'EUR': 'Euro',
+      'ZAR': 'South African Rand',
+      'BTC': 'Bitcoin',
+      'ETH': 'Ethereum',
+      'USDT': 'Tether USD',
+      'USDC': 'USD Coin'
+    };
+    return names[currency] || currency;
   };
 
   return (
@@ -58,9 +93,7 @@ export const WalletCard: React.FC<WalletCardProps> = ({ wallet, balanceVisible }
             <div>
               <h3 className="font-semibold text-white">{wallet.currency}</h3>
               <p className="text-xs text-white/70">
-                {wallet.currency === 'MWK' ? 'Malawian Kwacha' : 
-                 wallet.currency === 'BTC' ? 'Bitcoin' :
-                 wallet.currency === 'ETH' ? 'Ethereum' : 'US Dollar'}
+                {getCurrencyName(wallet.currency)}
               </p>
             </div>
           </div>
