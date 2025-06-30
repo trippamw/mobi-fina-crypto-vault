@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Wallet, Bitcoin, CreditCard, ArrowUpRight, ArrowDownLeft, TrendingUp, PiggyBank, Eye, EyeOff, Users, Zap, User as UserIcon, Plus } from 'lucide-react';
+import { Wallet, Bitcoin, CreditCard, ArrowUpRight, ArrowDownLeft, TrendingUp, PiggyBank, Eye, EyeOff, Users, Zap, User as UserIcon, Plus, UserPlus, Send } from 'lucide-react';
 import { WalletCard } from '@/components/WalletCard';
 import { ExchangeSection } from '@/components/ExchangeSection';
 import { InvestmentSection } from '@/components/InvestmentSection';
@@ -89,13 +89,14 @@ const Index = () => {
 
   const quickActions = [
     { icon: Plus, label: 'Deposit', color: 'text-green-400' },
-    { icon: ArrowUpRight, label: 'Send', color: 'text-blue-400' },
+    { icon: Send, label: 'Send', color: 'text-blue-400' },
     { icon: ArrowDownLeft, label: 'Receive', color: 'text-emerald-400' },
     { icon: Bitcoin, label: 'Exchange', color: 'text-yellow-400' },
     { icon: PiggyBank, label: 'Save', color: 'text-purple-400' },
     { icon: CreditCard, label: 'Cards', color: 'text-pink-400' },
     { icon: Zap, label: 'Bills', color: 'text-orange-400' },
-    { icon: Users, label: 'Village Bank', color: 'text-cyan-400' }
+    { icon: Users, label: 'Village Bank', color: 'text-cyan-400' },
+    { icon: UserPlus, label: 'Invite', color: 'text-indigo-400' }
   ];
 
   return (
@@ -134,17 +135,18 @@ const Index = () => {
 
       <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6">
         <Tabs defaultValue="dashboard" className="w-full">
-          {/* Mobile-optimized tabs */}
-          <div className="overflow-x-auto scrollbar-hide mb-6 sm:mb-8">
-            <TabsList className="flex w-max min-w-full sm:grid sm:grid-cols-8 bg-card/50 p-1">
-              <TabsTrigger value="dashboard" className="whitespace-nowrap text-xs sm:text-sm">Dashboard</TabsTrigger>
-              <TabsTrigger value="deposit" className="whitespace-nowrap text-xs sm:text-sm">Deposit</TabsTrigger>
-              <TabsTrigger value="exchange" className="whitespace-nowrap text-xs sm:text-sm">Exchange</TabsTrigger>
-              <TabsTrigger value="cards" className="whitespace-nowrap text-xs sm:text-sm">Cards</TabsTrigger>
-              <TabsTrigger value="invest" className="whitespace-nowrap text-xs sm:text-sm">Invest</TabsTrigger>
-              <TabsTrigger value="village" className="whitespace-nowrap text-xs sm:text-sm">Village Bank</TabsTrigger>
-              <TabsTrigger value="bills" className="whitespace-nowrap text-xs sm:text-sm">Bills</TabsTrigger>
-              <TabsTrigger value="profile" className="whitespace-nowrap text-xs sm:text-sm">Profile</TabsTrigger>
+          {/* Fixed Mobile Navigation */}
+          <div className="mb-6 sm:mb-8">
+            <TabsList className="w-full h-auto flex-wrap sm:grid sm:grid-cols-9 bg-card/50 p-1 gap-1">
+              <TabsTrigger value="dashboard" className="flex-1 min-w-0 text-xs sm:text-sm px-2 py-2">Dashboard</TabsTrigger>
+              <TabsTrigger value="deposit" className="flex-1 min-w-0 text-xs sm:text-sm px-2 py-2">Deposit</TabsTrigger>
+              <TabsTrigger value="send" className="flex-1 min-w-0 text-xs sm:text-sm px-2 py-2">Send</TabsTrigger>
+              <TabsTrigger value="exchange" className="flex-1 min-w-0 text-xs sm:text-sm px-2 py-2">Exchange</TabsTrigger>
+              <TabsTrigger value="cards" className="flex-1 min-w-0 text-xs sm:text-sm px-2 py-2">Cards</TabsTrigger>
+              <TabsTrigger value="invest" className="flex-1 min-w-0 text-xs sm:text-sm px-2 py-2">Invest</TabsTrigger>
+              <TabsTrigger value="village" className="flex-1 min-w-0 text-xs sm:text-sm px-2 py-2">Village</TabsTrigger>
+              <TabsTrigger value="bills" className="flex-1 min-w-0 text-xs sm:text-sm px-2 py-2">Bills</TabsTrigger>
+              <TabsTrigger value="profile" className="flex-1 min-w-0 text-xs sm:text-sm px-2 py-2">Profile</TabsTrigger>
             </TabsList>
           </div>
 
@@ -179,17 +181,37 @@ const Index = () => {
             {/* Quick Actions - Mobile Optimized Grid */}
             <Card className="gradient-card border-border/50">
               <CardContent className="pt-4 sm:pt-6">
-                <div className="grid grid-cols-4 sm:grid-cols-8 gap-2 sm:gap-4">
+                <div className="grid grid-cols-3 sm:grid-cols-9 gap-2 sm:gap-4">
                   {quickActions.map((action, index) => (
                     <Button
                       key={index}
                       variant="ghost"
-                      className="h-16 sm:h-16 flex-col space-y-1 sm:space-y-2 hover:bg-white/5 transition-all duration-300"
+                      className="h-16 sm:h-16 flex-col space-y-1 sm:space-y-2 hover:bg-white/5 transition-all duration-300 p-2"
                     >
                       <action.icon className={`w-4 h-4 sm:w-6 sm:h-6 ${action.color}`} />
-                      <span className="text-[10px] sm:text-xs">{action.label}</span>
+                      <span className="text-[10px] sm:text-xs leading-tight text-center">{action.label}</span>
                     </Button>
                   ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Invite Friends Feature */}
+            <Card className="gradient-card border-border/50 bg-gradient-to-r from-accent/10 to-primary/10">
+              <CardContent className="pt-4 sm:pt-6">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 bg-gradient-to-r from-accent to-primary rounded-full flex items-center justify-center">
+                      <UserPlus className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-sm sm:text-base">Invite Friends to NeoVault</h3>
+                      <p className="text-xs sm:text-sm text-muted-foreground">Send money for FREE within NeoVault network</p>
+                    </div>
+                  </div>
+                  <Button size="sm" className="gradient-primary">
+                    Invite
+                  </Button>
                 </div>
               </CardContent>
             </Card>
@@ -235,6 +257,38 @@ const Index = () => {
 
           <TabsContent value="deposit">
             <DepositSection />
+          </TabsContent>
+
+          <TabsContent value="send">
+            <Card className="gradient-card border-border/50">
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <Send className="w-5 h-5 text-primary" />
+                  <span>Send Money</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-center py-8">
+                  <div className="w-16 h-16 mx-auto bg-gradient-to-r from-primary to-accent rounded-full flex items-center justify-center mb-4">
+                    <Send className="w-8 h-8 text-white" />
+                  </div>
+                  <h3 className="text-lg font-semibold mb-2">Send Money Instantly</h3>
+                  <p className="text-muted-foreground mb-6">
+                    Send money to NeoVault users for FREE or to mobile money, banks, and other services
+                  </p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-md mx-auto">
+                    <Button className="gradient-primary">
+                      <UserPlus className="w-4 h-4 mr-2" />
+                      To NeoVault User
+                    </Button>
+                    <Button variant="outline">
+                      <ArrowUpRight className="w-4 h-4 mr-2" />
+                      External Transfer
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </TabsContent>
 
           <TabsContent value="exchange">

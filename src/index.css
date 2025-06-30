@@ -135,7 +135,7 @@ All colors MUST be HSL.
     color: #2775ca;
   }
 
-  /* Mobile optimizations */
+  /* Mobile optimizations - Enhanced */
   .scrollbar-hide {
     -ms-overflow-style: none;
     scrollbar-width: none;
@@ -154,6 +154,33 @@ All colors MUST be HSL.
     .card-hover:active {
       transform: scale(0.98);
     }
+
+    /* Better tab layout for mobile */
+    [data-radix-tabs-trigger] {
+      flex: 1;
+      min-width: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* Improved mobile spacing */
+    .container {
+      padding-left: 0.75rem;
+      padding-right: 0.75rem;
+    }
+
+    /* Better touch targets */
+    button {
+      min-height: 44px;
+    }
+
+    /* Prevent text overflow on mobile */
+    .text-truncate-mobile {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
   }
 
   /* Improved text readability on mobile */
@@ -162,6 +189,12 @@ All colors MUST be HSL.
       -webkit-text-fill-color: unset;
       background-clip: unset;
       color: hsl(var(--foreground));
+    }
+
+    /* Better font sizes for mobile */
+    .mobile-text-adjust {
+      font-size: 0.875rem;
+      line-height: 1.25rem;
     }
   }
 
@@ -213,5 +246,39 @@ All colors MUST be HSL.
     .card-hover:hover {
       transform: none;
     }
+  }
+
+  /* Enhanced mobile tab layout */
+  @media (max-width: 640px) {
+    [role="tablist"] {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 0.25rem;
+    }
+
+    [role="tablist"] button {
+      flex: 1;
+      min-width: calc(33.333% - 0.125rem);
+      font-size: 0.75rem;
+      padding: 0.5rem 0.25rem;
+      text-align: center;
+    }
+  }
+
+  /* QR Code styling */
+  .qr-code-container {
+    background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--accent)) 100%);
+    border-radius: 0.5rem;
+    padding: 1rem;
+  }
+
+  /* NeoVault branding elements */
+  .neovault-brand {
+    background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--accent)) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-weight: 700;
   }
 }

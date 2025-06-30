@@ -6,11 +6,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { CreditCard, Smartphone, Building, User, CheckCircle } from 'lucide-react';
+import { CreditCard, Smartphone, Building, User, CheckCircle, QrCode, Link, Share2, Copy } from 'lucide-react';
 
 export const DepositSection = () => {
   const [amount, setAmount] = useState('');
   const [selectedMethod, setSelectedMethod] = useState('');
+  const [paymentLink, setPaymentLink] = useState('');
+  const [showQRCode, setShowQRCode] = useState(false);
 
   const mobileMoneyProviders = [
     { name: 'TNM Mpamba', fee: '1%', logo: '📱' },
@@ -28,6 +30,15 @@ export const DepositSection = () => {
     { name: 'NeoVault Agent - Blantyre', location: 'Chichiri, Blantyre', distance: '1.2km' },
     { name: 'NeoVault Agent - Mzuzu', location: 'Mzuzu City Center', distance: '0.8km' }
   ];
+
+  const generatePaymentLink = () => {
+    const link = `https://neovault.app/pay?amount=${amount}&id=${Math.random().toString(36).substring(7)}`;
+    setPaymentLink(link);
+  };
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+  };
 
   return (
     <div className="space-y-6">
@@ -56,11 +67,12 @@ export const DepositSection = () => {
           </div>
 
           <Tabs defaultValue="mobile" className="w-full">
-            <TabsList className="grid w-full grid-cols-4 mb-6">
+            <TabsList className="grid w-full grid-cols-5 mb-6">
               <TabsTrigger value="mobile">Mobile Money</TabsTrigger>
               <TabsTrigger value="bank">Bank Transfer</TabsTrigger>
               <TabsTrigger value="agent">Agent</TabsTrigger>
               <TabsTrigger value="card">Card</TabsTrigger>
+              <TabsTrigger value="request">Request</TabsTrigger>
             </TabsList>
 
             <TabsContent value="mobile" className="space-y-4">
@@ -149,6 +161,79 @@ export const DepositSection = () => {
                 </div>
               </div>
               <Button className="w-full gradient-tertiary">Add Card & Deposit</Button>
+            </TabsContent>
+
+            <TabsContent value="request" className="space-y-4">
+              <div className="text-center mb-6">
+                <h3 className="text-lg font-semibold mb-2">Request Money</h3>
+                <p className="text-sm text-muted-foreground">Generate QR code or payment link to receive money</p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Card className="p-4 bg-white/5">
+                  <div className="text-center space-y-4">
+                    <QrCode className="w-16 h-16 mx-auto text-primary" />
+                    <h4 className="font-semibold">QR Code</h4>
+                    <p className="text-xs text-muted-foreground">Let others scan to pay you</p>
+                    <Button 
+                      onClick={() => setShowQRCode(true)}
+                      className="w-full"
+                      disabled={!amount}
+                    >
+                      Generate QR Code
+                    </Button>
+                  </div>
+                </Card>
+
+                <Card className="p-4 bg-white/5">
+                  <div className="text-center space-y-4">
+                    <Link className="w-16 h-16 mx-auto text-accent" />
+                    <h4 className="font-semibold">Payment Link</h4>
+                    <p className="text-xs text-muted-foreground">Share a link to receive payment</p>
+                    <Button 
+                      onClick={generatePaymentLink}
+                      className="w-full"
+                      disabled={!amount}
+                    >
+                      Generate Link
+                    </Button>
+                  </div>
+                </Card>
+              </div>
+
+              {paymentLink && (
+                <Card className="p-4 bg-accent/10 border-accent/30">
+                  <div className="space-y-3">
+                    <Label>Your Payment Link</Label>
+                    <div className="flex items-center space-x-2">
+                      <Input value={paymentLink} readOnly className="flex-1" />
+                      <Button size="sm" onClick={() => copyToClipboard(paymentLink)}>
+                        <Copy className="w-4 h-4" />
+                      </Button>
+                      <Button size="sm">
+                        <Share2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </Card>
+              )}
+
+              {showQRCode && amount && (
+                <Card className="p-6 bg-white text-center">
+                  <div className="w-48 h-48 mx-auto bg-gradient-to-br from-primary to-accent rounded-lg flex items-center justify-center mb-4">
+                    <QrCode className="w-24 h-24 text-white" />
+                  </div>
+                  <p className="text-lg font-semibold text-gray-800">MWK {amount}</p>
+                  <p className="text-sm text-gray-600">Scan to pay via NeoVault</p>
+                  <Button 
+                    variant="outline" 
+                    className="mt-4"
+                    onClick={() => setShowQRCode(false)}
+                  >
+                    Close
+                  </Button>
+                </Card>
+              )}
             </TabsContent>
           </Tabs>
         </CardContent>

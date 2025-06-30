@@ -60,13 +60,27 @@ export const VirtualCardsSection = () => {
             <div className="space-y-4">
               {myCards.map((card, index) => (
                 <div key={index} className="relative">
-                  <div className="w-full h-48 gradient-standard rounded-xl p-6 text-white relative overflow-hidden">
-                    <div className="absolute top-4 right-4 flex items-center space-x-2">
-                      <div className="w-8 h-8 bg-gradient-to-r from-red-500 to-orange-500 rounded flex items-center justify-center">
-                        <span className="text-white font-bold text-xs">MC</span>
+                  <div className="w-full h-48 gradient-primary rounded-xl p-6 text-white relative overflow-hidden">
+                    {/* NeoVault Branding */}
+                    <div className="absolute top-4 left-4">
+                      <div className="flex items-center space-x-2">
+                        <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center">
+                          <span className="text-primary font-bold text-sm">N</span>
+                        </div>
+                        <span className="text-lg font-bold">NeoVault</span>
                       </div>
-                      <span className="text-sm font-medium">Mastercard</span>
                     </div>
+
+                    {/* Mastercard Logo */}
+                    <div className="absolute top-4 right-4 flex items-center space-x-2">
+                      <div className="flex items-center space-x-1">
+                        <div className="w-6 h-6 bg-red-500 rounded-full opacity-90"></div>
+                        <div className="w-6 h-6 bg-yellow-500 rounded-full opacity-90 -ml-3"></div>
+                      </div>
+                      <span className="text-sm font-medium ml-2">Mastercard</span>
+                    </div>
+
+                    {/* Card Details */}
                     <div className="absolute bottom-6 left-6 right-6">
                       <div className="mb-4">
                         <p className="text-2xl font-mono tracking-wider">
@@ -79,9 +93,15 @@ export const VirtualCardsSection = () => {
                           <p className="font-mono">{showCardDetails ? card.expiry : '••/••'}</p>
                         </div>
                         <div>
-                          <Badge className="bg-green-500/20 text-green-300">{card.status}</Badge>
+                          <p className="text-xs opacity-80">CARDHOLDER</p>
+                          <p className="font-mono text-xs">NEOVAULT USER</p>
                         </div>
                       </div>
+                    </div>
+
+                    {/* Status Badge */}
+                    <div className="absolute bottom-4 right-4">
+                      <Badge className="bg-green-500/20 text-green-300 border-green-400/30">{card.status}</Badge>
                     </div>
                   </div>
                   <div className="flex justify-between items-center mt-4">
@@ -126,11 +146,24 @@ export const VirtualCardsSection = () => {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className={`w-full h-32 ${tier.color} rounded-lg p-4 text-white relative`}>
-                <div className="absolute top-2 right-2 flex items-center space-x-1">
-                  <div className="w-6 h-6 bg-gradient-to-r from-red-500 to-orange-500 rounded flex items-center justify-center">
-                    <span className="text-white font-bold text-xs">MC</span>
+                {/* NeoVault Logo */}
+                <div className="absolute top-2 left-2">
+                  <div className="flex items-center space-x-1">
+                    <div className="w-6 h-6 bg-white rounded-full flex items-center justify-center">
+                      <span className="text-primary font-bold text-xs">N</span>
+                    </div>
+                    <span className="text-xs font-bold">NeoVault</span>
                   </div>
                 </div>
+                
+                {/* Mastercard Logo */}
+                <div className="absolute top-2 right-2 flex items-center space-x-1">
+                  <div className="flex items-center">
+                    <div className="w-4 h-4 bg-red-500 rounded-full opacity-90"></div>
+                    <div className="w-4 h-4 bg-yellow-500 rounded-full opacity-90 -ml-2"></div>
+                  </div>
+                </div>
+                
                 <div className="absolute bottom-2 left-4">
                   <p className="text-sm font-mono">•••• •••• •••• ••••</p>
                 </div>
@@ -179,13 +212,19 @@ export const VirtualCardsSection = () => {
         <CardContent>
           <div className="flex items-center justify-between p-4 rounded-lg bg-white/5">
             <div className="flex items-center space-x-4">
-              <div className="w-16 h-10 gradient-primary rounded flex items-center justify-center">
-                <div className="w-6 h-6 bg-gradient-to-r from-red-500 to-orange-500 rounded flex items-center justify-center">
-                  <span className="text-white font-bold text-xs">MC</span>
+              <div className="w-16 h-10 gradient-primary rounded flex items-center justify-center relative">
+                <div className="absolute top-1 left-1">
+                  <div className="w-4 h-4 bg-white rounded-full flex items-center justify-center">
+                    <span className="text-primary font-bold text-xs">N</span>
+                  </div>
+                </div>
+                <div className="absolute bottom-1 right-1 flex items-center">
+                  <div className="w-3 h-3 bg-red-500 rounded-full opacity-90"></div>
+                  <div className="w-3 h-3 bg-yellow-500 rounded-full opacity-90 -ml-1"></div>
                 </div>
               </div>
               <div>
-                <h4 className="font-semibold">Physical Mastercard</h4>
+                <h4 className="font-semibold">NeoVault Physical Mastercard</h4>
                 <p className="text-sm text-muted-foreground">Get a physical card delivered to your address</p>
               </div>
             </div>
