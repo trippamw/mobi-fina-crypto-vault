@@ -15,12 +15,12 @@ export const DepositSection = () => {
   const mobileMoneyProviders = [
     { name: 'TNM Mpamba', fee: '1%', logo: '📱' },
     { name: 'Airtel Money', fee: '1.2%', logo: '📱' },
-    { name: 'National Bank Mobile', fee: '0.8%', logo: '🏦' }
+    { name: 'MO626', fee: '0.8%', logo: '🏦' }
   ];
 
   const banks = [
-    'National Bank of Malawi', 'Standard Bank', 'FDH Bank', 'NBS Bank',
-    'MyBucks Bank', 'Opportunity Bank', 'CDH Investment Bank'
+    'Standard Bank', 'FDH Bank', 'NBS Bank',
+    'CDH Investment Bank', 'Centenary Bank', 'FCB'
   ];
 
   const agents = [
@@ -128,6 +128,12 @@ export const DepositSection = () => {
             </TabsContent>
 
             <TabsContent value="card" className="space-y-4">
+              <div className="flex items-center space-x-2 mb-4">
+                <div className="w-8 h-8 bg-gradient-to-r from-red-500 to-orange-500 rounded flex items-center justify-center">
+                  <span className="text-white font-bold text-xs">MC</span>
+                </div>
+                <span className="text-sm font-medium">Mastercard</span>
+              </div>
               <div>
                 <Label htmlFor="cardNumber">Card Number</Label>
                 <Input id="cardNumber" placeholder="1234 5678 9012 3456" />

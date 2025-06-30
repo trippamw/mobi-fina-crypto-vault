@@ -19,7 +19,8 @@ export const VillageBankSection = () => {
       myContribution: 75000,
       interestRate: 15,
       status: 'Active',
-      role: 'Member'
+      role: 'Member',
+      duration: '12 months minimum'
     },
     {
       id: '2',
@@ -29,16 +30,16 @@ export const VillageBankSection = () => {
       myContribution: 120000,
       interestRate: 18,
       status: 'Active',
-      role: 'Admin'
+      role: 'Admin',
+      duration: '6 months minimum'
     }
   ];
 
   const withdrawalMethods = [
     { name: 'Mobile Money (TNM)', fee: '1%', icon: '📱' },
     { name: 'Mobile Money (Airtel)', fee: '1%', icon: '📱' },
-    { name: 'Bank Transfer (NBS)', fee: '0.5%', icon: '🏦' },
-    { name: 'Bank Transfer (Standard)', fee: '0.5%', icon: '🏦' },
-    { name: 'Bank Transfer (FDH)', fee: '0.5%', icon: '🏦' },
+    { name: 'Mobile Money (MO626)', fee: '1%', icon: '📱' },
+    { name: 'Bank Transfer', fee: '0.5%', icon: '🏦', description: 'All available banks in Malawi' },
     { name: 'Agent Withdrawal', fee: '2%', icon: '👤' },
     { name: 'Card Withdrawal', fee: 'Free', icon: '💳' }
   ];
@@ -97,6 +98,11 @@ export const VillageBankSection = () => {
                   <div className="flex justify-between text-sm">
                     <span>Interest Rate</span>
                     <span className="text-green-400">{group.interestRate}% p.a.</span>
+                  </div>
+
+                  <div className="flex justify-between text-sm">
+                    <span>Minimum Duration</span>
+                    <span className="text-orange-400">{group.duration}</span>
                   </div>
                   
                   <Progress 
@@ -160,6 +166,11 @@ export const VillageBankSection = () => {
                 <Input placeholder="e.g. 50" type="number" className="bg-white/5 border-white/10" />
               </div>
             </div>
+
+            <div>
+              <label className="text-sm font-medium mb-2 block">Minimum Duration</label>
+              <Input placeholder="e.g. 30 days" className="bg-white/5 border-white/10" />
+            </div>
             
             <Button className="w-full gradient-secondary text-white">
               Create Group
@@ -177,13 +188,16 @@ export const VillageBankSection = () => {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {withdrawalMethods.map((method, index) => (
               <div key={index} className="p-4 rounded-lg bg-white/5 hover:bg-white/10 transition-colors border border-white/10">
                 <div className="flex items-center space-x-3 mb-2">
                   <span className="text-2xl">{method.icon}</span>
                   <div>
                     <h5 className="font-medium">{method.name}</h5>
+                    {method.description && (
+                      <p className="text-xs text-muted-foreground">{method.description}</p>
+                    )}
                     <p className="text-sm text-accent">Fee: {method.fee}</p>
                   </div>
                 </div>

@@ -18,7 +18,10 @@ export const BillsSection = () => {
       bills: [
         { name: 'ESCOM', type: 'Electricity', fee: 'MWK 50', icon: '⚡' },
         { name: 'Lilongwe Water Board', type: 'Water', fee: 'MWK 30', icon: '💧' },
-        { name: 'Blantyre Water Board', type: 'Water', fee: 'MWK 30', icon: '💧' }
+        { name: 'Blantyre Water Board', type: 'Water', fee: 'MWK 30', icon: '💧' },
+        { name: 'Northern Region Water Board', type: 'Water', fee: 'MWK 30', icon: '💧' },
+        { name: 'Central Region Water Board', type: 'Water', fee: 'MWK 30', icon: '💧' },
+        { name: 'Southern Region Water Board', type: 'Water', fee: 'MWK 30', icon: '💧' }
       ]
     },
     {
