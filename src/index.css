@@ -62,6 +62,7 @@ All colors MUST be HSL.
 }
 
 @layer utilities {
+  /* Existing gradients */
   .gradient-primary {
     background: linear-gradient(135deg, hsl(217 91% 60%) 0%, hsl(236 72% 79%) 100%);
   }
@@ -132,5 +133,85 @@ All colors MUST be HSL.
   
   .crypto-usdc {
     color: #2775ca;
+  }
+
+  /* Mobile optimizations */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Touch-friendly interactions */
+  @media (max-width: 640px) {
+    .card-hover:hover {
+      transform: none;
+    }
+    
+    .card-hover:active {
+      transform: scale(0.98);
+    }
+  }
+
+  /* Improved text readability on mobile */
+  @media (max-width: 640px) {
+    .text-gradient {
+      -webkit-text-fill-color: unset;
+      background-clip: unset;
+      color: hsl(var(--foreground));
+    }
+  }
+
+  /* Better spacing for mobile */
+  .mobile-optimized {
+    @apply px-3 py-2;
+  }
+
+  @media (min-width: 640px) {
+    .mobile-optimized {
+      @apply px-4 py-3;
+    }
+  }
+
+  /* Village-friendly colors and patterns */
+  .local-accent {
+    background: linear-gradient(135deg, #8B4513 0%, #D2691E 100%);
+  }
+
+  .community-gradient {
+    background: linear-gradient(135deg, #228B22 0%, #32CD32 100%);
+  }
+
+  /* Global finance indicators */
+  .global-indicator {
+    border-left: 3px solid hsl(var(--accent));
+    padding-left: 0.75rem;
+  }
+
+  /* Accessibility improvements */
+  .focus-visible:focus-visible {
+    @apply ring-2 ring-ring ring-offset-2 ring-offset-background;
+  }
+
+  /* High contrast mode support */
+  @media (prefers-contrast: high) {
+    .gradient-card {
+      background: hsl(var(--card));
+      border: 2px solid hsl(var(--border));
+    }
+  }
+
+  /* Reduced motion support */
+  @media (prefers-reduced-motion: reduce) {
+    .card-hover {
+      transition: none;
+    }
+    
+    .card-hover:hover {
+      transform: none;
+    }
   }
 }
