@@ -21,7 +21,7 @@ export const DepositSection = () => {
   ];
 
   const banks = [
-    'Standard Bank', 'FDH Bank', 'NBS Bank',
+    'Standard Bank', 'FDH Bank', 'NBS Bank', 'National Bank',
     'CDH Investment Bank', 'Centenary Bank', 'FCB'
   ];
 
