@@ -6,9 +6,10 @@ import { Home, Wallet, ArrowUpDown, PiggyBank, User, Plus, Send, ArrowDownLeft, 
 interface MobileNavigationProps {
   activeTab: string;
   onTabChange: (tab: string) => void;
+  notificationCount?: number;
 }
 
-export const MobileNavigation = ({ activeTab, onTabChange }: MobileNavigationProps) => {
+export const MobileNavigation = ({ activeTab, onTabChange, notificationCount = 0 }: MobileNavigationProps) => {
   const navItems = [
     {
       id: 'home',
@@ -64,25 +65,34 @@ export const MobileNavigation = ({ activeTab, onTabChange }: MobileNavigationPro
   };
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-xl border-t border-border/50 md:hidden mobile-safe-area">
-      <div className="flex items-center justify-around py-2 px-1">
-        {navItems.map((item) => {
-          const isActive = getActiveMainTab() === item.id;
-          return (
-            <Button
-              key={item.id}
-              variant="ghost"
-              size="sm"
-              onClick={() => onTabChange(item.id)}
-              className={`flex-1 flex-col h-16 space-y-1 ${
-                isActive ? 'text-primary bg-primary/10' : 'text-muted-foreground'
-              }`}
-            >
-              <item.icon className="w-5 h-5" />
-              <span className="text-xs">{item.label}</span>
-            </Button>
-          );
-        })}
+    <div className="fixed bottom-0 left-0 right-0 z-50 mobile-safe-area">
+      <div className="bg-white/10 backdrop-blur-2xl border-t border-white/20 mx-4 mb-4 rounded-3xl shadow-2xl">
+        <div className="flex items-center justify-around py-3 px-2">
+          {navItems.map((item) => {
+            const isActive = getActiveMainTab() === item.id;
+            return (
+              <Button
+                key={item.id}
+                variant="ghost"
+                size="sm"
+                onClick={() => onTabChange(item.id)}
+                className={`flex-1 flex-col h-16 space-y-1 relative rounded-2xl transition-all duration-300 ${
+                  isActive 
+                    ? 'text-white bg-white/20 shadow-lg' 
+                    : 'text-white/70 hover:text-white hover:bg-white/10'
+                }`}
+              >
+                <item.icon className="w-5 h-5" />
+                <span className="text-xs font-medium">{item.label}</span>
+                {item.id === 'profile' && notificationCount > 0 && (
+                  <div className="notification-badge">
+                    {notificationCount > 99 ? '99+' : notificationCount}
+                  </div>
+                )}
+              </Button>
+            );
+          })}
+        </div>
       </div>
     </div>
   );

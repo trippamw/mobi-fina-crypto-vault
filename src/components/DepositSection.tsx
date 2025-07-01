@@ -7,17 +7,28 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { CreditCard, Smartphone, Building, User, CheckCircle, QrCode, Link, Share2, Copy } from 'lucide-react';
 
-export const DepositSection = () => {
+interface DepositSectionProps {
+  onBalanceUpdate?: (currency: string, amount: number) => void;
+}
+
+export const DepositSection = ({ onBalanceUpdate }: DepositSectionProps) => {
   const [amount, setAmount] = useState('');
   const [selectedMethod, setSelectedMethod] = useState('');
   const [paymentLink, setPaymentLink] = useState('');
   const [showQRCode, setShowQRCode] = useState(false);
   const [agentAccount, setAgentAccount] = useState('');
+  const [mobileNumber, setMobileNumber] = useState('');
+  const [bankAccount, setBankAccount] = useState('');
+  const [selectedBank, setSelectedBank] = useState('');
+  const [cardNumber, setCardNumber] = useState('');
+  const [expiryDate, setExpiryDate] = useState('');
+  const [cvv, setCvv] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const mobileMoneyProviders = [
-    { name: 'TNM Mpamba', fee: '1%', logo: '📱' },
-    { name: 'Airtel Money', fee: '1.2%', logo: '📱' },
-    { name: 'MO626', fee: '0.8%', logo: '🏦' }
+    { name: 'TNM Mpamba', fee: '1%', logo: '📱', prefix: '088' },
+    { name: 'Airtel Money', fee: '1.2%', logo: '📱', prefix: '099' },
+    { name: 'MO626', fee: '0.8%', logo: '🏦', prefix: '085' }
   ];
 
   const banks = [
@@ -31,6 +42,41 @@ export const DepositSection = () => {
     { name: 'Community Banking Agent', description: 'Local community agents' }
   ];
 
+  const processDeposit = async (method: string) => {
+    if (!amount || parseFloat(amount) <= 0) {
+      alert('Please enter a valid amount');
+      return;
+    }
+
+    setLoading(true);
+    
+    // Simulate processing delay
+    setTimeout(() => {
+      const depositAmount = parseFloat(amount);
+      
+      // Update wallet balance
+      if (onBalanceUpdate) {
+        onBalanceUpdate('MWK', depositAmount);
+      }
+      
+      setLoading(false);
+      
+      // Show success message
+      alert(`Successfully deposited MWK ${depositAmount.toLocaleString()} via ${method}`);
+      
+      // Reset form
+      setAmount('');
+      setSelectedMethod('');
+      setMobileNumber('');
+      setBankAccount('');
+      setSelectedBank('');
+      setCardNumber('');
+      setExpiryDate('');
+      setCvv('');
+      setAgentAccount('');
+    }, 2000);
+  };
+
   const generatePaymentLink = () => {
     const link = `https://neovault.app/pay?amount=${amount}&id=${Math.random().toString(36).substring(7)}`;
     setPaymentLink(link);
@@ -42,9 +88,9 @@ export const DepositSection = () => {
 
   return (
     <div className="space-y-4 sm:space-y-6">
-      <Card className="gradient-card border-border/50">
+      <Card className="gradient-card border-white/20">
         <CardHeader className="pb-4">
-          <CardTitle className="flex items-center space-x-2 text-base sm:text-lg">
+          <CardTitle className="flex items-center space-x-2 text-base sm:text-lg text-glass">
             <div className="w-6 h-6 sm:w-8 sm:h-8 gradient-primary rounded-lg flex items-center justify-center">
               <CreditCard className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
             </div>
@@ -53,102 +99,137 @@ export const DepositSection = () => {
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
-            <Label htmlFor="amount" className="text-sm">Amount to Deposit</Label>
+            <Label htmlFor="amount" className="text-sm text-glass">Amount to Deposit</Label>
             <Input
               id="amount"
               type="number"
               placeholder="Enter amount in MWK"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
-              className="text-base sm:text-lg font-semibold bg-input border-border text-foreground mt-1"
+              className="text-base sm:text-lg font-semibold bg-white/10 border-white/20 text-glass placeholder-white/60 mt-1"
             />
           </div>
 
           <Tabs defaultValue="mobile" className="w-full">
-            <TabsList className="grid w-full grid-cols-5 mb-4 h-auto">
-              <TabsTrigger value="mobile" className="text-xs p-2">Mobile</TabsTrigger>
-              <TabsTrigger value="bank" className="text-xs p-2">Bank</TabsTrigger>
-              <TabsTrigger value="agent" className="text-xs p-2">Agent</TabsTrigger>
-              <TabsTrigger value="card" className="text-xs p-2">Card</TabsTrigger>
-              <TabsTrigger value="request" className="text-xs p-2">Request</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-5 mb-4 h-auto bg-white/10 border-white/20">
+              <TabsTrigger value="mobile" className="text-xs p-2 text-glass data-[state=active]:bg-white/20">Mobile</TabsTrigger>
+              <TabsTrigger value="bank" className="text-xs p-2 text-glass data-[state=active]:bg-white/20">Bank</TabsTrigger>
+              <TabsTrigger value="agent" className="text-xs p-2 text-glass data-[state=active]:bg-white/20">Agent</TabsTrigger>
+              <TabsTrigger value="card" className="text-xs p-2 text-glass data-[state=active]:bg-white/20">Card</TabsTrigger>
+              <TabsTrigger value="request" className="text-xs p-2 text-glass data-[state=active]:bg-white/20">Request</TabsTrigger>
             </TabsList>
 
             <TabsContent value="mobile" className="space-y-4">
+              <div>
+                <Label className="text-glass">Mobile Number</Label>
+                <Input
+                  placeholder="Enter mobile number"
+                  value={mobileNumber}
+                  onChange={(e) => setMobileNumber(e.target.value)}
+                  className="bg-white/10 border-white/20 text-glass placeholder-white/60 mt-1"
+                />
+              </div>
               <div className="grid gap-3">
                 {mobileMoneyProviders.map((provider, index) => (
                   <div 
                     key={index}
-                    className="p-4 rounded-lg border border-border/50 hover:bg-white/5 cursor-pointer transition-colors"
+                    onClick={() => setSelectedMethod(provider.name)}
+                    className={`p-4 rounded-lg border cursor-pointer transition-all duration-300 ${
+                      selectedMethod === provider.name 
+                        ? 'border-blue-400/50 bg-blue-500/20' 
+                        : 'border-white/20 bg-white/5 hover:bg-white/10'
+                    }`}
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-3">
                         <span className="text-2xl">{provider.logo}</span>
                         <div>
-                          <p className="font-medium">{provider.name}</p>
-                          <p className="text-sm text-muted-foreground">Fee: {provider.fee}</p>
+                          <p className="font-medium text-glass">{provider.name}</p>
+                          <p className="text-sm text-white/60">Fee: {provider.fee}</p>
                         </div>
                       </div>
-                      <CheckCircle className="w-5 h-5 text-accent" />
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <Button className="w-full gradient-primary">Continue with Mobile Money</Button>
-            </TabsContent>
-
-            <TabsContent value="bank" className="space-y-4">
-              <div>
-                <Label>Select Bank</Label>
-                <Select>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Choose your bank" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {banks.map((bank) => (
-                      <SelectItem key={bank} value={bank.toLowerCase()}>{bank}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label htmlFor="account">Account Number</Label>
-                <Input id="account" placeholder="Enter your account number" />
-              </div>
-              <Button className="w-full gradient-secondary">Initiate Bank Transfer</Button>
-            </TabsContent>
-
-            <TabsContent value="agent" className="space-y-4">
-              <div>
-                <Label htmlFor="agentAccount">Agent Account Number</Label>
-                <Input
-                  id="agentAccount"
-                  placeholder="Enter agent account number"
-                  value={agentAccount}
-                  onChange={(e) => setAgentAccount(e.target.value)}
-                  className="bg-input border-border text-foreground"
-                />
-              </div>
-              <div className="space-y-3">
-                {agents.map((agent, index) => (
-                  <div key={index} className="p-3 sm:p-4 rounded-lg border border-border/50 bg-white/5">
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-start space-x-3">
-                        <User className="w-4 h-4 sm:w-5 sm:h-5 text-accent mt-1" />
-                        <div>
-                          <p className="font-medium text-sm sm:text-base">{agent.name}</p>
-                          <p className="text-xs sm:text-sm text-muted-foreground">{agent.description}</p>
-                        </div>
-                      </div>
-                      <Button size="sm" variant="outline" className="ml-2">Select</Button>
+                      {selectedMethod === provider.name && (
+                        <CheckCircle className="w-5 h-5 text-blue-400" />
+                      )}
                     </div>
                   </div>
                 ))}
               </div>
               <Button 
-                className="w-full gradient-primary"
-                disabled={!agentAccount}
+                className="w-full gradient-primary text-white font-semibold"
+                onClick={() => processDeposit(`Mobile Money (${selectedMethod})`)}
+                disabled={!selectedMethod || !mobileNumber || !amount || loading}
               >
-                Deposit via Agent
+                {loading ? 'Processing...' : 'Continue with Mobile Money'}
+              </Button>
+            </TabsContent>
+
+            <TabsContent value="bank" className="space-y-4">
+              <div>
+                <Label className="text-glass">Select Bank</Label>
+                <Select value={selectedBank} onValueChange={setSelectedBank}>
+                  <SelectTrigger className="bg-white/10 border-white/20 text-glass">
+                    <SelectValue placeholder="Choose your bank" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-gray-900 border-gray-700">
+                    {banks.map((bank) => (
+                      <SelectItem key={bank} value={bank} className="text-white">{bank}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="account" className="text-glass">Account Number</Label>
+                <Input 
+                  id="account" 
+                  placeholder="Enter your account number"
+                  value={bankAccount}
+                  onChange={(e) => setBankAccount(e.target.value)}
+                  className="bg-white/10 border-white/20 text-glass placeholder-white/60"
+                />
+              </div>
+              <Button 
+                className="w-full gradient-secondary text-white font-semibold"
+                onClick={() => processDeposit(`Bank Transfer (${selectedBank})`)}
+                disabled={!selectedBank || !bankAccount || !amount || loading}
+              >
+                {loading ? 'Processing...' : 'Initiate Bank Transfer'}
+              </Button>
+            </TabsContent>
+
+            <TabsContent value="agent" className="space-y-4">
+              <div>
+                <Label htmlFor="agentAccount" className="text-glass">Agent Account Number</Label>
+                <Input
+                  id="agentAccount"
+                  placeholder="Enter agent account number"
+                  value={agentAccount}
+                  onChange={(e) => setAgentAccount(e.target.value)}
+                  className="bg-white/10 border-white/20 text-glass placeholder-white/60"
+                />
+              </div>
+              <div className="space-y-3">
+                {agents.map((agent, index) => (
+                  <div key={index} className="p-3 sm:p-4 rounded-lg border border-white/20 bg-white/5">
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-start space-x-3">
+                        <User className="w-4 h-4 sm:w-5 sm:h-5 text-blue-400 mt-1" />
+                        <div>
+                          <p className="font-medium text-sm sm:text-base text-glass">{agent.name}</p>
+                          <p className="text-xs sm:text-sm text-white/60">{agent.description}</p>
+                        </div>
+                      </div>
+                      <Button size="sm" variant="outline" className="ml-2 border-white/20 text-glass hover:bg-white/10">Select</Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <Button 
+                className="w-full gradient-primary text-white font-semibold"
+                onClick={() => processDeposit('Agent Deposit')}
+                disabled={!agentAccount || !amount || loading}
+              >
+                {loading ? 'Processing...' : 'Deposit via Agent'}
               </Button>
             </TabsContent>
 
@@ -157,23 +238,47 @@ export const DepositSection = () => {
                 <div className="w-8 h-8 bg-gradient-to-r from-red-500 to-orange-500 rounded flex items-center justify-center">
                   <span className="text-white font-bold text-xs">MC</span>
                 </div>
-                <span className="text-sm font-medium">Mastercard</span>
+                <span className="text-sm font-medium text-glass">Mastercard</span>
               </div>
               <div>
-                <Label htmlFor="cardNumber">Card Number</Label>
-                <Input id="cardNumber" placeholder="1234 5678 9012 3456" />
+                <Label htmlFor="cardNumber" className="text-glass">Card Number</Label>
+                <Input 
+                  id="cardNumber" 
+                  placeholder="1234 5678 9012 3456"
+                  value={cardNumber}
+                  onChange={(e) => setCardNumber(e.target.value)}
+                  className="bg-white/10 border-white/20 text-glass placeholder-white/60"
+                />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="expiry">Expiry Date</Label>
-                  <Input id="expiry" placeholder="MM/YY" />
+                  <Label htmlFor="expiry" className="text-glass">Expiry Date</Label>
+                  <Input 
+                    id="expiry" 
+                    placeholder="MM/YY"
+                    value={expiryDate}
+                    onChange={(e) => setExpiryDate(e.target.value)}
+                    className="bg-white/10 border-white/20 text-glass placeholder-white/60"
+                  />
                 </div>
                 <div>
-                  <Label htmlFor="cvv">CVV</Label>
-                  <Input id="cvv" placeholder="123" />
+                  <Label htmlFor="cvv" className="text-glass">CVV</Label>
+                  <Input 
+                    id="cvv" 
+                    placeholder="123"
+                    value={cvv}
+                    onChange={(e) => setCvv(e.target.value)}
+                    className="bg-white/10 border-white/20 text-glass placeholder-white/60"
+                  />
                 </div>
               </div>
-              <Button className="w-full gradient-tertiary">Add Card & Deposit</Button>
+              <Button 
+                className="w-full gradient-tertiary text-white font-semibold"
+                onClick={() => processDeposit('Card Deposit')}
+                disabled={!cardNumber || !expiryDate || !cvv || !amount || loading}
+              >
+                {loading ? 'Processing...' : 'Add Card & Deposit'}
+              </Button>
             </TabsContent>
 
             <TabsContent value="request" className="space-y-4">
