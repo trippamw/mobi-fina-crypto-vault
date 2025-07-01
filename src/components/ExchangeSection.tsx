@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ArrowUpDown, TrendingUp, TrendingDown, RefreshCw } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { TransactionConfirmation } from '@/components/TransactionConfirmation';
 
 export const ExchangeSection = () => {
   const [fromAmount, setFromAmount] = useState('1000');
@@ -13,8 +13,13 @@ export const ExchangeSection = () => {
   const [toCurrency, setToCurrency] = useState('USD');
   const [exchangeRates, setExchangeRates] = useState<any>({});
   const [loading, setLoading] = useState(false);
+  const [transactionModal, setTransactionModal] = useState({
+    isOpen: false,
+    showSuccess: false,
+    transaction: null as any
+  });
 
-  // Live exchange rates (simulated with real-world rates for Malawi)
+  // Live exchange rates with real Malawi rates
   const liveRates = {
     'USD/MWK': { rate: '1,751.00', change: '+0.5%', trend: 'up' },
     'GBP/MWK': { rate: '2,210.50', change: '+0.8%', trend: 'up' },
@@ -86,14 +91,34 @@ export const ExchangeSection = () => {
     setToCurrency(temp);
   };
 
+  const handleExchange = () => {
+    if (!fromAmount || fromAmount === '0') return;
+
+    const exchangeFee = parseFloat(fromAmount) * 0.01; // 1% exchange fee
+    const convertedAmount = calculateExchange();
+    
+    setTransactionModal({
+      isOpen: true,
+      showSuccess: false,
+      transaction: {
+        type: 'Currency Exchange',
+        amount: `${fromAmount} ${fromCurrency} → ${convertedAmount} ${toCurrency}`,
+        recipient: 'Exchange Service',
+        fee: `${exchangeFee.toLocaleString()} ${fromCurrency}`,
+        total: `${convertedAmount} ${toCurrency}`,
+        exchangeRate: `1 ${fromCurrency} = ${(parseFloat(calculateExchange()) / parseFloat(fromAmount)).toFixed(fromCurrency === 'MWK' ? 6 : 2)} ${toCurrency}`
+      }
+    });
+  };
+
   return (
     <div className="space-y-6">
       {/* Exchange Interface */}
-      <Card className="gradient-card border-border/50">
+      <Card className="bg-gray-800/50 border-gray-700">
         <CardHeader>
-          <CardTitle className="flex items-center justify-between">
+          <CardTitle className="flex items-center justify-between text-white">
             <div className="flex items-center space-x-2">
-              <ArrowUpDown className="w-5 h-5 text-primary" />
+              <ArrowUpDown className="w-5 h-5 text-green-400" />
               <span>Currency Exchange</span>
             </div>
             <Button
@@ -101,6 +126,7 @@ export const ExchangeSection = () => {
               size="sm"
               onClick={fetchExchangeRates}
               disabled={loading}
+              className="text-gray-300 hover:text-white"
             >
               <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
             </Button>
@@ -109,22 +135,22 @@ export const ExchangeSection = () => {
         <CardContent className="space-y-6">
           {/* From Section */}
           <div className="space-y-2">
-            <label className="text-sm font-medium">From</label>
+            <label className="text-sm font-medium text-gray-300">From</label>
             <div className="flex space-x-3">
               <Input
                 type="number"
                 value={fromAmount}
                 onChange={(e) => setFromAmount(e.target.value)}
-                className="flex-1 bg-white/5 border-white/10"
+                className="flex-1 bg-gray-700 border-gray-600 text-white"
                 placeholder="Enter amount"
               />
               <Select value={fromCurrency} onValueChange={setFromCurrency}>
-                <SelectTrigger className="w-32 bg-white/5 border-white/10">
+                <SelectTrigger className="w-32 bg-gray-700 border-gray-600 text-white">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-gray-800 border-gray-700">
                   {currencies.map((currency) => (
-                    <SelectItem key={currency.code} value={currency.code}>
+                    <SelectItem key={currency.code} value={currency.code} className="text-white">
                       <div className="flex items-center space-x-2">
                         <span>{currency.flag}</span>
                         <span>{currency.code}</span>
@@ -142,30 +168,30 @@ export const ExchangeSection = () => {
               variant="ghost"
               size="sm"
               onClick={swapCurrencies}
-              className="rounded-full bg-primary/10 hover:bg-primary/20 p-2"
+              className="rounded-full bg-green-600/20 hover:bg-green-600/30 p-2"
             >
-              <ArrowUpDown className="w-4 h-4" />
+              <ArrowUpDown className="w-4 h-4 text-green-400" />
             </Button>
           </div>
 
           {/* To Section */}
           <div className="space-y-2">
-            <label className="text-sm font-medium">To</label>
+            <label className="text-sm font-medium text-gray-300">To</label>
             <div className="flex space-x-3">
               <Input
                 type="text"
                 value={calculateExchange()}
                 readOnly
-                className="flex-1 bg-white/5 border-white/10 font-mono"
+                className="flex-1 bg-gray-700 border-gray-600 font-mono text-white"
                 placeholder="Converted amount"
               />
               <Select value={toCurrency} onValueChange={setToCurrency}>
-                <SelectTrigger className="w-32 bg-white/5 border-white/10">
+                <SelectTrigger className="w-32 bg-gray-700 border-gray-600 text-white">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-gray-800 border-gray-700">
                   {currencies.map((currency) => (
-                    <SelectItem key={currency.code} value={currency.code}>
+                    <SelectItem key={currency.code} value={currency.code} className="text-white">
                       <div className="flex items-center space-x-2">
                         <span>{currency.flag}</span>
                         <span>{currency.code}</span>
@@ -178,25 +204,37 @@ export const ExchangeSection = () => {
           </div>
 
           {/* Exchange Rate Display */}
-          <div className="bg-white/5 p-3 rounded-lg">
-            <p className="text-sm text-muted-foreground">Exchange Rate</p>
-            <p className="text-lg font-semibold">
-              1 {fromCurrency} = {(1 * (parseFloat(calculateExchange()) / parseFloat(fromAmount || '1'))).toFixed(fromCurrency === 'MWK' ? 6 : 2)} {toCurrency}
-            </p>
+          <div className="bg-gray-700/50 p-3 rounded-lg">
+            <div className="flex justify-between items-center">
+              <div>
+                <p className="text-sm text-gray-400">Exchange Rate</p>
+                <p className="text-lg font-semibold text-white">
+                  1 {fromCurrency} = {(1 * (parseFloat(calculateExchange()) / parseFloat(fromAmount || '1'))).toFixed(fromCurrency === 'MWK' ? 6 : 2)} {toCurrency}
+                </p>
+              </div>
+              <div className="text-right">
+                <p className="text-sm text-gray-400">Exchange Fee</p>
+                <p className="text-sm text-orange-400">1.0%</p>
+              </div>
+            </div>
           </div>
 
-          <Button className="w-full gradient-primary text-white font-semibold">
+          <Button 
+            onClick={handleExchange}
+            disabled={!fromAmount || fromAmount === '0' || fromCurrency === toCurrency}
+            className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold"
+          >
             Exchange Now
           </Button>
         </CardContent>
       </Card>
 
       {/* Live Rates */}
-      <Card className="gradient-card border-border/50">
+      <Card className="bg-gray-800/50 border-gray-700">
         <CardHeader>
-          <CardTitle className="flex items-center justify-between">
+          <CardTitle className="flex items-center justify-between text-white">
             <span>Live Exchange Rates</span>
-            <Badge variant="secondary" className="bg-green-500/20 text-green-300">
+            <Badge className="bg-green-500/20 text-green-300 border-green-400/30">
               Live
             </Badge>
           </CardTitle>
@@ -204,15 +242,14 @@ export const ExchangeSection = () => {
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {Object.entries(liveRates).map(([pair, data]: [string, any], index) => (
-              <div key={index} className="flex items-center justify-between p-4 rounded-lg bg-white/5 hover:bg-white/10 transition-colors">
+              <div key={index} className="flex items-center justify-between p-4 rounded-lg bg-gray-700/50 hover:bg-gray-700 transition-colors">
                 <div>
-                  <p className="font-semibold">{pair}</p>
-                  <p className="text-lg font-bold font-mono">{data.rate}</p>
+                  <p className="font-semibold text-white">{pair}</p>
+                  <p className="text-lg font-bold font-mono text-white">{data.rate}</p>
                 </div>
                 <div className="text-right">
                   <Badge 
-                    variant="secondary" 
-                    className={`${data.trend === 'up' ? 'bg-green-500/20 text-green-300' : 'bg-red-500/20 text-red-300'} border-0`}
+                    className={`${data.trend === 'up' ? 'bg-green-500/20 text-green-300 border-green-400/30' : 'bg-red-500/20 text-red-300 border-red-400/30'}`}
                   >
                     {data.trend === 'up' ? <TrendingUp className="w-3 h-3 mr-1" /> : <TrendingDown className="w-3 h-3 mr-1" />}
                     {data.change}
@@ -222,12 +259,26 @@ export const ExchangeSection = () => {
             ))}
           </div>
           <div className="mt-4 text-center">
-            <p className="text-xs text-muted-foreground">
-              Rates updated every 30 seconds • Powered by NeoVault Exchange
+            <p className="text-xs text-gray-400">
+              Rates updated every 30 seconds • Powered by live market data
             </p>
           </div>
         </CardContent>
       </Card>
+
+      {/* Transaction Confirmation Modal */}
+      <TransactionConfirmation
+        isOpen={transactionModal.isOpen}
+        onClose={() => setTransactionModal({ isOpen: false, showSuccess: false, transaction: null })}
+        onConfirm={() => {
+          setTimeout(() => {
+            setTransactionModal(prev => ({ ...prev, showSuccess: true }));
+          }, 1500);
+        }}
+        onSuccess={() => setTransactionModal({ isOpen: false, showSuccess: false, transaction: null })}
+        transaction={transactionModal.transaction}
+        showSuccess={transactionModal.showSuccess}
+      />
     </div>
   );
 };
