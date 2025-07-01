@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -10,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { User, Shield, Settings, HelpCircle, FileText, Fingerprint, Camera, CheckCircle, AlertTriangle, Upload, MessageCircle, Globe, Phone, Mail } from 'lucide-react';
+import { User, Shield, Settings, HelpCircle, FileText, Fingerprint, Camera, CheckCircle, AlertTriangle, Upload, MessageCircle, Globe, Phone, Mail, Send } from 'lucide-react';
 
 export const UserProfile = () => {
   const [biometricsEnabled, setBiometricsEnabled] = useState(false);
