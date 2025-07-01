@@ -5,24 +5,24 @@
 
 @layer base {
   :root {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --card: 217.2 32.6% 17.5%;
+    --background: 0 0% 95%;
+    --foreground: 0 0% 5%;
+    --card: 220 13% 18%;
     --card-foreground: 210 40% 98%;
-    --popover: 217.2 32.6% 17.5%;
+    --popover: 220 13% 18%;
     --popover-foreground: 210 40% 98%;
     --primary: 142 76% 36%;
     --primary-foreground: 210 40% 98%;
-    --secondary: 217.2 32.6% 17.5%;
+    --secondary: 220 13% 18%;
     --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
+    --muted: 220 13% 18%;
     --muted-foreground: 215 20.2% 65.1%;
     --accent: 142 86% 28%;
     --accent-foreground: 210 40% 98%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 25%;
-    --input: 217.2 32.6% 25%;
+    --border: 220 13% 25%;
+    --input: 220 13% 25%;
     --ring: 142 76% 36%;
     --radius: 0.75rem;
     --chart-1: 12 76% 61%;
@@ -39,6 +39,7 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
   }
 }
 
@@ -81,15 +82,15 @@
   }
   
   .gradient-card {
-    background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
+    background: linear-gradient(135deg, rgba(55, 65, 81, 0.95) 0%, rgba(31, 41, 55, 0.9) 100%);
     backdrop-filter: blur(10px);
-    border: 1px solid rgba(255,255,255,0.1);
+    border: 1px solid rgba(107, 114, 128, 0.3);
   }
   
   .glass-effect {
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(55, 65, 81, 0.8);
     backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(107, 114, 128, 0.2);
   }
   
   .card-hover {
@@ -98,7 +99,43 @@
   
   .card-hover:hover {
     transform: translateY(-2px);
-    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+  }
+
+  /* Dark containers with proper contrast */
+  .bg-gray-800 {
+    background-color: rgb(31 41 55) !important;
+    color: rgb(243 244 246) !important;
+  }
+
+  .bg-gray-700 {
+    background-color: rgb(55 65 81) !important;
+    color: rgb(243 244 246) !important;
+  }
+
+  .bg-gray-900 {
+    background-color: rgb(17 24 39) !important;
+    color: rgb(243 244 246) !important;
+  }
+
+  .border-gray-700 {
+    border-color: rgb(75 85 99) !important;
+  }
+
+  .border-gray-600 {
+    border-color: rgb(107 114 128) !important;
+  }
+
+  .text-white {
+    color: rgb(255 255 255) !important;
+  }
+
+  .text-gray-300 {
+    color: rgb(209 213 219) !important;
+  }
+
+  .text-gray-400 {
+    color: rgb(156 163 175) !important;
   }
 }
 
@@ -147,4 +184,27 @@
   .mobile-hover:active {
     @apply scale-95 opacity-80;
   }
+}
+
+/* Ensure proper contrast for all text elements */
+.text-foreground {
+  color: rgb(17 24 39) !important;
+}
+
+.text-muted-foreground {
+  color: rgb(107 114 128) !important;
+}
+
+/* Header styling with light background */
+header {
+  background: rgba(249, 250, 251, 0.95) !important;
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(229, 231, 235, 0.8) !important;
+}
+
+/* Ensure wallet cards have proper contrast */
+.wallet-card {
+  background: rgb(31 41 55) !important;
+  color: rgb(243 244 246) !important;
+  border: 1px solid rgb(75 85 99) !important;
 }

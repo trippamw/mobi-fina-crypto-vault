@@ -109,33 +109,65 @@ const Index = () => {
   ];
 
   const handleCreateWallet = (newWallet: any) => {
-    setWallets([...wallets, newWallet]);
+    // Create actual wallet object with proper structure
+    const walletToAdd = {
+      currency: newWallet.currency,
+      balance: 0,
+      icon: newWallet.type === 'crypto' ? 'bitcoin' : 'wallet',
+      gradient: newWallet.type === 'crypto' ? 'gradient-bitcoin' : 'gradient-primary',
+      change: '+0.0%',
+      isDefault: false
+    };
+    setWallets(prevWallets => [...prevWallets, walletToAdd]);
   };
 
   const handleTransaction = (transactionDetails: any) => {
+    // Add return navigation info to transaction
+    const transactionWithReturn = {
+      ...transactionDetails,
+      returnTo: getReturnDestination(transactionDetails.type),
+      hasFee: transactionDetails.fee && transactionDetails.fee !== 'FREE' && transactionDetails.fee !== 'No charge'
+    };
+
     setTransactionModal({
       isOpen: true,
       showSuccess: false,
-      transaction: transactionDetails
+      transaction: transactionWithReturn
     });
   };
 
+  const getReturnDestination = (transactionType: string) => {
+    if (transactionType.includes('Card')) return 'Cards';
+    if (transactionType.includes('Investment') || transactionType.includes('Group')) return 'Save';
+    if (transactionType.includes('Exchange')) return 'Exchange';
+    return 'Home';
+  };
+
   const confirmTransaction = () => {
-    // Simulate transaction processing
     setTimeout(() => {
-      setTransactionModal(prev => ({
-        ...prev,
-        showSuccess: true
-      }));
+      setTransactionModal(prev => ({ ...prev, showSuccess: true }));
     }, 1000);
   };
 
   const closeTransactionModal = () => {
+    const returnTo = transactionModal.transaction?.returnTo;
+    
     setTransactionModal({
       isOpen: false,
       showSuccess: false,
       transaction: null
     });
+
+    // Navigate to appropriate tab after closing
+    if (returnTo === 'Cards') {
+      setActiveTab('cards');
+    } else if (returnTo === 'Save') {
+      setActiveTab('invest');
+    } else if (returnTo === 'Exchange') {
+      setActiveTab('exchange');
+    } else {
+      setActiveTab('dashboard');
+    }
   };
 
   const handleQuickAction = (action: string) => {
@@ -391,8 +423,8 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background pb-20 md:pb-0">
-      {/* Header - Mobile Optimized */}
-      <header className="border-b border-border/50 bg-card/30 backdrop-blur-xl sticky top-0 z-40">
+      {/* Header */}
+      <header className="border-b border-border/50 backdrop-blur-xl sticky top-0 z-40">
         <div className="container mx-auto px-3 sm:px-4 py-3 sm:py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2 sm:space-x-3">
