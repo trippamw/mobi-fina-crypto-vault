@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,6 +8,8 @@ import { Zap, Droplets, Smartphone, Building, Shield, Tv, Car, Heart } from 'luc
 
 export const BillsSection = () => {
   const [selectedBill, setSelectedBill] = useState('');
+  const [accountNumber, setAccountNumber] = useState('');
+  const [amount, setAmount] = useState('');
 
   const billCategories = [
     {
@@ -72,6 +73,20 @@ export const BillsSection = () => {
     { name: 'DSTV Premium', amount: 'MWK 15,800', date: '2 weeks ago', status: 'Paid' }
   ];
 
+  const getAccountPlaceholder = (billName: string) => {
+    const placeholders: { [key: string]: string } = {
+      'ESCOM': 'ESCOM Account Number (e.g., 123456789)',
+      'TNM': 'Phone Number (e.g., +265 123 456 789)',
+      'Airtel': 'Phone Number (e.g., +265 123 456 789)',
+      'DSTV': 'Smartcard Number (e.g., 12345678901)',
+      'GOtv': 'IUC Number (e.g., 1234567890)',
+      'MRA': 'TPIN Number (e.g., 12-345-678-9)',
+      'Road Traffic': 'Vehicle Registration (e.g., BT 1234 AA)',
+      'Water Board': 'Customer Number (e.g., 123456)'
+    };
+    return placeholders[billName] || 'Account/Reference Number';
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -88,6 +103,54 @@ export const BillsSection = () => {
           <p className="text-muted-foreground">
             Pay your bills quickly and securely. No queues, no hassle.
           </p>
+        </CardContent>
+      </Card>
+
+      {/* Quick Payment Form */}
+      <Card className="gradient-card border-border/50">
+        <CardHeader>
+          <CardTitle>Quick Payment</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 gap-4">
+            <div>
+              <Label htmlFor="billProvider">Bill Provider</Label>
+              <Input 
+                id="billProvider" 
+                placeholder="e.g., ESCOM, TNM, DSTV, MRA" 
+                value={selectedBill}
+                onChange={(e) => setSelectedBill(e.target.value)}
+                className="bg-input border-border text-foreground"
+              />
+            </div>
+            <div>
+              <Label htmlFor="accountNumber">Account/Reference Number</Label>
+              <Input 
+                id="accountNumber" 
+                placeholder={getAccountPlaceholder(selectedBill)}
+                value={accountNumber}
+                onChange={(e) => setAccountNumber(e.target.value)}
+                className="bg-input border-border text-foreground"
+              />
+            </div>
+            <div>
+              <Label htmlFor="amount">Amount (MWK)</Label>
+              <Input 
+                id="amount" 
+                type="number" 
+                placeholder="Enter amount in MWK"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                className="bg-input border-border text-foreground"
+              />
+            </div>
+            <Button 
+              className="w-full gradient-primary"
+              disabled={!selectedBill || !accountNumber || !amount}
+            >
+              Pay Bill
+            </Button>
+          </div>
         </CardContent>
       </Card>
 
@@ -124,37 +187,6 @@ export const BillsSection = () => {
           </Card>
         ))}
       </div>
-
-      {/* Quick Payment Form */}
-      <Card className="gradient-card border-border/50">
-        <CardHeader>
-          <CardTitle>Quick Payment</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="billProvider">Bill Provider</Label>
-              <Input 
-                id="billProvider" 
-                placeholder="e.g., ESCOM, TNM, DSTV" 
-                value={selectedBill.split('-')[1] || ''}
-                onChange={(e) => setSelectedBill(e.target.value)}
-              />
-            </div>
-            <div>
-              <Label htmlFor="accountNumber">Account/Reference Number</Label>
-              <Input id="accountNumber" placeholder="Enter your account number" />
-            </div>
-            <div>
-              <Label htmlFor="amount">Amount</Label>
-              <Input id="amount" type="number" placeholder="Enter amount in MWK" />
-            </div>
-            <div className="flex items-end">
-              <Button className="w-full gradient-primary">Pay Bill</Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
 
       {/* Recent Payments */}
       <Card className="gradient-card border-border/50">

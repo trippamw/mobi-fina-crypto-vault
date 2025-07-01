@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -13,6 +12,7 @@ export const DepositSection = () => {
   const [selectedMethod, setSelectedMethod] = useState('');
   const [paymentLink, setPaymentLink] = useState('');
   const [showQRCode, setShowQRCode] = useState(false);
+  const [agentAccount, setAgentAccount] = useState('');
 
   const mobileMoneyProviders = [
     { name: 'TNM Mpamba', fee: '1%', logo: '📱' },
@@ -26,9 +26,9 @@ export const DepositSection = () => {
   ];
 
   const agents = [
-    { name: 'NeoVault Agent - Lilongwe City', location: 'Area 3, Lilongwe', distance: '0.5km' },
-    { name: 'NeoVault Agent - Blantyre', location: 'Chichiri, Blantyre', distance: '1.2km' },
-    { name: 'NeoVault Agent - Mzuzu', location: 'Mzuzu City Center', distance: '0.8km' }
+    { name: 'NeoVault Agent Network', description: 'Find agents nationwide' },
+    { name: 'Authorized Money Transfer Agent', description: 'Licensed agents only' },
+    { name: 'Community Banking Agent', description: 'Local community agents' }
   ];
 
   const generatePaymentLink = () => {
@@ -41,38 +41,36 @@ export const DepositSection = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       <Card className="gradient-card border-border/50">
-        <CardHeader>
-          <CardTitle className="flex items-center space-x-2">
-            <div className="w-8 h-8 gradient-primary rounded-lg flex items-center justify-center">
-              <CreditCard className="w-5 h-5 text-white" />
+        <CardHeader className="pb-4">
+          <CardTitle className="flex items-center space-x-2 text-base sm:text-lg">
+            <div className="w-6 h-6 sm:w-8 sm:h-8 gradient-primary rounded-lg flex items-center justify-center">
+              <CreditCard className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
             </div>
             <span>Deposit Money</span>
           </CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="space-y-4 mb-6">
-            <div>
-              <Label htmlFor="amount">Amount to Deposit</Label>
-              <Input
-                id="amount"
-                type="number"
-                placeholder="Enter amount in MWK"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                className="text-lg font-semibold"
-              />
-            </div>
+        <CardContent className="space-y-4">
+          <div>
+            <Label htmlFor="amount" className="text-sm">Amount to Deposit</Label>
+            <Input
+              id="amount"
+              type="number"
+              placeholder="Enter amount in MWK"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              className="text-base sm:text-lg font-semibold bg-input border-border text-foreground mt-1"
+            />
           </div>
 
           <Tabs defaultValue="mobile" className="w-full">
-            <TabsList className="grid w-full grid-cols-5 mb-6">
-              <TabsTrigger value="mobile">Mobile Money</TabsTrigger>
-              <TabsTrigger value="bank">Bank Transfer</TabsTrigger>
-              <TabsTrigger value="agent">Agent</TabsTrigger>
-              <TabsTrigger value="card">Card</TabsTrigger>
-              <TabsTrigger value="request">Request</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-5 mb-4 h-auto">
+              <TabsTrigger value="mobile" className="text-xs p-2">Mobile</TabsTrigger>
+              <TabsTrigger value="bank" className="text-xs p-2">Bank</TabsTrigger>
+              <TabsTrigger value="agent" className="text-xs p-2">Agent</TabsTrigger>
+              <TabsTrigger value="card" className="text-xs p-2">Card</TabsTrigger>
+              <TabsTrigger value="request" className="text-xs p-2">Request</TabsTrigger>
             </TabsList>
 
             <TabsContent value="mobile" className="space-y-4">
@@ -120,23 +118,38 @@ export const DepositSection = () => {
             </TabsContent>
 
             <TabsContent value="agent" className="space-y-4">
+              <div>
+                <Label htmlFor="agentAccount">Agent Account Number</Label>
+                <Input
+                  id="agentAccount"
+                  placeholder="Enter agent account number"
+                  value={agentAccount}
+                  onChange={(e) => setAgentAccount(e.target.value)}
+                  className="bg-input border-border text-foreground"
+                />
+              </div>
               <div className="space-y-3">
                 {agents.map((agent, index) => (
-                  <div key={index} className="p-4 rounded-lg border border-border/50">
+                  <div key={index} className="p-3 sm:p-4 rounded-lg border border-border/50 bg-white/5">
                     <div className="flex items-start justify-between">
                       <div className="flex items-start space-x-3">
-                        <User className="w-5 h-5 text-accent mt-1" />
+                        <User className="w-4 h-4 sm:w-5 sm:h-5 text-accent mt-1" />
                         <div>
-                          <p className="font-medium">{agent.name}</p>
-                          <p className="text-sm text-muted-foreground">{agent.location}</p>
-                          <p className="text-xs text-accent">{agent.distance} away</p>
+                          <p className="font-medium text-sm sm:text-base">{agent.name}</p>
+                          <p className="text-xs sm:text-sm text-muted-foreground">{agent.description}</p>
                         </div>
                       </div>
-                      <Button size="sm" variant="outline">Select</Button>
+                      <Button size="sm" variant="outline" className="ml-2">Select</Button>
                     </div>
                   </div>
                 ))}
               </div>
+              <Button 
+                className="w-full gradient-primary"
+                disabled={!agentAccount}
+              >
+                Deposit via Agent
+              </Button>
             </TabsContent>
 
             <TabsContent value="card" className="space-y-4">
