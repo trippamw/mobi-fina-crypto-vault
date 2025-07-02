@@ -23,12 +23,18 @@ const Index = () => {
   const [balanceVisible, setBalanceVisible] = useState(true);
   const [activeTab, setActiveTab] = useState('dashboard');
   const [notificationCount, setNotificationCount] = useState(3);
+  const [recentTransactions, setRecentTransactions] = useState([
+    { type: 'Received', amount: '+MWK 50,000', description: 'TNM Mobile Money', time: '2 min ago', status: 'completed' },
+    { type: 'Exchange', amount: '0.001 BTC → MWK 294,000', description: 'Crypto Exchange', time: '1 hour ago', status: 'completed' },
+    { type: 'Investment', amount: '+MWK 25,000', description: 'Savings Goal', time: '3 hours ago', status: 'pending' }
+  ]);
+  
   const [wallets, setWallets] = useState([
     {
       currency: 'MWK',
       balance: 1250000,
       icon: 'wallet',
-      gradient: 'gradient-primary',
+      gradient: 'bg-gradient-to-br from-slate-800 to-slate-900',
       change: '+5.2%',
       isDefault: true
     },
@@ -36,35 +42,35 @@ const Index = () => {
       currency: 'USD',
       balance: 5420,
       icon: 'dollar',
-      gradient: 'gradient-secondary',
+      gradient: 'bg-gradient-to-br from-emerald-800 to-emerald-900',
       change: '+2.1%'
     },
     {
       currency: 'GBP',
       balance: 3250,
       icon: 'pound',
-      gradient: 'gradient-tertiary',
+      gradient: 'bg-gradient-to-br from-purple-800 to-purple-900',
       change: '+1.8%'
     },
     {
       currency: 'EUR',
       balance: 4180,
       icon: 'euro',
-      gradient: 'gradient-quaternary',
+      gradient: 'bg-gradient-to-br from-amber-800 to-amber-900',
       change: '+2.5%'
     },
     {
       currency: 'ZAR',
       balance: 82500,
       icon: 'rand',
-      gradient: 'gradient-quinary',
+      gradient: 'bg-gradient-to-br from-orange-800 to-orange-900',
       change: '+3.1%'
     },
     {
       currency: 'BTC',
       balance: 0.0453,
       icon: 'bitcoin',
-      gradient: 'gradient-bitcoin',
+      gradient: 'bg-gradient-to-br from-yellow-700 to-orange-800',
       change: '+12.8%',
       usdValue: 2890
     },
@@ -72,7 +78,7 @@ const Index = () => {
       currency: 'ETH',
       balance: 1.2567,
       icon: 'ethereum',
-      gradient: 'gradient-ethereum',
+      gradient: 'bg-gradient-to-br from-blue-800 to-indigo-900',
       change: '+8.4%',
       usdValue: 3150
     },
@@ -80,17 +86,19 @@ const Index = () => {
       currency: 'USDT',
       balance: 8750,
       icon: 'usdt',
-      gradient: 'gradient-usdt',
+      gradient: 'bg-gradient-to-br from-green-800 to-teal-900',
       change: '+0.1%'
     },
     {
       currency: 'USDC',
       balance: 6430,
       icon: 'usdc',
-      gradient: 'gradient-usdc',
+      gradient: 'bg-gradient-to-br from-blue-700 to-cyan-800',
       change: '+0.1%'
     }
   ]);
+
+  const [purchasedCards, setPurchasedCards] = useState([]);
 
   const [transactionModal, setTransactionModal] = useState({
     isOpen: false,
@@ -106,6 +114,22 @@ const Index = () => {
           : wallet
       )
     );
+  };
+
+  const handleTransactionUpdate = (transaction: any) => {
+    setRecentTransactions(prev => [transaction, ...prev.slice(0, 4)]);
+  };
+
+  const handleCardPurchase = (cardType: string) => {
+    const newCard = {
+      id: Date.now(),
+      type: cardType,
+      number: `**** **** **** ${Math.floor(1000 + Math.random() * 9000)}`,
+      balance: 0,
+      status: 'Active',
+      purchasedAt: new Date().toISOString()
+    };
+    setPurchasedCards(prev => [...prev, newCard]);
   };
 
   const quickActions = [
@@ -126,7 +150,7 @@ const Index = () => {
       currency: newWallet.currency,
       balance: 0,
       icon: newWallet.type === 'crypto' ? 'bitcoin' : 'wallet',
-      gradient: newWallet.type === 'crypto' ? 'gradient-bitcoin' : 'gradient-primary',
+      gradient: newWallet.type === 'crypto' ? 'bg-gradient-to-br from-yellow-700 to-orange-800' : 'bg-gradient-to-br from-slate-800 to-slate-900',
       change: '+0.0%',
       isDefault: false
     };
@@ -214,45 +238,63 @@ const Index = () => {
   const renderContent = () => {
     switch (activeTab) {
       case 'deposit':
-        return <DepositSection onBalanceUpdate={handleBalanceUpdate} />;
+        return <DepositSection 
+          onBalanceUpdate={handleBalanceUpdate} 
+          onTransactionUpdate={handleTransactionUpdate}
+        />;
       case 'send':
-        return <SendSection onBalanceUpdate={handleBalanceUpdate} />;
+        return <SendSection 
+          onBalanceUpdate={handleBalanceUpdate} 
+          onTransactionUpdate={handleTransactionUpdate}
+        />;
       case 'receive':
         return <ReceiveSection />;
       case 'invite':
         return <InviteSection />;
       case 'exchange':
-        return <ExchangeSection onBalanceUpdate={handleBalanceUpdate} />;
+        return <ExchangeSection 
+          onBalanceUpdate={handleBalanceUpdate}
+          onTransactionUpdate={handleTransactionUpdate}
+        />;
       case 'cards':
         return (
           <div className="space-y-6 pb-24">
             <div className="flex justify-between items-center">
-              <h2 className="text-2xl font-bold text-glass">Wallet & Cards</h2>
+              <h2 className="text-2xl font-bold text-white">Wallet & Cards</h2>
               <CreateWalletModal onCreateWallet={handleCreateWallet} />
             </div>
-            <VirtualCardsSection />
+            <VirtualCardsSection 
+              onCardPurchase={handleCardPurchase}
+              purchasedCards={purchasedCards}
+            />
           </div>
         );
       case 'invest':
-        return <InvestmentSection onBalanceUpdate={handleBalanceUpdate} />;
+        return <InvestmentSection 
+          onBalanceUpdate={handleBalanceUpdate}
+          onTransactionUpdate={handleTransactionUpdate}
+        />;
       case 'village':
         return <VillageBankSection />;
       case 'bills':
-        return <BillsSection onBalanceUpdate={handleBalanceUpdate} />;
+        return <BillsSection 
+          onBalanceUpdate={handleBalanceUpdate}
+          onTransactionUpdate={handleTransactionUpdate}
+        />;
       case 'profile':
         return <UserProfile />;
       default:
         return (
           <div className="space-y-4 sm:space-y-6 pb-32 sm:pb-24">
-            {/* Total Balance Card - Enhanced Design */}
-            <Card className="bg-gradient-to-br from-gray-900/80 to-gray-800/60 backdrop-blur-2xl border-white/20 card-hover shadow-2xl">
+            {/* Total Balance Card - Enhanced Design with Bold Font */}
+            <Card className="bg-gradient-to-br from-slate-900/95 to-gray-800/90 backdrop-blur-2xl border-gray-600/30 card-hover shadow-2xl">
               <CardHeader className="pb-3 sm:pb-6">
                 <CardTitle className="flex items-center justify-between text-base sm:text-lg text-white">
                   <div className="flex items-center space-x-3">
                     <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
                       <Wallet className="w-5 h-5 text-white" />
                     </div>
-                    <span className="font-wealth text-xl">Total Portfolio</span>
+                    <span className="font-black text-xl tracking-tight">Total Portfolio</span>
                   </div>
                   <Badge className="bg-green-500/20 text-green-300 border-green-400/30 text-xs px-3 py-1">
                     <TrendingUp className="w-3 h-3 mr-1" />
@@ -264,38 +306,38 @@ const Index = () => {
                 <div className="mb-4">
                   {balanceVisible ? (
                     <div className="space-y-2">
-                      <h2 className="text-4xl sm:text-5xl font-black font-wealth bg-gradient-to-r from-white via-blue-100 to-purple-200 bg-clip-text text-transparent">
+                      <h2 className="text-5xl sm:text-6xl font-black tracking-tighter bg-gradient-to-r from-white via-blue-100 to-purple-200 bg-clip-text text-transparent">
                         MWK {wallets.reduce((total, wallet) => total + (wallet.currency === 'MWK' ? wallet.balance : 0), 0).toLocaleString()}
                       </h2>
-                      <p className="text-lg sm:text-xl font-semibold text-white/80">
+                      <p className="text-xl sm:text-2xl font-bold text-white/90 tracking-wide">
                         ≈ $1,625 USD
                       </p>
                     </div>
                   ) : (
                     <div className="space-y-2">
-                      <h2 className="text-4xl sm:text-5xl font-black text-white/20">
+                      <h2 className="text-5xl sm:text-6xl font-black text-white/20 tracking-tighter">
                         ••••••••••
                       </h2>
-                      <p className="text-lg sm:text-xl font-semibold text-white/20">
+                      <p className="text-xl sm:text-2xl font-bold text-white/20">
                         ••••••••
                       </p>
                     </div>
                   )}
                 </div>
                 <div className="flex items-center justify-between">
-                  <p className="text-sm text-white/60 font-medium">
+                  <p className="text-sm text-white/70 font-semibold">
                     🔄 Updated just now
                   </p>
                   <div className="flex items-center space-x-2 text-green-400">
-                    <span className="text-sm font-semibold">+MWK 47,300</span>
-                    <span className="text-xs">Today</span>
+                    <span className="text-sm font-bold">+MWK 47,300</span>
+                    <span className="text-xs font-medium">Today</span>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
             {/* Quick Actions Dashboard - Enhanced */}
-            <Card className="bg-gray-900/60 backdrop-blur-xl border-white/20 shadow-xl">
+            <Card className="bg-gray-900/80 backdrop-blur-xl border-gray-700/50 shadow-xl">
               <CardContent className="p-4">
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                   <Button
@@ -370,25 +412,21 @@ const Index = () => {
             </div>
 
             {/* Recent Activity - Enhanced */}
-            <Card className="bg-gray-900/60 backdrop-blur-xl border-white/20 shadow-xl">
+            <Card className="bg-gray-900/80 backdrop-blur-xl border-gray-700/50 shadow-xl">
               <CardHeader className="pb-3 sm:pb-6">
-                <CardTitle className="text-base sm:text-lg text-white font-wealth">Recent Activity</CardTitle>
+                <CardTitle className="text-base sm:text-lg text-white font-bold">Recent Activity</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3 sm:space-y-4">
-                  {[
-                    { type: 'Received', amount: '+MWK 50,000', from: 'TNM Mobile Money', time: '2 min ago', status: 'completed' },
-                    { type: 'Exchange', amount: '0.001 BTC → MWK 294,000', from: 'Crypto Exchange', time: '1 hour ago', status: 'completed' },
-                    { type: 'Investment', amount: '+MWK 25,000', from: 'Savings Goal', time: '3 hours ago', status: 'pending' }
-                  ].map((activity, index) => (
-                    <div key={index} className="flex items-center justify-between p-3 rounded-lg bg-gray-800/50 hover:bg-gray-700/50 transition-colors border border-white/10">
+                  {recentTransactions.map((activity, index) => (
+                    <div key={index} className="flex items-center justify-between p-3 rounded-lg bg-gray-800/50 hover:bg-gray-700/50 transition-colors border border-gray-600/30">
                       <div className="min-w-0 flex-1">
                         <p className="font-medium text-sm sm:text-base truncate text-white">{activity.type}</p>
-                        <p className="text-xs sm:text-sm text-white/60 truncate">{activity.from}</p>
+                        <p className="text-xs sm:text-sm text-gray-300 truncate">{activity.description}</p>
                       </div>
                       <div className="text-right ml-2">
                         <p className="font-medium text-xs sm:text-sm text-white">{activity.amount}</p>
-                        <p className="text-[10px] sm:text-xs text-white/60">{activity.time}</p>
+                        <p className="text-[10px] sm:text-xs text-gray-300">{activity.time}</p>
                       </div>
                     </div>
                   ))}

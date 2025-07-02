@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,9 +10,10 @@ import { CreditCard, Smartphone, Building, User, CheckCircle, QrCode, Link, Shar
 
 interface DepositSectionProps {
   onBalanceUpdate?: (currency: string, amount: number) => void;
+  onTransactionUpdate?: (transaction: any) => void;
 }
 
-export const DepositSection = ({ onBalanceUpdate }: DepositSectionProps) => {
+export const DepositSection = ({ onBalanceUpdate, onTransactionUpdate }: DepositSectionProps) => {
   const [amount, setAmount] = useState('');
   const [selectedMethod, setSelectedMethod] = useState('');
   const [paymentLink, setPaymentLink] = useState('');
@@ -58,6 +60,17 @@ export const DepositSection = ({ onBalanceUpdate }: DepositSectionProps) => {
       if (onBalanceUpdate) {
         onBalanceUpdate('MWK', depositAmount);
       }
+
+      // Add to transaction history
+      if (onTransactionUpdate) {
+        onTransactionUpdate({
+          type: 'Deposit',
+          amount: `+MWK ${depositAmount.toLocaleString()}`,
+          description: `Deposit via ${method}`,
+          time: 'Just now',
+          status: 'completed'
+        });
+      }
       
       setLoading(false);
       
@@ -87,11 +100,11 @@ export const DepositSection = ({ onBalanceUpdate }: DepositSectionProps) => {
   };
 
   return (
-    <div className="space-y-4 sm:space-y-6">
-      <Card className="gradient-card border-white/20">
+    <div className="space-y-4 sm:space-y-6 pb-24">
+      <Card className="bg-gray-900/80 backdrop-blur-xl border-gray-700/50 shadow-2xl">
         <CardHeader className="pb-4">
-          <CardTitle className="flex items-center space-x-2 text-base sm:text-lg text-glass">
-            <div className="w-6 h-6 sm:w-8 sm:h-8 gradient-primary rounded-lg flex items-center justify-center">
+          <CardTitle className="flex items-center space-x-2 text-base sm:text-lg text-white">
+            <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
               <CreditCard className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
             </div>
             <span>Deposit Money</span>
@@ -99,34 +112,34 @@ export const DepositSection = ({ onBalanceUpdate }: DepositSectionProps) => {
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
-            <Label htmlFor="amount" className="text-sm text-glass">Amount to Deposit</Label>
+            <Label htmlFor="amount" className="text-sm text-white">Amount to Deposit</Label>
             <Input
               id="amount"
               type="number"
               placeholder="Enter amount in MWK"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
-              className="text-base sm:text-lg font-semibold bg-white/10 border-white/20 text-glass placeholder-white/60 mt-1"
+              className="text-base sm:text-lg font-semibold bg-gray-800/60 border-gray-600/50 text-white placeholder-gray-400 mt-1"
             />
           </div>
 
           <Tabs defaultValue="mobile" className="w-full">
-            <TabsList className="grid w-full grid-cols-5 mb-4 h-auto bg-white/10 border-white/20">
-              <TabsTrigger value="mobile" className="text-xs p-2 text-glass data-[state=active]:bg-white/20">Mobile</TabsTrigger>
-              <TabsTrigger value="bank" className="text-xs p-2 text-glass data-[state=active]:bg-white/20">Bank</TabsTrigger>
-              <TabsTrigger value="agent" className="text-xs p-2 text-glass data-[state=active]:bg-white/20">Agent</TabsTrigger>
-              <TabsTrigger value="card" className="text-xs p-2 text-glass data-[state=active]:bg-white/20">Card</TabsTrigger>
-              <TabsTrigger value="request" className="text-xs p-2 text-glass data-[state=active]:bg-white/20">Request</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-5 mb-4 h-auto bg-gray-800/60 border-gray-600/50">
+              <TabsTrigger value="mobile" className="text-xs p-2 text-white data-[state=active]:bg-gray-700/60">Mobile</TabsTrigger>
+              <TabsTrigger value="bank" className="text-xs p-2 text-white data-[state=active]:bg-gray-700/60">Bank</TabsTrigger>
+              <TabsTrigger value="agent" className="text-xs p-2 text-white data-[state=active]:bg-gray-700/60">Agent</TabsTrigger>
+              <TabsTrigger value="card" className="text-xs p-2 text-white data-[state=active]:bg-gray-700/60">Card</TabsTrigger>
+              <TabsTrigger value="request" className="text-xs p-2 text-white data-[state=active]:bg-gray-700/60">Request</TabsTrigger>
             </TabsList>
 
             <TabsContent value="mobile" className="space-y-4">
               <div>
-                <Label className="text-glass">Mobile Number</Label>
+                <Label className="text-white">Mobile Number</Label>
                 <Input
                   placeholder="Enter mobile number"
                   value={mobileNumber}
                   onChange={(e) => setMobileNumber(e.target.value)}
-                  className="bg-white/10 border-white/20 text-glass placeholder-white/60 mt-1"
+                  className="bg-gray-800/60 border-gray-600/50 text-white placeholder-gray-400 mt-1"
                 />
               </div>
               <div className="grid gap-3">
@@ -137,15 +150,15 @@ export const DepositSection = ({ onBalanceUpdate }: DepositSectionProps) => {
                     className={`p-4 rounded-lg border cursor-pointer transition-all duration-300 ${
                       selectedMethod === provider.name 
                         ? 'border-blue-400/50 bg-blue-500/20' 
-                        : 'border-white/20 bg-white/5 hover:bg-white/10'
+                        : 'border-gray-600/50 bg-gray-800/40 hover:bg-gray-700/40'
                     }`}
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-3">
                         <span className="text-2xl">{provider.logo}</span>
                         <div>
-                          <p className="font-medium text-glass">{provider.name}</p>
-                          <p className="text-sm text-white/60">Fee: {provider.fee}</p>
+                          <p className="font-medium text-white">{provider.name}</p>
+                          <p className="text-sm text-gray-300">Fee: {provider.fee}</p>
                         </div>
                       </div>
                       {selectedMethod === provider.name && (
@@ -156,7 +169,7 @@ export const DepositSection = ({ onBalanceUpdate }: DepositSectionProps) => {
                 ))}
               </div>
               <Button 
-                className="w-full gradient-primary text-white font-semibold"
+                className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold"
                 onClick={() => processDeposit(`Mobile Money (${selectedMethod})`)}
                 disabled={!selectedMethod || !mobileNumber || !amount || loading}
               >
@@ -166,9 +179,9 @@ export const DepositSection = ({ onBalanceUpdate }: DepositSectionProps) => {
 
             <TabsContent value="bank" className="space-y-4">
               <div>
-                <Label className="text-glass">Select Bank</Label>
+                <Label className="text-white">Select Bank</Label>
                 <Select value={selectedBank} onValueChange={setSelectedBank}>
-                  <SelectTrigger className="bg-white/10 border-white/20 text-glass">
+                  <SelectTrigger className="bg-gray-800/60 border-gray-600/50 text-white">
                     <SelectValue placeholder="Choose your bank" />
                   </SelectTrigger>
                   <SelectContent className="bg-gray-900 border-gray-700">
@@ -179,17 +192,17 @@ export const DepositSection = ({ onBalanceUpdate }: DepositSectionProps) => {
                 </Select>
               </div>
               <div>
-                <Label htmlFor="account" className="text-glass">Account Number</Label>
+                <Label htmlFor="account" className="text-white">Account Number</Label>
                 <Input 
                   id="account" 
                   placeholder="Enter your account number"
                   value={bankAccount}
                   onChange={(e) => setBankAccount(e.target.value)}
-                  className="bg-white/10 border-white/20 text-glass placeholder-white/60"
+                  className="bg-gray-800/60 border-gray-600/50 text-white placeholder-gray-400"
                 />
               </div>
               <Button 
-                className="w-full gradient-secondary text-white font-semibold"
+                className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold"
                 onClick={() => processDeposit(`Bank Transfer (${selectedBank})`)}
                 disabled={!selectedBank || !bankAccount || !amount || loading}
               >
@@ -199,33 +212,33 @@ export const DepositSection = ({ onBalanceUpdate }: DepositSectionProps) => {
 
             <TabsContent value="agent" className="space-y-4">
               <div>
-                <Label htmlFor="agentAccount" className="text-glass">Agent Account Number</Label>
+                <Label htmlFor="agentAccount" className="text-white">Agent Account Number</Label>
                 <Input
                   id="agentAccount"
                   placeholder="Enter agent account number"
                   value={agentAccount}
                   onChange={(e) => setAgentAccount(e.target.value)}
-                  className="bg-white/10 border-white/20 text-glass placeholder-white/60"
+                  className="bg-gray-800/60 border-gray-600/50 text-white placeholder-gray-400"
                 />
               </div>
               <div className="space-y-3">
                 {agents.map((agent, index) => (
-                  <div key={index} className="p-3 sm:p-4 rounded-lg border border-white/20 bg-white/5">
+                  <div key={index} className="p-3 sm:p-4 rounded-lg border border-gray-600/50 bg-gray-800/40">
                     <div className="flex items-start justify-between">
                       <div className="flex items-start space-x-3">
                         <User className="w-4 h-4 sm:w-5 sm:h-5 text-blue-400 mt-1" />
                         <div>
-                          <p className="font-medium text-sm sm:text-base text-glass">{agent.name}</p>
-                          <p className="text-xs sm:text-sm text-white/60">{agent.description}</p>
+                          <p className="font-medium text-sm sm:text-base text-white">{agent.name}</p>
+                          <p className="text-xs sm:text-sm text-gray-300">{agent.description}</p>
                         </div>
                       </div>
-                      <Button size="sm" variant="outline" className="ml-2 border-white/20 text-glass hover:bg-white/10">Select</Button>
+                      <Button size="sm" variant="outline" className="ml-2 border-gray-600/50 text-white hover:bg-gray-700/50">Select</Button>
                     </div>
                   </div>
                 ))}
               </div>
               <Button 
-                className="w-full gradient-primary text-white font-semibold"
+                className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold"
                 onClick={() => processDeposit('Agent Deposit')}
                 disabled={!agentAccount || !amount || loading}
               >
@@ -238,42 +251,42 @@ export const DepositSection = ({ onBalanceUpdate }: DepositSectionProps) => {
                 <div className="w-8 h-8 bg-gradient-to-r from-red-500 to-orange-500 rounded flex items-center justify-center">
                   <span className="text-white font-bold text-xs">MC</span>
                 </div>
-                <span className="text-sm font-medium text-glass">Mastercard</span>
+                <span className="text-sm font-medium text-white">Mastercard</span>
               </div>
               <div>
-                <Label htmlFor="cardNumber" className="text-glass">Card Number</Label>
+                <Label htmlFor="cardNumber" className="text-white">Card Number</Label>
                 <Input 
                   id="cardNumber" 
                   placeholder="1234 5678 9012 3456"
                   value={cardNumber}
                   onChange={(e) => setCardNumber(e.target.value)}
-                  className="bg-white/10 border-white/20 text-glass placeholder-white/60"
+                  className="bg-gray-800/60 border-gray-600/50 text-white placeholder-gray-400"
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="expiry" className="text-glass">Expiry Date</Label>
+                  <Label htmlFor="expiry" className="text-white">Expiry Date</Label>
                   <Input 
                     id="expiry" 
                     placeholder="MM/YY"
                     value={expiryDate}
                     onChange={(e) => setExpiryDate(e.target.value)}
-                    className="bg-white/10 border-white/20 text-glass placeholder-white/60"
+                    className="bg-gray-800/60 border-gray-600/50 text-white placeholder-gray-400"
                   />
                 </div>
                 <div>
-                  <Label htmlFor="cvv" className="text-glass">CVV</Label>
+                  <Label htmlFor="cvv" className="text-white">CVV</Label>
                   <Input 
                     id="cvv" 
                     placeholder="123"
                     value={cvv}
                     onChange={(e) => setCvv(e.target.value)}
-                    className="bg-white/10 border-white/20 text-glass placeholder-white/60"
+                    className="bg-gray-800/60 border-gray-600/50 text-white placeholder-gray-400"
                   />
                 </div>
               </div>
               <Button 
-                className="w-full gradient-tertiary text-white font-semibold"
+                className="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white font-semibold"
                 onClick={() => processDeposit('Card Deposit')}
                 disabled={!cardNumber || !expiryDate || !cvv || !amount || loading}
               >
@@ -283,19 +296,19 @@ export const DepositSection = ({ onBalanceUpdate }: DepositSectionProps) => {
 
             <TabsContent value="request" className="space-y-4">
               <div className="text-center mb-6">
-                <h3 className="text-lg font-semibold mb-2">Request Money</h3>
-                <p className="text-sm text-muted-foreground">Generate QR code or payment link to receive money</p>
+                <h3 className="text-lg font-semibold mb-2 text-white">Request Money</h3>
+                <p className="text-sm text-gray-300">Generate QR code or payment link to receive money</p>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Card className="p-4 bg-white/5">
+                <Card className="p-4 bg-gray-800/60 border-gray-600/50">
                   <div className="text-center space-y-4">
-                    <QrCode className="w-16 h-16 mx-auto text-primary" />
-                    <h4 className="font-semibold">QR Code</h4>
-                    <p className="text-xs text-muted-foreground">Let others scan to pay you</p>
+                    <QrCode className="w-16 h-16 mx-auto text-blue-400" />
+                    <h4 className="font-semibold text-white">QR Code</h4>
+                    <p className="text-xs text-gray-300">Let others scan to pay you</p>
                     <Button 
                       onClick={() => setShowQRCode(true)}
-                      className="w-full"
+                      className="w-full bg-gradient-to-r from-blue-500 to-purple-600"
                       disabled={!amount}
                     >
                       Generate QR Code
@@ -303,14 +316,14 @@ export const DepositSection = ({ onBalanceUpdate }: DepositSectionProps) => {
                   </div>
                 </Card>
 
-                <Card className="p-4 bg-white/5">
+                <Card className="p-4 bg-gray-800/60 border-gray-600/50">
                   <div className="text-center space-y-4">
-                    <Link className="w-16 h-16 mx-auto text-accent" />
-                    <h4 className="font-semibold">Payment Link</h4>
-                    <p className="text-xs text-muted-foreground">Share a link to receive payment</p>
+                    <Link className="w-16 h-16 mx-auto text-cyan-400" />
+                    <h4 className="font-semibold text-white">Payment Link</h4>
+                    <p className="text-xs text-gray-300">Share a link to receive payment</p>
                     <Button 
                       onClick={generatePaymentLink}
-                      className="w-full"
+                      className="w-full bg-gradient-to-r from-cyan-500 to-blue-600"
                       disabled={!amount}
                     >
                       Generate Link
@@ -320,15 +333,15 @@ export const DepositSection = ({ onBalanceUpdate }: DepositSectionProps) => {
               </div>
 
               {paymentLink && (
-                <Card className="p-4 bg-accent/10 border-accent/30">
+                <Card className="p-4 bg-cyan-500/10 border-cyan-400/30">
                   <div className="space-y-3">
-                    <Label>Your Payment Link</Label>
+                    <Label className="text-white">Your Payment Link</Label>
                     <div className="flex items-center space-x-2">
-                      <Input value={paymentLink} readOnly className="flex-1" />
-                      <Button size="sm" onClick={() => copyToClipboard(paymentLink)}>
+                      <Input value={paymentLink} readOnly className="flex-1 bg-gray-800/60 border-gray-600/50 text-white" />
+                      <Button size="sm" onClick={() => copyToClipboard(paymentLink)} className="bg-cyan-500 hover:bg-cyan-600">
                         <Copy className="w-4 h-4" />
                       </Button>
-                      <Button size="sm">
+                      <Button size="sm" className="bg-blue-500 hover:bg-blue-600">
                         <Share2 className="w-4 h-4" />
                       </Button>
                     </div>
@@ -337,8 +350,8 @@ export const DepositSection = ({ onBalanceUpdate }: DepositSectionProps) => {
               )}
 
               {showQRCode && amount && (
-                <Card className="p-6 bg-white text-center">
-                  <div className="w-48 h-48 mx-auto bg-gradient-to-br from-primary to-accent rounded-lg flex items-center justify-center mb-4">
+                <Card className="p-6 bg-white text-center border-gray-600/50">
+                  <div className="w-48 h-48 mx-auto bg-gradient-to-br from-blue-500 to-cyan-500 rounded-lg flex items-center justify-center mb-4">
                     <QrCode className="w-24 h-24 text-white" />
                   </div>
                   <p className="text-lg font-semibold text-gray-800">MWK {amount}</p>
