@@ -4,15 +4,16 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Zap, GraduationCap, Droplets, Fuel, Wifi, Phone, Home, CreditCard, Building, FileText, Shield, Car } from 'lucide-react';
+import { Zap, GraduationCap, Droplets, Fuel, Wifi, Phone, Home, CreditCard, Building, FileText, Shield, Car, ArrowLeft } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
 interface BillsSectionProps {
   onBalanceUpdate?: (currency: string, amount: number) => void;
   onTransactionUpdate?: (transaction: any) => void;
+  onBack?: () => void;
 }
 
-export const BillsSection = ({ onBalanceUpdate, onTransactionUpdate }: BillsSectionProps) => {
+export const BillsSection = ({ onBalanceUpdate, onTransactionUpdate, onBack }: BillsSectionProps) => {
   const [selectedCategory, setSelectedCategory] = useState('');
   const [amount, setAmount] = useState('');
   const [selectedProvider, setSelectedProvider] = useState('');
@@ -65,6 +66,22 @@ export const BillsSection = ({ onBalanceUpdate, onTransactionUpdate }: BillsSect
     return providers[categoryId as keyof typeof providers] || [];
   };
 
+  const getAccountPlaceholder = (categoryId: string) => {
+    const placeholders = {
+      electricity: 'Enter meter number',
+      education: 'Enter student ID',
+      water: 'Enter account number',
+      fuel: 'Enter card number',
+      internet: 'Enter account number',
+      mobile: 'Enter phone number',
+      passport: 'Enter passport application number',
+      mra: 'Enter tax identification number',
+      rta: 'Enter vehicle registration number',
+      rent: 'Enter property reference'
+    };
+    return placeholders[categoryId as keyof typeof placeholders] || 'Enter account number';
+  };
+
   const handlePayBill = () => {
     if (!selectedCategory || !selectedProvider || !amount || !accountNumber) {
       alert('Please fill in all fields');
@@ -114,6 +131,21 @@ export const BillsSection = ({ onBalanceUpdate, onTransactionUpdate }: BillsSect
 
   return (
     <div className="space-y-6 pb-24">
+      {/* Header with Back Button */}
+      {onBack && (
+        <div className="flex items-center space-x-3">
+          <Button
+            onClick={onBack}
+            variant="ghost"
+            size="sm"
+            className="text-white/70 hover:text-white hover:bg-white/10"
+          >
+            <ArrowLeft className="w-4 h-4" />
+          </Button>
+          <h2 className="text-2xl font-bold text-white">Bill Payments</h2>
+        </div>
+      )}
+
       {/* Bill Categories */}
       <Card className="bg-gray-900/80 backdrop-blur-xl border-gray-700/50 shadow-2xl">
         <CardHeader>
@@ -165,12 +197,17 @@ export const BillsSection = ({ onBalanceUpdate, onTransactionUpdate }: BillsSect
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-white mb-2">Account Number</label>
+              <label className="block text-sm font-medium text-white mb-2">
+                {selectedCategory === 'rta' ? 'Vehicle Registration Number' :
+                 selectedCategory === 'passport' ? 'Passport Application Number' :
+                 selectedCategory === 'mra' ? 'Tax Identification Number' :
+                 'Account Number'}
+              </label>
               <Input
                 type="text"
                 value={accountNumber}
                 onChange={(e) => setAccountNumber(e.target.value)}
-                placeholder="Enter account number"
+                placeholder={getAccountPlaceholder(selectedCategory)}
                 className="bg-gray-800/60 border-gray-600/50 text-white placeholder-gray-400"
               />
             </div>

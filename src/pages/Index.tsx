@@ -121,6 +121,21 @@ const Index = () => {
   };
 
   const handleCardPurchase = (cardType: string) => {
+    // Get card details
+    const cardDetails = {
+      Standard: { price: 0 },
+      Gold: { price: 15000 },
+      Platinum: { price: 35000 }
+    };
+
+    const cardInfo = cardDetails[cardType as keyof typeof cardDetails];
+    if (!cardInfo) return;
+
+    // Deduct cost from wallet
+    if (cardInfo.price > 0) {
+      handleBalanceUpdate('MWK', -cardInfo.price);
+    }
+
     const newCard = {
       id: Date.now(),
       type: cardType,
@@ -130,6 +145,15 @@ const Index = () => {
       purchasedAt: new Date().toISOString()
     };
     setPurchasedCards(prev => [...prev, newCard]);
+
+    // Add to transaction history
+    handleTransactionUpdate({
+      type: 'Card Purchase',
+      amount: cardInfo.price > 0 ? `-MWK ${cardInfo.price.toLocaleString()}` : 'FREE',
+      description: `${cardType} Virtual Card purchased`,
+      time: 'Just now',
+      status: 'completed'
+    });
   };
 
   const quickActions = [
@@ -241,26 +265,39 @@ const Index = () => {
         return <DepositSection 
           onBalanceUpdate={handleBalanceUpdate} 
           onTransactionUpdate={handleTransactionUpdate}
+          onBack={() => setActiveTab('dashboard')}
         />;
       case 'send':
         return <SendSection 
           onBalanceUpdate={handleBalanceUpdate} 
           onTransactionUpdate={handleTransactionUpdate}
+          onBack={() => setActiveTab('dashboard')}
         />;
       case 'receive':
-        return <ReceiveSection />;
+        return <ReceiveSection onBack={() => setActiveTab('dashboard')} />;
       case 'invite':
-        return <InviteSection />;
+        return <InviteSection onBack={() => setActiveTab('dashboard')} />;
       case 'exchange':
         return <ExchangeSection 
           onBalanceUpdate={handleBalanceUpdate}
           onTransactionUpdate={handleTransactionUpdate}
+          onBack={() => setActiveTab('dashboard')}
         />;
       case 'cards':
         return (
           <div className="space-y-6 pb-24">
             <div className="flex justify-between items-center">
-              <h2 className="text-2xl font-bold text-white">Wallet & Cards</h2>
+              <div className="flex items-center space-x-3">
+                <Button
+                  onClick={() => setActiveTab('dashboard')}
+                  variant="ghost"
+                  size="sm"
+                  className="text-white/70 hover:text-white hover:bg-white/10"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                </Button>
+                <h2 className="text-2xl font-bold text-white">Wallet & Cards</h2>
+              </div>
               <CreateWalletModal onCreateWallet={handleCreateWallet} />
             </div>
             <VirtualCardsSection 
@@ -273,16 +310,18 @@ const Index = () => {
         return <InvestmentSection 
           onBalanceUpdate={handleBalanceUpdate}
           onTransactionUpdate={handleTransactionUpdate}
+          onBack={() => setActiveTab('dashboard')}
         />;
       case 'village':
-        return <VillageBankSection />;
+        return <VillageBankSection onBack={() => setActiveTab('invest')} />;
       case 'bills':
         return <BillsSection 
           onBalanceUpdate={handleBalanceUpdate}
           onTransactionUpdate={handleTransactionUpdate}
+          onBack={() => setActiveTab('dashboard')}
         />;
       case 'profile':
-        return <UserProfile />;
+        return <UserProfile onBack={() => setActiveTab('dashboard')} />;
       default:
         return (
           <div className="space-y-4 sm:space-y-6 pb-32 sm:pb-24">
@@ -472,7 +511,7 @@ const Index = () => {
               >
                 <UserIcon className="w-4 h-4 text-white" />
                 {notificationCount > 0 && (
-                  <div className="notification-badge">
+                  <div className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
                     {notificationCount > 99 ? '99+' : notificationCount}
                   </div>
                 )}
@@ -487,23 +526,21 @@ const Index = () => {
       </div>
 
       {/* Mobile Navigation - Fixed with proper padding */}
-      <div className="fixed bottom-0 left-0 right-0 z-50 pb-safe-area-inset-bottom">
-        <MobileNavigation 
-          activeTab={activeTab} 
-          onTabChange={(tab) => {
-            if (tab === 'home') {
-              setActiveTab('dashboard');
-            } else if (tab === 'wallet') {
-              setActiveTab('cards');
-            } else if (tab === 'save') {
-              setActiveTab('invest');
-            } else {
-              setActiveTab(tab);
-            }
-          }}
-          notificationCount={notificationCount}
-        />
-      </div>
+      <MobileNavigation 
+        activeTab={activeTab} 
+        onTabChange={(tab) => {
+          if (tab === 'home') {
+            setActiveTab('dashboard');
+          } else if (tab === 'wallet') {
+            setActiveTab('cards');
+          } else if (tab === 'save') {
+            setActiveTab('invest');
+          } else {
+            setActiveTab(tab);
+          }
+        }}
+        notificationCount={notificationCount}
+      />
 
       {/* Transaction Confirmation Modal */}
       <TransactionConfirmation

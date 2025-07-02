@@ -5,12 +5,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Users, Plus, TrendingUp, Banknote, UserPlus, Settings, ArrowUpRight, ArrowDownLeft } from 'lucide-react';
+import { Users, Plus, TrendingUp, Banknote, UserPlus, Settings, ArrowUpRight, ArrowDownLeft, ArrowLeft } from 'lucide-react';
+import { VillageBankDetails } from './VillageBankDetails';
 
 export const VillageBankSection = () => {
   const [selectedGroup, setSelectedGroup] = useState<string | null>(null);
+  const [showDetails, setShowDetails] = useState(false);
 
-  const myGroups = [
+  const [myGroups, setMyGroups] = useState([
     {
       id: '1',
       name: 'Chilomoni Savings Group',
@@ -20,7 +22,11 @@ export const VillageBankSection = () => {
       interestRate: 15,
       status: 'Active',
       role: 'Member',
-      duration: '12 months minimum'
+      duration: '12 months minimum',
+      totalPool: 850000,
+      nextMeeting: '2024-02-15',
+      description: 'Local community savings group',
+      isAdmin: false
     },
     {
       id: '2',
@@ -31,9 +37,13 @@ export const VillageBankSection = () => {
       interestRate: 18,
       status: 'Active',
       role: 'Admin',
-      duration: '6 months minimum'
+      duration: '6 months minimum',
+      totalPool: 2100000,
+      nextMeeting: '2024-02-20',
+      description: 'Business traders collaborative fund',
+      isAdmin: true
     }
-  ];
+  ]);
 
   const withdrawalMethods = [
     { name: 'Mobile Money (TNM)', fee: '1%', icon: '📱' },
@@ -50,17 +60,41 @@ export const VillageBankSection = () => {
     { type: 'Interest Earned', amount: '+MWK 3,500', group: 'Chilomoni Savings', time: '3 days ago' }
   ];
 
+  const handleGroupClick = (group: any) => {
+    setSelectedGroup(group);
+    setShowDetails(true);
+  };
+
+  const handleUpdateGroup = (updatedGroup: any) => {
+    setMyGroups(groups => 
+      groups.map(g => g.id === updatedGroup.id ? updatedGroup : g)
+    );
+  };
+
+  if (showDetails && selectedGroup) {
+    return (
+      <VillageBankDetails
+        group={selectedGroup}
+        onBack={() => {
+          setShowDetails(false);
+          setSelectedGroup(null);
+        }}
+        onUpdateGroup={handleUpdateGroup}
+      />
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* My Groups Overview */}
-      <Card className="gradient-card border-border/50">
+      <Card className="bg-gray-900/80 backdrop-blur-xl border-gray-700/50 shadow-2xl">
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
               <Users className="w-5 h-5 text-primary" />
-              <span>My Village Bank Groups</span>
+              <span className="text-white">My Village Bank Groups</span>
             </div>
-            <Button className="gradient-primary text-white">
+            <Button className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white">
               <Plus className="w-4 h-4 mr-2" />
               Create Group
             </Button>
@@ -69,9 +103,13 @@ export const VillageBankSection = () => {
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {myGroups.map((group) => (
-              <div key={group.id} className="p-4 rounded-lg bg-white/5 hover:bg-white/10 transition-colors border border-white/10">
+              <div 
+                key={group.id} 
+                className="p-4 rounded-lg bg-gray-800/60 hover:bg-gray-700/60 transition-colors border border-gray-600/50 cursor-pointer"
+                onClick={() => handleGroupClick(group)}
+              >
                 <div className="flex items-center justify-between mb-3">
-                  <h4 className="font-semibold">{group.name}</h4>
+                  <h4 className="font-semibold text-white">{group.name}</h4>
                   <Badge 
                     className={group.role === 'Admin' ? 'bg-accent/20 text-accent' : 'bg-primary/20 text-primary'}
                   >
@@ -81,27 +119,27 @@ export const VillageBankSection = () => {
                 
                 <div className="space-y-3">
                   <div className="flex justify-between text-sm">
-                    <span>Members</span>
-                    <span>{group.members}</span>
+                    <span className="text-gray-300">Members</span>
+                    <span className="text-white">{group.members}</span>
                   </div>
                   
                   <div className="flex justify-between text-sm">
-                    <span>Total Savings</span>
-                    <span className="font-semibold">MWK {group.totalSavings.toLocaleString()}</span>
+                    <span className="text-gray-300">Total Savings</span>
+                    <span className="font-semibold text-white">MWK {group.totalSavings.toLocaleString()}</span>
                   </div>
                   
                   <div className="flex justify-between text-sm">
-                    <span>My Contribution</span>
-                    <span className="font-semibold text-accent">MWK {group.myContribution.toLocaleString()}</span>
+                    <span className="text-gray-300">My Contribution</span>
+                    <span className="font-semibold text-accent">{/* accent color styles applied elsewhere */}MWK {group.myContribution.toLocaleString()}</span>
                   </div>
                   
                   <div className="flex justify-between text-sm">
-                    <span>Interest Rate</span>
+                    <span className="text-gray-300">Interest Rate</span>
                     <span className="text-green-400">{group.interestRate}% p.a.</span>
                   </div>
 
                   <div className="flex justify-between text-sm">
-                    <span>Minimum Duration</span>
+                    <span className="text-gray-300">Minimum Duration</span>
                     <span className="text-orange-400">{group.duration}</span>
                   </div>
                   
@@ -111,14 +149,14 @@ export const VillageBankSection = () => {
                   />
                   
                   <div className="flex space-x-2 mt-3">
-                    <Button size="sm" variant="outline" className="flex-1">
+                    <Button size="sm" variant="outline" className="flex-1 border-gray-600 text-gray-300 hover:text-white">
                       Contribute
                     </Button>
-                    <Button size="sm" variant="outline" className="flex-1">
+                    <Button size="sm" variant="outline" className="flex-1 border-gray-600 text-gray-300 hover:text-white">
                       Request Loan
                     </Button>
                     {group.role === 'Admin' && (
-                      <Button size="sm" variant="outline">
+                      <Button size="sm" variant="outline" className="border-gray-600 text-gray-300 hover:text-white">
                         <Settings className="w-4 h-4" />
                       </Button>
                     )}
@@ -131,48 +169,48 @@ export const VillageBankSection = () => {
       </Card>
 
       {/* Create New Group */}
-      <Card className="gradient-card border-border/50">
+      <Card className="bg-gray-900/80 backdrop-blur-xl border-gray-700/50 shadow-2xl">
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
             <UserPlus className="w-5 h-5 text-accent" />
-            <span>Create New Village Bank Group</span>
+            <span className="text-white">Create New Village Bank Group</span>
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="text-sm font-medium mb-2 block">Group Name</label>
-                <Input placeholder="Enter group name" className="bg-white/5 border-white/10" />
+                <label className="text-sm font-medium mb-2 block text-gray-300">Group Name</label>
+                <Input placeholder="Enter group name" className="bg-gray-800/60 border-gray-600/50 text-white placeholder-gray-400" />
               </div>
               <div>
-                <label className="text-sm font-medium mb-2 block">Interest Rate (%)</label>
-                <Input placeholder="e.g. 15" type="number" className="bg-white/5 border-white/10" />
+                <label className="text-sm font-medium mb-2 block text-gray-300">Interest Rate (%)</label>
+                <Input placeholder="e.g. 15" type="number" className="bg-gray-800/60 border-gray-600/50 text-white placeholder-gray-400" />
               </div>
             </div>
             
             <div>
-              <label className="text-sm font-medium mb-2 block">Description</label>
-              <Input placeholder="Describe the purpose of your group" className="bg-white/5 border-white/10" />
+              <label className="text-sm font-medium mb-2 block text-gray-300">Description</label>
+              <Input placeholder="Describe the purpose of your group" className="bg-gray-800/60 border-gray-600/50 text-white placeholder-gray-400" />
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="text-sm font-medium mb-2 block">Minimum Contribution</label>
-                <Input placeholder="MWK 10,000" className="bg-white/5 border-white/10" />
+                <label className="text-sm font-medium mb-2 block text-gray-300">Minimum Contribution</label>
+                <Input placeholder="MWK 10,000" className="bg-gray-800/60 border-gray-600/50 text-white placeholder-gray-400" />
               </div>
               <div>
-                <label className="text-sm font-medium mb-2 block">Maximum Members</label>
-                <Input placeholder="e.g. 50" type="number" className="bg-white/5 border-white/10" />
+                <label className="text-sm font-medium mb-2 block text-gray-300">Maximum Members</label>
+                <Input placeholder="e.g. 50" type="number" className="bg-gray-800/60 border-gray-600/50 text-white placeholder-gray-400" />
               </div>
             </div>
 
             <div>
-              <label className="text-sm font-medium mb-2 block">Minimum Duration</label>
-              <Input placeholder="e.g. 30 days" className="bg-white/5 border-white/10" />
+              <label className="text-sm font-medium mb-2 block text-gray-300">Minimum Duration</label>
+              <Input placeholder="e.g. 30 days" className="bg-gray-800/60 border-gray-600/50 text-white placeholder-gray-400" />
             </div>
             
-            <Button className="w-full gradient-secondary text-white">
+            <Button className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white">
               Create Group
             </Button>
           </div>
@@ -180,28 +218,28 @@ export const VillageBankSection = () => {
       </Card>
 
       {/* Withdrawal Methods */}
-      <Card className="gradient-card border-border/50">
+      <Card className="bg-gray-900/80 backdrop-blur-xl border-gray-700/50 shadow-2xl">
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
             <Banknote className="w-5 h-5 text-green-400" />
-            <span>Withdrawal Methods</span>
+            <span className="text-white">Withdrawal Methods</span>
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {withdrawalMethods.map((method, index) => (
-              <div key={index} className="p-4 rounded-lg bg-white/5 hover:bg-white/10 transition-colors border border-white/10">
+              <div key={index} className="p-4 rounded-lg bg-gray-800/60 hover:bg-gray-700/60 transition-colors border border-gray-600/50">
                 <div className="flex items-center space-x-3 mb-2">
                   <span className="text-2xl">{method.icon}</span>
                   <div>
-                    <h5 className="font-medium">{method.name}</h5>
+                    <h5 className="font-medium text-white">{method.name}</h5>
                     {method.description && (
-                      <p className="text-xs text-muted-foreground">{method.description}</p>
+                      <p className="text-xs text-gray-400">{method.description}</p>
                     )}
-                    <p className="text-sm text-accent">Fee: {method.fee}</p>
+                    <p className="text-sm text-accent">{/* accent color styles applied elsewhere */}Fee: {method.fee}</p>
                   </div>
                 </div>
-                <Button size="sm" variant="outline" className="w-full">
+                <Button size="sm" variant="outline" className="w-full border-gray-600 text-gray-300 hover:text-white">
                   Select
                 </Button>
               </div>
@@ -211,14 +249,14 @@ export const VillageBankSection = () => {
       </Card>
 
       {/* Recent Village Bank Activity */}
-      <Card className="gradient-card border-border/50">
+      <Card className="bg-gray-900/80 backdrop-blur-xl border-gray-700/50 shadow-2xl">
         <CardHeader>
-          <CardTitle>Recent Village Bank Activity</CardTitle>
+          <CardTitle className="text-white">Recent Village Bank Activity</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
             {recentTransactions.map((transaction, index) => (
-              <div key={index} className="flex items-center justify-between p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors">
+              <div key={index} className="flex items-center justify-between p-3 rounded-lg bg-gray-800/60 hover:bg-gray-700/60 transition-colors">
                 <div className="flex items-center space-x-3">
                   <div className="flex-shrink-0">
                     {transaction.type === 'Contribution' ? (
@@ -230,17 +268,17 @@ export const VillageBankSection = () => {
                     )}
                   </div>
                   <div>
-                    <p className="font-medium">{transaction.type}</p>
-                    <p className="text-sm text-muted-foreground">{transaction.group}</p>
+                    <p className="font-medium text-white">{transaction.type}</p>
+                    <p className="text-sm text-gray-400">{transaction.group}</p>
                   </div>
                 </div>
                 <div className="text-right">
                   <p className={`font-semibold ${
-                    transaction.amount.startsWith('+') ? 'text-green-400' : 'text-foreground'
+                    transaction.amount.startsWith('+') ? 'text-green-400' : 'text-white'
                   }`}>
                     {transaction.amount}
                   </p>
-                  <p className="text-xs text-muted-foreground">{transaction.time}</p>
+                  <p className="text-xs text-gray-400">{transaction.time}</p>
                 </div>
               </div>
             ))}

@@ -1,533 +1,369 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { CreditCard, Plus, Eye, EyeOff, Truck } from 'lucide-react';
-import { CardSettings } from '@/components/CardSettings';
-import { TransactionConfirmation } from '@/components/TransactionConfirmation';
-
-interface CardTier {
-  name: string;
-  price: string;
-  priceValue: number;
-  color: string;
-  features: string[];
-  monthlyLimit: string;
-  dailyLimit: string;
-}
-
-interface MyCard {
-  id: string;
-  type: string;
-  number: string;
-  expiry: string;
-  holderName: string;
-  status: string;
-  balance: number;
-}
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { CreditCard, Plus, Settings, Eye, EyeOff, Copy, Check } from 'lucide-react';
 
 interface VirtualCardsSectionProps {
   onCardPurchase?: (cardType: string) => void;
   purchasedCards?: any[];
 }
 
-export const VirtualCardsSection: React.FC<VirtualCardsSectionProps> = ({ onCardPurchase, purchasedCards = [] }) => {
+export const VirtualCardsSection = ({ onCardPurchase, purchasedCards = [] }: VirtualCardsSectionProps) => {
   const [showCardDetails, setShowCardDetails] = useState(false);
-  const [myCards, setMyCards] = useState<MyCard[]>([
+  const [selectedCard, setSelectedCard] = useState<any>(null);
+  const [showPurchaseModal, setShowPurchaseModal] = useState(false);
+  const [selectedCardType, setSelectedCardType] = useState<any>(null);
+  const [copiedField, setCopiedField] = useState('');
+
+  const availableCards = [
     {
-      id: '1',
       type: 'Standard',
-      number: '1234 5678 9012 3456',
-      expiry: '12/26',
-      holderName: 'NEOVAULT USER',
-      status: 'Active',
-      balance: 125000
-    }
-  ]);
-
-  const [showOrderCard, setShowOrderCard] = useState(false);
-  const [showPhysicalCard, setShowPhysicalCard] = useState(false);
-  const [selectedTier, setSelectedTier] = useState<CardTier | null>(null);
-  const [orderForm, setOrderForm] = useState({
-    fullName: '',
-    email: '',
-    phone: '',
-    address: '',
-    city: '',
-    postalCode: ''
-  });
-  const [transactionModal, setTransactionModal] = useState({
-    isOpen: false,
-    showSuccess: false,
-    transaction: null as any
-  });
-
-  const cardTiers: CardTier[] = [
-    {
-      name: 'Standard',
-      price: 'Free',
-      priceValue: 0,
-      color: 'from-gray-600 to-gray-800',
+      price: 0,
       features: ['Basic transactions', 'Online payments', 'ATM withdrawals'],
-      monthlyLimit: 'MWK 500,000',
-      dailyLimit: 'MWK 50,000'
+      gradient: 'bg-gradient-to-br from-slate-800 to-slate-900',
+      textColor: 'text-white',
+      isDefault: true
     },
     {
-      name: 'Gold',
-      price: 'MWK 5,000',
-      priceValue: 5000,
-      color: 'from-yellow-600 to-yellow-800',
-      features: ['Higher limits', 'Priority support', 'Cashback rewards', 'Travel insurance'],
-      monthlyLimit: 'MWK 2,000,000',
-      dailyLimit: 'MWK 200,000'
+      type: 'Gold',
+      price: 15000,
+      features: ['All Standard features', 'Higher limits', 'Priority support', 'Cashback rewards'],
+      gradient: 'bg-gradient-to-br from-yellow-600 to-yellow-800',
+      textColor: 'text-white'
     },
     {
-      name: 'Platinum',
-      price: 'MWK 12,000',
-      priceValue: 12000,
-      color: 'from-purple-600 to-purple-800',
-      features: ['Unlimited transactions', 'Concierge service', 'Premium rewards', 'Global coverage'],
-      monthlyLimit: 'Unlimited',
-      dailyLimit: 'MWK 500,000'
+      type: 'Platinum',
+      price: 35000,
+      features: ['All Gold features', 'Premium support', 'Travel insurance', 'Airport lounge access'],
+      gradient: 'bg-gradient-to-br from-gray-400 to-gray-600',
+      textColor: 'text-white'
     }
   ];
 
-  const handleOrderCard = (tier: CardTier) => {
-    setSelectedTier(tier);
-    setShowOrderCard(true);
-  };
+  // Include standard card by default and purchased cards
+  const myCards = [
+    {
+      id: 'standard',
+      type: 'Standard',
+      number: '**** **** **** 1234',
+      balance: 0,
+      status: 'Active',
+      gradient: 'bg-gradient-to-br from-slate-800 to-slate-900',
+      textColor: 'text-white',
+      cvv: '123',
+      expiry: '12/26',
+      holderName: 'John Doe'
+    },
+    ...purchasedCards.map(card => ({
+      ...card,
+      gradient: availableCards.find(ac => ac.type === card.type)?.gradient || 'bg-gradient-to-br from-slate-800 to-slate-900',
+      textColor: availableCards.find(ac => ac.type === card.type)?.textColor || 'text-white',
+      cvv: '123',
+      expiry: '12/26',
+      holderName: 'John Doe'
+    }))
+  ];
 
-  const handleOrderPhysicalCard = () => {
-    setShowPhysicalCard(true);
-  };
-
-  const processCardOrder = (isPhysical: boolean = false) => {
-    if (!selectedTier && !isPhysical) return;
-
-    const price = isPhysical ? 10000 : selectedTier?.priceValue || 0;
-    const cardType = isPhysical ? 'Physical Card' : selectedTier?.name || '';
-
-    setTransactionModal({
-      isOpen: true,
-      showSuccess: false,
-      transaction: {
-        type: isPhysical ? 'Physical Card Order' : 'Virtual Card Order',
-        amount: `MWK ${price.toLocaleString()}`,
-        recipient: cardType,
-        fee: 'FREE',
-        total: `MWK ${price.toLocaleString()}`
+  const handleCardPurchase = () => {
+    if (selectedCardType && onCardPurchase) {
+      // Check if card type already exists
+      const cardExists = myCards.some(card => card.type === selectedCardType.type);
+      if (cardExists) {
+        alert('You already own this card type!');
+        return;
       }
-    });
-  };
 
-  const handleCardOrderSuccess = () => {
-    if (selectedTier) {
-      const newCard: MyCard = {
-        id: Date.now().toString(),
-        type: selectedTier.name,
-        number: generateCardNumber(),
-        expiry: generateExpiry(),
-        holderName: orderForm.fullName.toUpperCase() || 'NEOVAULT USER',
-        status: 'Active',
-        balance: 0
-      };
-      setMyCards([...myCards, newCard]);
-      
-      // Call the onCardPurchase callback if provided
-      if (onCardPurchase) {
-        onCardPurchase(selectedTier.name);
-      }
+      onCardPurchase(selectedCardType.type);
+      alert(`${selectedCardType.type} card purchased successfully for MWK ${selectedCardType.price.toLocaleString()}!`);
     }
-    
-    setShowOrderCard(false);
-    setShowPhysicalCard(false);
-    setSelectedTier(null);
-    setOrderForm({
-      fullName: '',
-      email: '',
-      phone: '',
-      address: '',
-      city: '',
-      postalCode: ''
-    });
+    setShowPurchaseModal(false);
+    setSelectedCardType(null);
   };
 
-  const generateCardNumber = () => {
-    const first = Math.floor(1000 + Math.random() * 9000);
-    const second = Math.floor(1000 + Math.random() * 9000);
-    const third = Math.floor(1000 + Math.random() * 9000);
-    const fourth = Math.floor(1000 + Math.random() * 9000);
-    return `${first} ${second} ${third} ${fourth}`;
-  };
-
-  const generateExpiry = () => {
-    const currentYear = new Date().getFullYear();
-    const expiryYear = currentYear + 4;
-    const month = Math.floor(1 + Math.random() * 12).toString().padStart(2, '0');
-    return `${month}/${expiryYear.toString().substr(-2)}`;
+  const copyToClipboard = (text: string, field: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedField(field);
+    setTimeout(() => setCopiedField(''), 2000);
   };
 
   return (
     <div className="space-y-6">
-      {/* My Cards */}
+      {/* My Virtual Cards */}
       <Card className="bg-gray-900/80 backdrop-blur-xl border-gray-700/50 shadow-2xl">
         <CardHeader>
-          <CardTitle className="flex items-center space-x-2 text-white">
-            <CreditCard className="w-5 h-5 text-green-400" />
-            <span>My Virtual Cards</span>
-          </CardTitle>
+          <CardTitle className="text-white">My Virtual Cards</CardTitle>
         </CardHeader>
         <CardContent>
-          {myCards.length > 0 ? (
-            <div className="space-y-4">
-              {myCards.map((card, index) => (
-                <div key={index} className="relative">
-                  <div className="w-full h-48 bg-gradient-to-r from-green-600 to-green-800 rounded-xl p-6 text-white relative overflow-hidden">
-                    {/* NeoVault Branding */}
-                    <div className="absolute top-4 left-4">
-                      <div className="flex items-center space-x-2">
-                        <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center">
-                          <span className="text-green-600 font-bold text-sm">N</span>
-                        </div>
-                        <span className="text-lg font-bold">NeoVault</span>
-                      </div>
-                    </div>
-
-                    {/* Mastercard Logo */}
-                    <div className="absolute top-4 right-4 flex items-center space-x-2">
-                      <div className="flex items-center space-x-1">
-                        <div className="w-6 h-6 bg-red-500 rounded-full opacity-90"></div>
-                        <div className="w-6 h-6 bg-yellow-500 rounded-full opacity-90 -ml-3"></div>
-                      </div>
-                      <span className="text-sm font-medium ml-2">Mastercard</span>
-                    </div>
-
-                    {/* Card Details */}
-                    <div className="absolute bottom-6 left-6 right-6">
-                      <div className="mb-4">
-                        <p className="text-2xl font-mono tracking-wider">
-                          {showCardDetails ? card.number : '•••• •••• •••• ••••'}
-                        </p>
-                      </div>
-                      <div className="flex justify-between items-end">
-                        <div>
-                          <p className="text-xs opacity-80">EXPIRES</p>
-                          <p className="font-mono">{showCardDetails ? card.expiry : '••/••'}</p>
-                        </div>
-                        <div>
-                          <p className="text-xs opacity-80">CARDHOLDER</p>
-                          <p className="font-mono text-xs">{card.holderName}</p>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Status Badge */}
-                    <div className="absolute bottom-4 right-4">
-                      <Badge className="bg-green-500/20 text-green-300 border-green-400/30">{card.status}</Badge>
-                    </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {myCards.map((card) => (
+              <div
+                key={card.id}
+                className={`relative p-6 rounded-xl ${card.gradient} cursor-pointer transform transition-all duration-300 hover:scale-105 hover:shadow-2xl`}
+                onClick={() => {
+                  setSelectedCard(card);
+                  setShowCardDetails(true);
+                }}
+              >
+                <div className="flex justify-between items-start mb-8">
+                  <div>
+                    <Badge className="bg-white/20 text-white border-white/30 text-xs">
+                      {card.type}
+                    </Badge>
+                    <Badge className={`ml-2 text-xs ${
+                      card.status === 'Active' 
+                        ? 'bg-green-500/20 text-green-300 border-green-400/30'
+                        : 'bg-gray-500/20 text-gray-300 border-gray-400/30'
+                    }`}>
+                      {card.status}
+                    </Badge>
                   </div>
-                  <div className="flex justify-between items-center mt-4">
+                  <CreditCard className={`w-8 h-8 ${card.textColor}`} />
+                </div>
+                
+                <div className="space-y-4">
+                  <div>
+                    <p className={`text-lg font-mono ${card.textColor}`}>
+                      {card.number}
+                    </p>
+                  </div>
+                  
+                  <div className="flex justify-between items-end">
                     <div>
-                      <p className="font-semibold text-white">Balance: MWK {card.balance.toLocaleString()}</p>
-                      <p className="text-sm text-gray-400">{card.type} Card</p>
+                      <p className={`text-xs ${card.textColor} opacity-70`}>Balance</p>
+                      <p className={`text-lg font-semibold ${card.textColor}`}>
+                        MWK {card.balance.toLocaleString()}
+                      </p>
                     </div>
-                    <div className="flex space-x-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setShowCardDetails(!showCardDetails)}
-                        className="bg-gray-700 border-gray-600 text-white hover:bg-gray-600"
-                      >
-                        {showCardDetails ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                      </Button>
-                      <CardSettings 
-                        cardId={card.id}
-                        cardType={card.type}
-                        onSettingsChange={(settings) => console.log('Settings updated:', settings)}
-                      />
+                    <div className="text-right">
+                      <p className={`text-xs ${card.textColor} opacity-70`}>Valid Thru</p>
+                      <p className={`text-sm ${card.textColor}`}>{card.expiry}</p>
                     </div>
                   </div>
                 </div>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-8 text-gray-400">
-              <CreditCard className="w-16 h-16 mx-auto mb-4 opacity-50" />
-              <p>No cards yet. Create your first virtual card below.</p>
-            </div>
-          )}
+              </div>
+            ))}
+          </div>
         </CardContent>
       </Card>
 
-      {/* Card Tiers */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {cardTiers.map((tier, index) => (
-          <Card key={index} className="bg-gray-900/80 backdrop-blur-xl border-gray-700/50 shadow-2xl hover:scale-105 transition-transform">
-            <CardHeader>
-              <CardTitle className="flex items-center justify-between text-white">
-                <span>{tier.name}</span>
-                <Badge variant="secondary" className="bg-gray-700 text-gray-300">{tier.price}</Badge>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className={`w-full h-32 bg-gradient-to-r ${tier.color} rounded-lg p-4 text-white relative`}>
-                {/* NeoVault Logo */}
-                <div className="absolute top-2 left-2">
-                  <div className="flex items-center space-x-1">
-                    <div className="w-6 h-6 bg-white rounded-full flex items-center justify-center">
-                      <span className="text-green-600 font-bold text-xs">N</span>
+      {/* Available Cards */}
+      <Card className="bg-gray-900/80 backdrop-blur-xl border-gray-700/50 shadow-2xl">
+        <CardHeader>
+          <CardTitle className="text-white">Available Cards</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {availableCards.map((card) => {
+              const alreadyOwned = myCards.some(owned => owned.type === card.type);
+              
+              return (
+                <div key={card.type} className="p-6 rounded-lg bg-gray-800/50 hover:bg-gray-700/50 transition-colors border border-gray-600/30">
+                  <div className="text-center mb-4">
+                    <div className={`w-16 h-10 ${card.gradient} rounded-lg mx-auto mb-3 flex items-center justify-center`}>
+                      <CreditCard className="w-6 h-6 text-white" />
                     </div>
-                    <span className="text-xs font-bold">NeoVault</span>
+                    <h3 className="text-lg font-semibold text-white">{card.type}</h3>
+                    <p className="text-2xl font-bold text-white">
+                      {card.price === 0 ? 'FREE' : `MWK ${card.price.toLocaleString()}`}
+                    </p>
                   </div>
+                  
+                  <ul className="space-y-2 mb-6">
+                    {card.features.map((feature, index) => (
+                      <li key={index} className="text-sm text-gray-300 flex items-center">
+                        <Check className="w-4 h-4 text-green-400 mr-2" />
+                        {feature}
+                      </li>
+                    ))}
+                  </ul>
+                  
+                  <Button
+                    onClick={() => {
+                      if (alreadyOwned) {
+                        alert('You already own this card type!');
+                        return;
+                      }
+                      setSelectedCardType(card);
+                      setShowPurchaseModal(true);
+                    }}
+                    disabled={alreadyOwned}
+                    className={`w-full ${
+                      alreadyOwned 
+                        ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                        : 'bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white'
+                    }`}
+                  >
+                    {alreadyOwned ? 'Owned' : (card.price === 0 ? 'Get Card' : 'Purchase')}
+                  </Button>
+                </div>
+              );
+            })}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Card Details Modal */}
+      <Dialog open={showCardDetails} onOpenChange={setShowCardDetails}>
+        <DialogContent className="bg-gray-800 border-gray-700 text-white max-w-md">
+          <DialogHeader>
+            <DialogTitle>Card Details</DialogTitle>
+          </DialogHeader>
+          {selectedCard && (
+            <div className="space-y-4">
+              <div className={`p-6 rounded-xl ${selectedCard.gradient}`}>
+                <div className="flex justify-between items-start mb-8">
+                  <Badge className="bg-white/20 text-white border-white/30">
+                    {selectedCard.type}
+                  </Badge>
+                  <CreditCard className="w-8 h-8 text-white" />
                 </div>
                 
-                {/* Mastercard Logo */}
-                <div className="absolute top-2 right-2 flex items-center space-x-1">
-                  <div className="flex items-center">
-                    <div className="w-4 h-4 bg-red-500 rounded-full opacity-90"></div>
-                    <div className="w-4 h-4 bg-yellow-500 rounded-full opacity-90 -ml-2"></div>
+                <div className="space-y-4">
+                  <div>
+                    <p className="text-lg font-mono text-white">
+                      {selectedCard.number}
+                    </p>
                   </div>
-                </div>
-                
-                <div className="absolute bottom-2 left-4">
-                  <p className="text-sm font-mono">•••• •••• •••• ••••</p>
+                  
+                  <div className="flex justify-between">
+                    <div>
+                      <p className="text-xs text-white opacity-70">Card Holder</p>
+                      <p className="text-sm text-white">{selectedCard.holderName}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-white opacity-70">Valid Thru</p>
+                      <p className="text-sm text-white">{selectedCard.expiry}</p>
+                    </div>
+                  </div>
                 </div>
               </div>
               
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-300">Monthly Limit:</span>
-                  <span className="font-semibold text-white">{tier.monthlyLimit}</span>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between p-3 bg-gray-700/50 rounded-lg">
+                  <div>
+                    <p className="text-sm text-gray-300">Card Number</p>
+                    <p className="font-mono text-white">{selectedCard.number}</p>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => copyToClipboard(selectedCard.number.replace(/\s/g, ''), 'number')}
+                    className="text-blue-400 hover:text-blue-300"
+                  >
+                    {copiedField === 'number' ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                  </Button>
                 </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-300">Daily Limit:</span>
-                  <span className="font-semibold text-white">{tier.dailyLimit}</span>
+                
+                <div className="flex items-center justify-between p-3 bg-gray-700/50 rounded-lg">
+                  <div>
+                    <p className="text-sm text-gray-300">CVV</p>
+                    <p className="font-mono text-white">{selectedCard.cvv}</p>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => copyToClipboard(selectedCard.cvv, 'cvv')}
+                    className="text-blue-400 hover:text-blue-300"
+                  >
+                    {copiedField === 'cvv' ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                  </Button>
+                </div>
+                
+                <div className="flex items-center justify-between p-3 bg-gray-700/50 rounded-lg">
+                  <div>
+                    <p className="text-sm text-gray-300">Expiry Date</p>
+                    <p className="font-mono text-white">{selectedCard.expiry}</p>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => copyToClipboard(selectedCard.expiry, 'expiry')}
+                    className="text-blue-400 hover:text-blue-300"
+                  >
+                    {copiedField === 'expiry' ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                  </Button>
                 </div>
               </div>
+              
+              <div className="flex space-x-2">
+                <Button
+                  className="flex-1 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700"
+                  onClick={() => {
+                    const amount = prompt('Enter amount to add to card:');
+                    if (amount && parseFloat(amount) > 0) {
+                      alert(`MWK ${parseFloat(amount).toLocaleString()} added to card successfully!`);
+                      setShowCardDetails(false);
+                    }
+                  }}
+                >
+                  Add Money
+                </Button>
+                <Button
+                  variant="outline"
+                  className="flex-1 border-gray-600 text-gray-300 hover:text-white"
+                  onClick={() => alert('Card settings coming soon!')}
+                >
+                  <Settings className="w-4 h-4 mr-2" />
+                  Settings
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
-              <div className="space-y-2">
-                <p className="text-sm font-medium text-white">Features:</p>
-                <ul className="text-xs space-y-1">
-                  {tier.features.map((feature, idx) => (
-                    <li key={idx} className="flex items-center space-x-2 text-gray-300">
-                      <div className="w-1 h-1 bg-green-400 rounded-full"></div>
-                      <span>{feature}</span>
+      {/* Purchase Confirmation Modal */}
+      <Dialog open={showPurchaseModal} onOpenChange={setShowPurchaseModal}>
+        <DialogContent className="bg-gray-800 border-gray-700 text-white">
+          <DialogHeader>
+            <DialogTitle>Confirm Card Purchase</DialogTitle>
+          </DialogHeader>
+          {selectedCardType && (
+            <div className="space-y-4">
+              <div className="text-center">
+                <div className={`w-20 h-12 ${selectedCardType.gradient} rounded-lg mx-auto mb-4 flex items-center justify-center`}>
+                  <CreditCard className="w-8 h-8 text-white" />
+                </div>
+                <h3 className="text-xl font-semibold text-white">{selectedCardType.type} Card</h3>
+                <p className="text-2xl font-bold text-white mt-2">
+                  MWK {selectedCardType.price.toLocaleString()}
+                </p>
+              </div>
+              
+              <div className="bg-gray-700/50 p-4 rounded-lg">
+                <h4 className="font-medium text-white mb-2">Features included:</h4>
+                <ul className="space-y-1">
+                  {selectedCardType.features.map((feature, index) => (
+                    <li key={index} className="text-sm text-gray-300 flex items-center">
+                      <Check className="w-4 h-4 text-green-400 mr-2" />
+                      {feature}
                     </li>
                   ))}
                 </ul>
               </div>
-
-              <Button 
-                onClick={() => handleOrderCard(tier)}
-                className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white"
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Get {tier.name} Card
-              </Button>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      {/* Physical Card Option */}
-      <Card className="bg-gray-900/80 backdrop-blur-xl border-gray-700/50 shadow-2xl">
-        <CardHeader>
-          <CardTitle className="flex items-center space-x-2 text-white">
-            <Truck className="w-5 h-5 text-green-400" />
-            <span>Physical Card</span>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center justify-between p-4 rounded-lg bg-gray-800/60 border border-gray-600/50">
-            <div className="flex items-center space-x-4">
-              <div className="w-16 h-10 bg-gradient-to-r from-green-600 to-green-800 rounded flex items-center justify-center relative">
-                <div className="absolute top-1 left-1">
-                  <div className="w-4 h-4 bg-white rounded-full flex items-center justify-center">
-                    <span className="text-green-600 font-bold text-xs">N</span>
-                  </div>
-                </div>
-                <div className="absolute bottom-1 right-1 flex items-center">
-                  <div className="w-3 h-3 bg-red-500 rounded-full opacity-90"></div>
-                  <div className="w-3 h-3 bg-yellow-500 rounded-full opacity-90 -ml-1"></div>
-                </div>
-              </div>
-              <div>
-                <h4 className="font-semibold text-white">NeoVault Physical Mastercard</h4>
-                <p className="text-sm text-gray-400">Get a physical card delivered to your address</p>
+              
+              <div className="flex space-x-3">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowPurchaseModal(false)}
+                  className="flex-1 border-gray-600 text-gray-300 hover:text-white"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleCardPurchase}
+                  className="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white"
+                >
+                  Purchase Card
+                </Button>
               </div>
             </div>
-            <div className="text-right">
-              <p className="font-semibold text-lg text-white">MWK 10,000</p>
-              <p className="text-xs text-gray-400">One-time fee</p>
-            </div>
-          </div>
-          <Button 
-            onClick={handleOrderPhysicalCard}
-            className="w-full mt-4 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white"
-          >
-            <Truck className="w-4 h-4 mr-2" />
-            Order Physical Card
-          </Button>
-        </CardContent>
-      </Card>
-
-      {/* Card Order Modal */}
-      <Dialog open={showOrderCard} onOpenChange={setShowOrderCard}>
-        <DialogContent className="bg-gray-800 border-gray-700 text-white">
-          <DialogHeader>
-            <DialogTitle>Order {selectedTier?.name} Card</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="bg-gray-700/50 p-4 rounded-lg">
-              <h4 className="font-medium mb-2">Order Summary</h4>
-              <div className="flex justify-between">
-                <span>Card Type:</span>
-                <span>{selectedTier?.name}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Price:</span>
-                <span>{selectedTier?.price}</span>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label className="text-gray-300">Full Name</Label>
-                <Input
-                  value={orderForm.fullName}
-                  onChange={(e) => setOrderForm({...orderForm, fullName: e.target.value})}
-                  placeholder="Enter your full name"
-                  className="bg-gray-700 border-gray-600 text-white"
-                />
-              </div>
-              <div>
-                <Label className="text-gray-300">Email</Label>
-                <Input
-                  type="email"
-                  value={orderForm.email}
-                  onChange={(e) => setOrderForm({...orderForm, email: e.target.value})}
-                  placeholder="your@email.com"
-                  className="bg-gray-700 border-gray-600 text-white"
-                />
-              </div>
-            </div>
-
-            <div>
-              <Label className="text-gray-300">Phone Number</Label>
-              <Input
-                value={orderForm.phone}
-                onChange={(e) => setOrderForm({...orderForm, phone: e.target.value})}
-                placeholder="088xxxxxxx"
-                className="bg-gray-700 border-gray-600 text-white"
-              />
-            </div>
-
-            <Button 
-              onClick={() => processCardOrder(false)}
-              disabled={!orderForm.fullName || !orderForm.email || !orderForm.phone}
-              className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700"
-            >
-              Order Card - {selectedTier?.price}
-            </Button>
-          </div>
+          )}
         </DialogContent>
       </Dialog>
-
-      {/* Physical Card Order Modal */}
-      <Dialog open={showPhysicalCard} onOpenChange={setShowPhysicalCard}>
-        <DialogContent className="bg-gray-800 border-gray-700 text-white">
-          <DialogHeader>
-            <DialogTitle>Order Physical Card</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="bg-gray-700/50 p-4 rounded-lg">
-              <h4 className="font-medium mb-2">Delivery Information</h4>
-              <p className="text-sm text-gray-400">Your physical card will be delivered within 7-10 business days.</p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label className="text-gray-300">Full Name</Label>
-                <Input
-                  value={orderForm.fullName}
-                  onChange={(e) => setOrderForm({...orderForm, fullName: e.target.value})}
-                  placeholder="Enter your full name"
-                  className="bg-gray-700 border-gray-600 text-white"
-                />
-              </div>
-              <div>
-                <Label className="text-gray-300">Phone Number</Label>
-                <Input
-                  value={orderForm.phone}
-                  onChange={(e) => setOrderForm({...orderForm, phone: e.target.value})}
-                  placeholder="088xxxxxxx"
-                  className="bg-gray-700 border-gray-600 text-white"
-                />
-              </div>
-            </div>
-
-            <div>
-              <Label className="text-gray-300">Delivery Address</Label>
-              <Input
-                value={orderForm.address}
-                onChange={(e) => setOrderForm({...orderForm, address: e.target.value})}
-                placeholder="Enter your full address"
-                className="bg-gray-700 border-gray-600 text-white"
-              />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label className="text-gray-300">City</Label>
-                <Input
-                  value={orderForm.city}
-                  onChange={(e) => setOrderForm({...orderForm, city: e.target.value})}
-                  placeholder="Enter city"
-                  className="bg-gray-700 border-gray-600 text-white"
-                />
-              </div>
-              <div>
-                <Label className="text-gray-300">Postal Code</Label>
-                <Input
-                  value={orderForm.postalCode}
-                  onChange={(e) => setOrderForm({...orderForm, postalCode: e.target.value})}
-                  placeholder="Enter postal code"
-                  className="bg-gray-700 border-gray-600 text-white"
-                />
-              </div>
-            </div>
-
-            <Button 
-              onClick={() => processCardOrder(true)}
-              disabled={!orderForm.fullName || !orderForm.phone || !orderForm.address || !orderForm.city}
-              className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700"
-            >
-              Order Physical Card - MWK 10,000
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Transaction Confirmation Modal */}
-      <TransactionConfirmation
-        isOpen={transactionModal.isOpen}
-        onClose={() => setTransactionModal({ isOpen: false, showSuccess: false, transaction: null })}
-        onConfirm={() => {
-          setTimeout(() => {
-            setTransactionModal(prev => ({ ...prev, showSuccess: true }));
-          }, 1000);
-        }}
-        onSuccess={() => {
-          handleCardOrderSuccess();
-          setTransactionModal({ isOpen: false, showSuccess: false, transaction: null });
-        }}
-        transaction={transactionModal.transaction}
-        showSuccess={transactionModal.showSuccess}
-      />
     </div>
   );
 };
