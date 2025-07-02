@@ -215,7 +215,7 @@
   letter-spacing: -0.015em;
 }
 
-/* Enhanced Mobile Navigation */
+/* Enhanced Mobile Navigation - Fixed positioning for all screen sizes */
 .mobile-nav-fixed {
   position: fixed;
   bottom: 0;
@@ -223,4 +223,17 @@
   right: 0;
   z-index: 50;
   padding-bottom: env(safe-area-inset-bottom, 1rem);
+}
+
+/* Responsive navigation positioning */
+@media (min-width: 768px) {
+  .mobile-nav-fixed {
+    padding-bottom: 1rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .mobile-nav-fixed {
+    padding-bottom: 1.5rem;
+  }
 }

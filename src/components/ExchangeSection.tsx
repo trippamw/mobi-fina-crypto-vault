@@ -124,11 +124,11 @@ export const ExchangeSection = ({ onBalanceUpdate }: ExchangeSectionProps) => {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Exchange Interface */}
-      <Card className="gradient-card border-white/20">
+    <div className="space-y-6 pb-24">
+      {/* Exchange Interface - Made darker */}
+      <Card className="bg-white/5 backdrop-blur-md border-white/10">
         <CardHeader>
-          <CardTitle className="flex items-center justify-between text-glass">
+          <CardTitle className="flex items-center justify-between text-white">
             <div className="flex items-center space-x-2">
               <ArrowUpDown className="w-5 h-5 text-blue-400" />
               <span>Currency Exchange</span>
@@ -147,17 +147,17 @@ export const ExchangeSection = ({ onBalanceUpdate }: ExchangeSectionProps) => {
         <CardContent className="space-y-6">
           {/* From Section */}
           <div className="space-y-2">
-            <label className="text-sm font-medium text-glass">From</label>
+            <label className="text-sm font-medium text-white">From</label>
             <div className="flex space-x-3">
               <Input
                 type="number"
                 value={fromAmount}
                 onChange={(e) => setFromAmount(e.target.value)}
-                className="flex-1 bg-white/10 border-white/20 text-glass placeholder-white/60"
+                className="flex-1 bg-white/10 border-white/20 text-white placeholder-white/60"
                 placeholder="Enter amount"
               />
               <Select value={fromCurrency} onValueChange={setFromCurrency}>
-                <SelectTrigger className="w-32 bg-white/10 border-white/20 text-glass">
+                <SelectTrigger className="w-32 bg-white/10 border-white/20 text-white">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="bg-gray-900 border-gray-700">
@@ -188,17 +188,17 @@ export const ExchangeSection = ({ onBalanceUpdate }: ExchangeSectionProps) => {
 
           {/* To Section */}
           <div className="space-y-2">
-            <label className="text-sm font-medium text-glass">To</label>
+            <label className="text-sm font-medium text-white">To</label>
             <div className="flex space-x-3">
               <Input
                 type="text"
                 value={calculateExchange()}
                 readOnly
-                className="flex-1 bg-white/10 border-white/20 font-mono text-glass"
+                className="flex-1 bg-white/10 border-white/20 font-mono text-white"
                 placeholder="Converted amount"
               />
               <Select value={toCurrency} onValueChange={setToCurrency}>
-                <SelectTrigger className="w-32 bg-white/10 border-white/20 text-glass">
+                <SelectTrigger className="w-32 bg-white/10 border-white/20 text-white">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="bg-gray-900 border-gray-700">
@@ -220,7 +220,7 @@ export const ExchangeSection = ({ onBalanceUpdate }: ExchangeSectionProps) => {
             <div className="flex justify-between items-center">
               <div>
                 <p className="text-sm text-white/60">Exchange Rate</p>
-                <p className="text-lg font-semibold text-glass">
+                <p className="text-lg font-semibold text-white">
                   1 {fromCurrency} = {(1 * (parseFloat(calculateExchange()) / parseFloat(fromAmount || '1'))).toFixed(fromCurrency === 'MWK' ? 6 : 2)} {toCurrency}
                 </p>
               </div>
@@ -241,10 +241,10 @@ export const ExchangeSection = ({ onBalanceUpdate }: ExchangeSectionProps) => {
         </CardContent>
       </Card>
 
-      {/* Live Rates */}
-      <Card className="gradient-card border-white/20">
+      {/* Live Rates - Made darker */}
+      <Card className="bg-white/5 backdrop-blur-md border-white/10">
         <CardHeader>
-          <CardTitle className="flex items-center justify-between text-glass">
+          <CardTitle className="flex items-center justify-between text-white">
             <span>Live Exchange Rates</span>
             <Badge className="bg-green-500/20 text-green-300 border-green-400/30">
               Live
@@ -256,8 +256,8 @@ export const ExchangeSection = ({ onBalanceUpdate }: ExchangeSectionProps) => {
             {Object.entries(liveRates).map(([pair, data]: [string, any], index) => (
               <div key={index} className="flex items-center justify-between p-4 rounded-lg bg-white/5 hover:bg-white/10 transition-colors">
                 <div>
-                  <p className="font-semibold text-glass">{pair}</p>
-                  <p className="text-lg font-bold font-mono text-glass">{data.rate}</p>
+                  <p className="font-semibold text-white">{pair}</p>
+                  <p className="text-lg font-bold font-mono text-white">{data.rate}</p>
                 </div>
                 <div className="text-right">
                   <Badge 

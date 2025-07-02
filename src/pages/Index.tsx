@@ -225,7 +225,7 @@ const Index = () => {
         return <ExchangeSection onBalanceUpdate={handleBalanceUpdate} />;
       case 'cards':
         return (
-          <div className="space-y-6">
+          <div className="space-y-6 pb-24">
             <div className="flex justify-between items-center">
               <h2 className="text-2xl font-bold text-glass">Wallet & Cards</h2>
               <CreateWalletModal onCreateWallet={handleCreateWallet} />
@@ -243,11 +243,11 @@ const Index = () => {
         return <UserProfile />;
       default:
         return (
-          <div className="space-y-4 sm:space-y-6 pb-24">
-            {/* Total Balance Card */}
-            <Card className="gradient-card border-white/20 card-hover">
+          <div className="space-y-4 sm:space-y-6 pb-32 sm:pb-24">
+            {/* Total Balance Card - Made darker */}
+            <Card className="bg-white/5 backdrop-blur-md border-white/10 card-hover">
               <CardHeader className="pb-3 sm:pb-6">
-                <CardTitle className="flex items-center justify-between text-base sm:text-lg text-glass">
+                <CardTitle className="flex items-center justify-between text-base sm:text-lg text-white">
                   <span>Total Balance</span>
                   <Badge className="bg-green-500/20 text-green-300 border-green-400/30 text-xs">
                     <TrendingUp className="w-3 h-3 mr-1" />
@@ -271,8 +271,8 @@ const Index = () => {
               </CardContent>
             </Card>
 
-            {/* Quick Actions Dashboard */}
-            <Card className="gradient-card border-white/20">
+            {/* Quick Actions Dashboard - Made darker */}
+            <Card className="bg-white/5 backdrop-blur-md border-white/10">
               <CardContent className="p-4">
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                   <Button
@@ -346,8 +346,8 @@ const Index = () => {
               ))}
             </div>
 
-            {/* Recent Activity - Updated text to white */}
-            <Card className="gradient-card border-white/20">
+            {/* Recent Activity - Made darker */}
+            <Card className="bg-white/5 backdrop-blur-md border-white/10">
               <CardHeader className="pb-3 sm:pb-6">
                 <CardTitle className="text-base sm:text-lg text-white">Recent Activity</CardTitle>
               </CardHeader>
@@ -421,7 +421,7 @@ const Index = () => {
         </div>
       </header>
 
-      <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 pb-24">
+      <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 pb-32 sm:pb-24">
         {renderContent()}
       </div>
 
