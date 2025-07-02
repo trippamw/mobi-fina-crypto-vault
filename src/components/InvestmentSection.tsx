@@ -1,643 +1,658 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Users, Plus, UserPlus, Settings, MessageCircle, Target, ArrowLeft } from 'lucide-react';
-import { VillageBankChat } from '@/components/VillageBankChat';
-import { TransactionConfirmation } from '@/components/TransactionConfirmation';
+import { PiggyBank, Users, Plus, Target, Calendar, TrendingUp, ArrowRight } from 'lucide-react';
 
 interface InvestmentSectionProps {
   onBalanceUpdate?: (currency: string, amount: number) => void;
+  onTransactionUpdate?: (transaction: any) => void;
 }
 
-export const InvestmentSection: React.FC<InvestmentSectionProps> = ({ onBalanceUpdate }) => {
-  const [showChat, setShowChat] = useState(false);
-  const [chatGroupId, setChatGroupId] = useState('');
-  const [chatGroupName, setChatGroupName] = useState('');
-  const [showAdminDashboard, setShowAdminDashboard] = useState(false);
-  const [selectedGroup, setSelectedGroup] = useState<any>(null);
+export const InvestmentSection: React.FC<InvestmentSectionProps> = ({ onBalanceUpdate, onTransactionUpdate }) => {
+  const [activeTab, setActiveTab] = useState('goals');
+  const [showCreateGoal, setShowCreateGoal] = useState(false);
+  const [showCreateGroup, setShowCreateGroup] = useState(false);
+  const [showAddMoney, setShowAddMoney] = useState(false);
+  const [selectedGoal, setSelectedGoal] = useState<any>(null);
+  const [addMoneyAmount, setAddMoneyAmount] = useState('');
 
   const [savingsGoals, setSavingsGoals] = useState([
     {
-      id: '1',
+      id: 1,
       name: 'Emergency Fund',
-      target: 500000,
-      current: 275000,
-      percentage: 55,
-      deadline: '2024-12-31'
-    }
-  ]);
-
-  const [villageBankGroups, setVillageBankGroups] = useState([
-    {
-      id: '1',
-      name: 'Chilomoni Savings Group',
-      members: 12,
-      totalSavings: 850000,
-      myContribution: 75000,
-      interestRate: 15,
-      status: 'Active',
-      role: 'Member',
-      duration: '12 months minimum',
-      membersList: [
-        { name: 'John Banda', contribution: 85000, loans: 0 },
-        { name: 'Mary Phiri', contribution: 65000, loans: 25000 },
-        { name: 'Peter Mwale', contribution: 75000, loans: 0 },
-        { name: 'Grace Tembo', contribution: 95000, loans: 15000 }
-      ],
-      pendingLoans: [
-        { member: 'David Chirwa', amount: 30000, purpose: 'Business expansion' }
-      ]
+      targetAmount: 500000,
+      currentAmount: 125000,
+      deadline: '2024-12-31',
+      category: 'Emergency',
+      description: 'Build emergency fund for unexpected expenses'
     },
     {
-      id: '2',
-      name: 'Traders Union Fund',
-      members: 25,
-      totalSavings: 2100000,
-      myContribution: 120000,
-      interestRate: 18,
-      status: 'Active',
-      role: 'Admin',
-      duration: '6 months minimum',
-      membersList: [
-        { name: 'James Kadzuwa', contribution: 150000, loans: 45000 },
-        { name: 'Ruth Mvula', contribution: 130000, loans: 0 },
-        { name: 'Samuel Nyirenda', contribution: 120000, loans: 20000 }
-      ],
-      pendingLoans: [
-        { member: 'Alice Mbewe', amount: 50000, purpose: 'School fees' },
-        { member: 'Joseph Zulu', amount: 25000, purpose: 'Medical bills' }
-      ]
+      id: 2,
+      name: 'New Car',
+      targetAmount: 2000000,
+      currentAmount: 400000,
+      deadline: '2025-06-30',
+      category: 'Vehicle',
+      description: 'Save for a reliable vehicle'
     }
   ]);
 
-  const [transactionModal, setTransactionModal] = useState({
-    isOpen: false,
-    showSuccess: false,
-    transaction: null as any
+  const [villageGroups, setVillageGroups] = useState([
+    {
+      id: 1,
+      name: 'Blantyre Business Group',
+      members: 12,
+      totalPool: 850000,
+      myContribution: 50000,
+      nextMeeting: '2024-02-15',
+      status: 'Active',
+      description: 'Local business owners saving together',
+      isAdmin: true
+    },
+    {
+      id: 2,
+      name: 'Lilongwe Teachers',
+      members: 8,
+      totalPool: 320000,
+      myContribution: 25000,
+      nextMeeting: '2024-02-20',
+      status: 'Active',
+      description: 'Teachers collaborative savings group',
+      isAdmin: false
+    }
+  ]);
+
+  const [newGoal, setNewGoal] = useState({
+    name: '',
+    targetAmount: '',
+    deadline: '',
+    category: '',
+    description: ''
   });
 
-  const [showNewGoalForm, setShowNewGoalForm] = useState(false);
-  const [showNewGroupForm, setShowNewGroupForm] = useState(false);
-  const [showAddMoneyForm, setShowAddMoneyForm] = useState<string | null>(null);
-  const [showContributeForm, setShowContributeForm] = useState<string | null>(null);
-  const [showLoanForm, setShowLoanForm] = useState<string | null>(null);
+  const [newGroup, setNewGroup] = useState({
+    name: '',
+    description: '',
+    contributionAmount: '',
+    meetingSchedule: '',
+    maxMembers: ''
+  });
 
-  const handleCreateSavingsGoal = (formData: any) => {
-    const newGoal = {
-      id: Date.now().toString(),
-      name: formData.name,
-      target: parseInt(formData.target),
-      current: 0,
-      percentage: 0,
-      deadline: formData.deadline
-    };
-    setSavingsGoals([...savingsGoals, newGoal]);
-    setShowNewGoalForm(false);
-  };
-
-  const handleAddMoney = (goalId: string, amount: number) => {
-    setSavingsGoals(prev => prev.map(goal => {
-      if (goal.id === goalId) {
-        const newCurrent = goal.current + amount;
-        return {
-          ...goal,
-          current: newCurrent,
-          percentage: Math.round((newCurrent / goal.target) * 100)
-        };
-      }
-      return goal;
-    }));
-
-    if (onBalanceUpdate) {
-      onBalanceUpdate('MWK', -amount);
+  const handleCreateGoal = () => {
+    if (!newGoal.name || !newGoal.targetAmount || !newGoal.deadline) {
+      alert('Please fill in all required fields');
+      return;
     }
 
-    setShowAddMoneyForm(null);
-    alert(`Successfully added MWK ${amount.toLocaleString()} to your savings goal!`);
+    const goal = {
+      id: Date.now(),
+      name: newGoal.name,
+      targetAmount: parseFloat(newGoal.targetAmount),
+      currentAmount: 0,
+      deadline: newGoal.deadline,
+      category: newGoal.category || 'General',
+      description: newGoal.description
+    };
+
+    setSavingsGoals([...savingsGoals, goal]);
+    
+    if (onTransactionUpdate) {
+      onTransactionUpdate({
+        type: 'Savings Goal Created',
+        amount: `Target: MWK ${parseFloat(newGoal.targetAmount).toLocaleString()}`,
+        description: `Created savings goal: ${newGoal.name}`,
+        time: 'Just now',
+        status: 'completed'
+      });
+    }
+
+    setNewGoal({ name: '', targetAmount: '', deadline: '', category: '', description: '' });
+    setShowCreateGoal(false);
+    alert('Savings goal created successfully!');
   };
 
-  const handleCreateVillageBank = (formData: any) => {
-    const newGroup = {
-      id: Date.now().toString(),
-      name: formData.name,
+  const handleCreateGroup = () => {
+    if (!newGroup.name || !newGroup.contributionAmount || !newGroup.maxMembers) {
+      alert('Please fill in all required fields');
+      return;
+    }
+
+    const group = {
+      id: Date.now(),
+      name: newGroup.name,
       members: 1,
-      totalSavings: 0,
+      totalPool: 0,
       myContribution: 0,
-      interestRate: parseInt(formData.interestRate),
+      nextMeeting: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
       status: 'Active',
-      role: 'Admin',
-      duration: formData.duration,
-      membersList: [],
-      pendingLoans: []
+      description: newGroup.description,
+      isAdmin: true,
+      contributionAmount: parseFloat(newGroup.contributionAmount),
+      maxMembers: parseInt(newGroup.maxMembers)
     };
-    setVillageBankGroups([...villageBankGroups, newGroup]);
-    setShowNewGroupForm(false);
+
+    setVillageGroups([...villageGroups, group]);
+    
+    if (onTransactionUpdate) {
+      onTransactionUpdate({
+        type: 'Village Bank Created',
+        amount: `Contribution: MWK ${parseFloat(newGroup.contributionAmount).toLocaleString()}`,
+        description: `Created village bank group: ${newGroup.name}`,
+        time: 'Just now',
+        status: 'completed'
+      });
+    }
+
+    setNewGroup({ name: '', description: '', contributionAmount: '', meetingSchedule: '', maxMembers: '' });
+    setShowCreateGroup(false);
+    alert('Village bank group created successfully!');
   };
 
-  const handleContribute = (groupId: string, amount: number) => {
-    setVillageBankGroups(prev => prev.map(group => {
-      if (group.id === groupId) {
-        return {
-          ...group,
-          myContribution: group.myContribution + amount,
-          totalSavings: group.totalSavings + amount
-        };
-      }
-      return group;
-    }));
+  const handleAddMoney = () => {
+    if (!addMoneyAmount || !selectedGoal) {
+      alert('Please enter an amount');
+      return;
+    }
 
+    const amount = parseFloat(addMoneyAmount);
+    if (amount <= 0) {
+      alert('Please enter a valid amount');
+      return;
+    }
+
+    // Update the savings goal
+    setSavingsGoals(goals => 
+      goals.map(goal => 
+        goal.id === selectedGoal.id 
+          ? { ...goal, currentAmount: Math.min(goal.currentAmount + amount, goal.targetAmount) }
+          : goal
+      )
+    );
+
+    // Deduct from wallet
     if (onBalanceUpdate) {
       onBalanceUpdate('MWK', -amount);
     }
 
-    setShowContributeForm(null);
-    alert(`Successfully contributed MWK ${amount.toLocaleString()} to the group!`);
+    // Add to transaction history
+    if (onTransactionUpdate) {
+      onTransactionUpdate({
+        type: 'Money Added to Savings',
+        amount: `+MWK ${amount.toLocaleString()}`,
+        description: `Added to ${selectedGoal.name} savings goal`,
+        time: 'Just now',
+        status: 'completed'
+      });
+    }
+
+    setAddMoneyAmount('');
+    setSelectedGoal(null);
+    setShowAddMoney(false);
+    alert(`Successfully added MWK ${amount.toLocaleString()} to ${selectedGoal.name}`);
   };
 
-  const handleRequestLoan = (groupId: string, amount: number) => {
-    setTransactionModal({
-      isOpen: true,
-      showSuccess: false,
-      transaction: {
-        type: 'Loan Request',
-        amount: `MWK ${amount.toLocaleString()}`,
-        recipient: 'Village Bank Group',
-        fee: 'MWK 500',
-        total: `MWK ${(amount + 500).toLocaleString()}`
-      }
-    });
-    setShowLoanForm(null);
+  const openAddMoney = (goal: any) => {
+    setSelectedGoal(goal);
+    setShowAddMoney(true);
   };
-
-  const confirmTransaction = () => {
-    setTimeout(() => {
-      setTransactionModal(prev => ({ ...prev, showSuccess: true }));
-    }, 1000);
-  };
-
-  const closeTransactionModal = () => {
-    setTransactionModal({
-      isOpen: false,
-      showSuccess: false,
-      transaction: null
-    });
-  };
-
-  const openChat = (groupId: string, groupName: string) => {
-    setChatGroupId(groupId);
-    setChatGroupName(groupName);
-    setShowChat(true);
-  };
-
-  const openAdminDashboard = (group: any) => {
-    setSelectedGroup(group);
-    setShowAdminDashboard(true);
-  };
-
-  const approveLoan = (groupId: string, memberName: string) => {
-    alert(`Loan approved for ${memberName}`);
-  };
-
-  const addMember = (groupId: string) => {
-    alert('Member invitation sent');
-  };
-
-  if (showAdminDashboard && selectedGroup) {
-    return (
-      <div className="space-y-6 pb-24">
-        <div className="flex items-center space-x-4 mb-6">
-          <Button
-            onClick={() => setShowAdminDashboard(false)}
-            variant="outline"
-            className="border-white/20 text-white hover:bg-white/10"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back
-          </Button>
-          <h2 className="text-2xl font-bold text-white">{selectedGroup.name} - Admin Dashboard</h2>
-        </div>
-
-        {/* Group Overview */}
-        <Card className="bg-gray-900/50 backdrop-blur-md border-white/10">
-          <CardHeader>
-            <CardTitle className="text-white">Group Overview</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="text-center">
-                <p className="text-2xl font-bold text-white">{selectedGroup.members}</p>
-                <p className="text-sm text-white/60">Members</p>
-              </div>
-              <div className="text-center">
-                <p className="text-2xl font-bold text-green-400">MWK {selectedGroup.totalSavings.toLocaleString()}</p>
-                <p className="text-sm text-white/60">Total Savings</p>
-              </div>
-              <div className="text-center">
-                <p className="text-2xl font-bold text-yellow-400">{selectedGroup.interestRate}%</p>
-                <p className="text-sm text-white/60">Interest Rate</p>
-              </div>
-              <div className="text-center">
-                <p className="text-2xl font-bold text-blue-400">{selectedGroup.pendingLoans.length}</p>
-                <p className="text-sm text-white/60">Pending Loans</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Members List */}
-        <Card className="bg-gray-900/50 backdrop-blur-md border-white/10">
-          <CardHeader>
-            <CardTitle className="flex items-center justify-between text-white">
-              <span>Members & Contributions</span>
-              <Button onClick={() => addMember(selectedGroup.id)} className="bg-blue-600 hover:bg-blue-700">
-                <UserPlus className="w-4 h-4 mr-2" />
-                Add Member
-              </Button>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {selectedGroup.membersList.map((member: any, index: number) => (
-                <div key={index} className="flex items-center justify-between p-3 rounded-lg bg-gray-800/50">
-                  <div>
-                    <p className="font-medium text-white">{member.name}</p>
-                    <p className="text-sm text-white/60">Contribution: MWK {member.contribution.toLocaleString()}</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-sm text-white">Loans: MWK {member.loans.toLocaleString()}</p>
-                    <Badge className={member.loans > 0 ? 'bg-yellow-500/20 text-yellow-300' : 'bg-green-500/20 text-green-300'}>
-                      {member.loans > 0 ? 'Has Loan' : 'No Loan'}
-                    </Badge>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Pending Loans */}
-        <Card className="bg-gray-900/50 backdrop-blur-md border-white/10">
-          <CardHeader>
-            <CardTitle className="text-white">Pending Loan Requests</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {selectedGroup.pendingLoans.map((loan: any, index: number) => (
-                <div key={index} className="flex items-center justify-between p-3 rounded-lg bg-gray-800/50">
-                  <div>
-                    <p className="font-medium text-white">{loan.member}</p>
-                    <p className="text-sm text-white/60">{loan.purpose}</p>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <p className="text-white font-medium">MWK {loan.amount.toLocaleString()}</p>
-                    <Button
-                      onClick={() => approveLoan(selectedGroup.id, loan.member)}
-                      size="sm"
-                      className="bg-green-600 hover:bg-green-700"
-                    >
-                      Approve
-                    </Button>
-                    <Button size="sm" variant="outline" className="border-red-500 text-red-400 hover:bg-red-500/20">
-                      Decline
-                    </Button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-6 pb-24">
-      <Tabs defaultValue="savings" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 bg-gray-900/50 border-white/10">
-          <TabsTrigger value="savings" className="text-white data-[state=active]:bg-white/20">Savings Goals</TabsTrigger>
-          <TabsTrigger value="village-bank" className="text-blue-400 data-[state=active]:bg-blue-500/20">Village Bank</TabsTrigger>
-        </TabsList>
+      {/* Header */}
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold text-white">Save & Invest</h2>
+        <div className="flex space-x-2">
+          <Button
+            onClick={() => setActiveTab('goals')}
+            className={`${activeTab === 'goals' 
+              ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white' 
+              : 'bg-gray-800/60 text-gray-300 hover:text-white'
+            }`}
+          >
+            <Target className="w-4 h-4 mr-2" />
+            Savings Goals
+          </Button>
+          <Button
+            onClick={() => setActiveTab('village')}
+            className={`${activeTab === 'village' 
+              ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white' 
+              : 'bg-gray-800/60 text-gray-300 hover:text-white'
+            }`}
+          >
+            <Users className="w-4 h-4 mr-2" />
+            Village Bank
+          </Button>
+        </div>
+      </div>
 
-        <TabsContent value="savings" className="space-y-4">
-          {showNewGoalForm && (
-            <Card className="bg-gray-900/50 backdrop-blur-md border-white/10 mb-6">
-              <CardHeader>
-                <CardTitle className="text-white">Create New Savings Goal</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <Input placeholder="Goal Name (e.g., New Car)" className="bg-gray-800/50 border-white/20 text-white placeholder-white/60" id="goal-name" />
-                <Input placeholder="Target Amount (MWK)" type="number" className="bg-gray-800/50 border-white/20 text-white placeholder-white/60" id="goal-target" />
-                <Input placeholder="Deadline" type="date" className="bg-gray-800/50 border-white/20 text-white placeholder-white/60" id="goal-deadline" />
-                <div className="flex space-x-2">
-                  <Button onClick={() => {
-                    const name = (document.getElementById('goal-name') as HTMLInputElement)?.value;
-                    const target = (document.getElementById('goal-target') as HTMLInputElement)?.value;
-                    const deadline = (document.getElementById('goal-deadline') as HTMLInputElement)?.value;
-                    if (name && target && deadline) {
-                      handleCreateSavingsGoal({ name, target, deadline });
-                    }
-                  }} className="flex-1 bg-blue-600 hover:bg-blue-700">
-                    Create Goal
-                  </Button>
-                  <Button onClick={() => setShowNewGoalForm(false)} variant="outline" className="flex-1 border-white/20 text-white hover:bg-white/10">
-                    Cancel
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          <Card className="bg-gray-900/50 backdrop-blur-md border-white/10">
-            <CardHeader>
-              <CardTitle className="flex items-center justify-between text-white">
-                <div className="flex items-center space-x-2">
-                  <Target className="w-5 h-5 text-blue-400" />
-                  <span>Savings Goals</span>
-                </div>
-                <Button onClick={() => setShowNewGoalForm(true)} className="bg-blue-600 hover:bg-blue-700">
-                  <Plus className="w-4 h-4 mr-2" />
-                  New Goal
-                </Button>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {savingsGoals.map((goal) => (
-                  <div key={goal.id} className="p-4 rounded-lg bg-gray-800/50 border border-gray-600">
-                    <h4 className="font-semibold text-white mb-2">{goal.name}</h4>
-                    <div className="space-y-3">
-                      <div className="flex justify-between text-sm text-gray-300">
-                        <span>Target:</span>
-                        <span className="text-white font-bold">MWK {goal.target.toLocaleString()}</span>
-                      </div>
-                      <div className="flex justify-between text-sm text-gray-300">
-                        <span>Current:</span>
-                        <span className="text-blue-400 font-bold">MWK {goal.current.toLocaleString()}</span>
-                      </div>
-                      <Progress value={goal.percentage} className="h-3" />
-                      <p className="text-xs text-gray-400">Deadline: {goal.deadline}</p>
-                      
-                      {showAddMoneyForm === goal.id ? (
-                        <div className="space-y-2">
-                          <Input
-                            placeholder="Amount to add (MWK)"
-                            type="number"
-                            className="bg-gray-700 border-gray-600 text-white"
-                            id={`add-amount-${goal.id}`}
-                          />
-                          <div className="flex space-x-2">
-                            <Button
-                              onClick={() => {
-                                const amount = parseInt((document.getElementById(`add-amount-${goal.id}`) as HTMLInputElement)?.value || '0');
-                                if (amount > 0) {
-                                  handleAddMoney(goal.id, amount);
-                                }
-                              }}
-                              size="sm"
-                              className="flex-1 bg-green-600 hover:bg-green-700"
-                            >
-                              Add Money
-                            </Button>
-                            <Button
-                              onClick={() => setShowAddMoneyForm(null)}
-                              size="sm"
-                              variant="outline"
-                              className="flex-1 border-gray-600 text-gray-300"
-                            >
-                              Cancel
-                            </Button>
-                          </div>
-                        </div>
-                      ) : (
-                        <Button
-                          onClick={() => setShowAddMoneyForm(goal.id)}
-                          size="sm"
-                          className="w-full bg-blue-600 hover:bg-blue-700"
-                        >
-                          Add Money
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                ))}
+      {/* Create New Section */}
+      {activeTab === 'goals' && (
+        <Card className="bg-gray-900/80 backdrop-blur-xl border-gray-700/50 shadow-2xl">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-semibold text-white">Create New Savings Goal</h3>
+                <p className="text-gray-400">Set a target and start saving towards your dreams</p>
               </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="village-bank" className="space-y-4">
-          {showNewGroupForm && (
-            <Card className="bg-gray-900/50 backdrop-blur-md border-white/10 mb-6">
-              <CardHeader>
-                <CardTitle className="text-white">Create New Village Bank Group</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <Input placeholder="Group Name" className="bg-gray-800/50 border-white/20 text-white placeholder-white/60" id="group-name" />
-                <Input placeholder="Interest Rate (%)" type="number" className="bg-gray-800/50 border-white/20 text-white placeholder-white/60" id="group-rate" />
-                <Input placeholder="Minimum Duration" className="bg-gray-800/50 border-white/20 text-white placeholder-white/60" id="group-duration" />
-                <div className="flex space-x-2">
-                  <Button onClick={() => {
-                    const name = (document.getElementById('group-name') as HTMLInputElement)?.value;
-                    const interestRate = (document.getElementById('group-rate') as HTMLInputElement)?.value;
-                    const duration = (document.getElementById('group-duration') as HTMLInputElement)?.value;
-                    if (name && interestRate && duration) {
-                      handleCreateVillageBank({ name, interestRate, duration });
-                    }
-                  }} className="flex-1 bg-cyan-600 hover:bg-cyan-700">
-                    Create Group
-                  </Button>
-                  <Button onClick={() => setShowNewGroupForm(false)} variant="outline" className="flex-1 border-white/20 text-white hover:bg-white/10">
-                    Cancel
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          <Card className="bg-gray-900/50 backdrop-blur-md border-white/10">
-            <CardHeader>
-              <CardTitle className="flex items-center justify-between text-white">
-                <div className="flex items-center space-x-2">
-                  <Users className="w-5 h-5 text-cyan-400" />
-                  <span>My Village Bank Groups</span>
-                </div>
-                <Button onClick={() => setShowNewGroupForm(true)} className="bg-cyan-600 hover:bg-cyan-700">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Create Group
-                </Button>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {villageBankGroups.map((group) => (
-                  <div key={group.id} className="p-4 rounded-lg bg-gray-800/50 border border-gray-600">
-                    <div className="flex items-center justify-between mb-3">
-                      <h4 className="font-semibold text-white">{group.name}</h4>
-                      <Badge 
-                        className={group.role === 'Admin' ? 'bg-orange-500/20 text-orange-300' : 'bg-cyan-500/20 text-cyan-300'}
-                      >
-                        {group.role}
-                      </Badge>
-                    </div>
-                    
-                    <div className="space-y-3">
-                      <div className="flex justify-between text-sm text-gray-300">
-                        <span>Members</span>
-                        <span className="text-white">{group.members}</span>
-                      </div>
-                      
-                      <div className="flex justify-between text-sm text-gray-300">
-                        <span>Total Savings</span>
-                        <span className="font-semibold text-white">MWK {group.totalSavings.toLocaleString()}</span>
-                      </div>
-                      
-                      <div className="flex justify-between text-sm text-gray-300">
-                        <span>My Contribution</span>
-                        <span className="font-semibold text-cyan-400">MWK {group.myContribution.toLocaleString()}</span>
-                      </div>
-                      
-                      <div className="flex justify-between text-sm text-gray-300">
-                        <span>Interest Rate</span>
-                        <span className="text-green-400">{group.interestRate}% p.a.</span>
-                      </div>
-
-                      <Progress 
-                        value={(group.myContribution / Math.max(group.totalSavings, 1)) * 100} 
-                        className="h-2"
-                      />
-                      
-                      <div className="flex space-x-2 mt-3">
-                        {showContributeForm === group.id ? (
-                          <div className="w-full space-y-2">
-                            <Input
-                              placeholder="Amount to contribute (MWK)"
-                              type="number"
-                              className="bg-gray-700 border-gray-600 text-white"
-                              id={`contribute-amount-${group.id}`}
-                            />
-                            <div className="flex space-x-2">
-                              <Button
-                                onClick={() => {
-                                  const amount = parseInt((document.getElementById(`contribute-amount-${group.id}`) as HTMLInputElement)?.value || '0');
-                                  if (amount > 0) {
-                                    handleContribute(group.id, amount);
-                                  }
-                                }}
-                                size="sm"
-                                className="flex-1 bg-green-600 hover:bg-green-700"
-                              >
-                                Contribute
-                              </Button>
-                              <Button
-                                onClick={() => setShowContributeForm(null)}
-                                size="sm"
-                                variant="outline"
-                                className="flex-1 border-gray-600 text-gray-300"
-                              >
-                                Cancel
-                              </Button>
-                            </div>
-                          </div>
-                        ) : showLoanForm === group.id ? (
-                          <div className="w-full space-y-2">
-                            <Input
-                              placeholder="Loan amount (MWK)"
-                              type="number"
-                              className="bg-gray-700 border-gray-600 text-white"
-                              id={`loan-amount-${group.id}`}
-                            />
-                            <div className="flex space-x-2">
-                              <Button
-                                onClick={() => {
-                                  const amount = parseInt((document.getElementById(`loan-amount-${group.id}`) as HTMLInputElement)?.value || '0');
-                                  if (amount > 0) {
-                                    handleRequestLoan(group.id, amount);
-                                  }
-                                }}
-                                size="sm"
-                                className="flex-1 bg-yellow-600 hover:bg-yellow-700"
-                              >
-                                Request
-                              </Button>
-                              <Button
-                                onClick={() => setShowLoanForm(null)}
-                                size="sm"
-                                variant="outline"
-                                className="flex-1 border-gray-600 text-gray-300"
-                              >
-                                Cancel
-                              </Button>
-                            </div>
-                          </div>
-                        ) : (
-                          <>
-                            <Button
-                              size="sm"
-                              onClick={() => setShowContributeForm(group.id)}
-                              className="flex-1 bg-green-600 hover:bg-green-700"
-                            >
-                              Contribute
-                            </Button>
-                            <Button
-                              size="sm"
-                              onClick={() => setShowLoanForm(group.id)}
-                              className="flex-1 bg-yellow-600 hover:bg-yellow-700"
-                            >
-                              Request Loan
-                            </Button>
-                          </>
-                        )}
-                      </div>
-                      
-                      <Button 
-                        size="sm" 
-                        onClick={() => openChat(group.id, group.name)}
-                        className="w-full bg-blue-600 hover:bg-blue-700 mt-2"
-                      >
-                        <MessageCircle className="w-4 h-4 mr-2" />
-                        Chat
-                      </Button>
-                      
-                      {group.role === 'Admin' && (
-                        <Button
-                          size="sm"
-                          onClick={() => openAdminDashboard(group)}
-                          className="w-full bg-purple-600 hover:bg-purple-700 mt-2"
-                        >
-                          <Settings className="w-4 h-4 mr-2" />
-                          Admin Dashboard
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
-
-      {showChat && (
-        <VillageBankChat
-          groupId={chatGroupId}
-          groupName={chatGroupName}
-          onClose={() => setShowChat(false)}
-        />
+              <Button
+                onClick={() => setShowCreateGoal(true)}
+                className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Create Goal
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       )}
 
-      <TransactionConfirmation
-        isOpen={transactionModal.isOpen}
-        onClose={closeTransactionModal}
-        onConfirm={confirmTransaction}
-        onSuccess={closeTransactionModal}
-        transaction={transactionModal.transaction}
-        showSuccess={transactionModal.showSuccess}
-      />
+      {activeTab === 'village' && (
+        <Card className="bg-gray-900/80 backdrop-blur-xl border-gray-700/50 shadow-2xl">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-semibold text-white">Create Village Bank Group</h3>
+                <p className="text-gray-400">Start or join a community savings group</p>
+              </div>
+              <Button
+                onClick={() => setShowCreateGroup(true)}
+                className="bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Create Group
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Content based on active tab */}
+      {activeTab === 'goals' && (
+        <div className="space-y-4">
+          {savingsGoals.map((goal) => {
+            const progress = (goal.currentAmount / goal.targetAmount) * 100;
+            const remainingDays = Math.ceil((new Date(goal.deadline).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+            
+            return (
+              <Card key={goal.id} className="bg-gray-900/80 backdrop-blur-xl border-gray-700/50 shadow-2xl">
+                <CardContent className="p-6">
+                  <div className="flex justify-between items-start mb-4">
+                    <div className="flex-1">
+                      <div className="flex items-center space-x-2 mb-2">
+                        <PiggyBank className="w-5 h-5 text-green-400" />
+                        <h3 className="text-lg font-semibold text-white">{goal.name}</h3>
+                        <Badge className="bg-blue-500/20 text-blue-300 border-blue-400/30">
+                          {goal.category}
+                        </Badge>
+                      </div>
+                      <p className="text-gray-400 text-sm mb-3">{goal.description}</p>
+                      
+                      <div className="space-y-2">
+                        <div className="flex justify-between text-sm">
+                          <span className="text-gray-300">Progress</span>
+                          <span className="text-white font-medium">{progress.toFixed(1)}%</span>
+                        </div>
+                        <div className="w-full bg-gray-700 rounded-full h-2">
+                          <div 
+                            className="bg-gradient-to-r from-green-500 to-green-600 h-2 rounded-full transition-all duration-300"
+                            style={{ width: `${Math.min(progress, 100)}%` }}
+                          />
+                        </div>
+                        <div className="flex justify-between text-sm">
+                          <span className="text-gray-300">
+                            MWK {goal.currentAmount.toLocaleString()} / MWK {goal.targetAmount.toLocaleString()}
+                          </span>
+                          <span className="text-gray-300">
+                            {remainingDays > 0 ? `${remainingDays} days left` : 'Deadline passed'}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex space-x-2">
+                    <Button
+                      onClick={() => openAddMoney(goal)}
+                      className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white flex-1"
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      Add Money
+                    </Button>
+                    {remainingDays <= 0 && (
+                      <Button
+                        onClick={() => {
+                          if (onBalanceUpdate) {
+                            onBalanceUpdate('MWK', goal.currentAmount);
+                          }
+                          if (onTransactionUpdate) {
+                            onTransactionUpdate({
+                              type: 'Savings Withdrawal',
+                              amount: `+MWK ${goal.currentAmount.toLocaleString()}`,
+                              description: `Withdrew from ${goal.name} savings goal`,
+                              time: 'Just now',
+                              status: 'completed'
+                            });
+                          }
+                          setSavingsGoals(goals => goals.filter(g => g.id !== goal.id));
+                          alert(`Successfully withdrew MWK ${goal.currentAmount.toLocaleString()} from ${goal.name}`);
+                        }}
+                        className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white"
+                      >
+                        Withdraw
+                      </Button>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      )}
+
+      {activeTab === 'village' && (
+        <div className="space-y-4">
+          {villageGroups.map((group) => (
+            <Card key={group.id} className="bg-gray-900/80 backdrop-blur-xl border-gray-700/50 shadow-2xl">
+              <CardContent className="p-6">
+                <div className="flex justify-between items-start mb-4">
+                  <div className="flex-1">
+                    <div className="flex items-center space-x-2 mb-2">
+                      <Users className="w-5 h-5 text-purple-400" />
+                      <h3 className="text-lg font-semibold text-white">{group.name}</h3>
+                      <Badge className={`${
+                        group.status === 'Active' 
+                          ? 'bg-green-500/20 text-green-300 border-green-400/30' 
+                          : 'bg-gray-500/20 text-gray-300 border-gray-400/30'
+                      }`}>
+                        {group.status}
+                      </Badge>
+                      {group.isAdmin && (
+                        <Badge className="bg-yellow-500/20 text-yellow-300 border-yellow-400/30">
+                          Admin
+                        </Badge>
+                      )}
+                    </div>
+                    <p className="text-gray-400 text-sm mb-3">{group.description}</p>
+                    
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                      <div>
+                        <p className="text-gray-300">Members</p>
+                        <p className="font-semibold text-white">{group.members}</p>
+                      </div>
+                      <div>
+                        <p className="text-gray-300">Total Pool</p>
+                        <p className="font-semibold text-white">MWK {group.totalPool.toLocaleString()}</p>
+                      </div>
+                      <div>
+                        <p className="text-gray-300">My Contribution</p>
+                        <p className="font-semibold text-white">MWK {group.myContribution.toLocaleString()}</p>
+                      </div>
+                      <div>
+                        <p className="text-gray-300">Next Meeting</p>
+                        <p className="font-semibold text-white">{group.nextMeeting}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="flex space-x-2">
+                  <Button
+                    onClick={() => {
+                      const amount = prompt('Enter contribution amount:');
+                      if (amount && parseFloat(amount) > 0) {
+                        const contributionAmount = parseFloat(amount);
+                        setVillageGroups(groups => 
+                          groups.map(g => 
+                            g.id === group.id 
+                              ? { 
+                                  ...g, 
+                                  myContribution: g.myContribution + contributionAmount,
+                                  totalPool: g.totalPool + contributionAmount
+                                }
+                              : g
+                          )
+                        );
+                        if (onBalanceUpdate) {
+                          onBalanceUpdate('MWK', -contributionAmount);
+                        }
+                        if (onTransactionUpdate) {
+                          onTransactionUpdate({
+                            type: 'Village Bank Contribution',
+                            amount: `-MWK ${contributionAmount.toLocaleString()}`,
+                            description: `Contributed to ${group.name}`,
+                            time: 'Just now',
+                            status: 'completed'
+                          });
+                        }
+                        alert(`Successfully contributed MWK ${contributionAmount.toLocaleString()} to ${group.name}`);
+                      }
+                    }}
+                    className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Contribute
+                  </Button>
+                  
+                  <Button
+                    onClick={() => {
+                      const maxLoan = group.myContribution * 3; // Can borrow 3x contribution
+                      const amount = prompt(`Enter loan amount (Max: MWK ${maxLoan.toLocaleString()}):`);
+                      if (amount && parseFloat(amount) > 0 && parseFloat(amount) <= maxLoan) {
+                        const loanAmount = parseFloat(amount);
+                        if (onBalanceUpdate) {
+                          onBalanceUpdate('MWK', loanAmount);
+                        }
+                        if (onTransactionUpdate) {
+                          onTransactionUpdate({
+                            type: 'Village Bank Loan',
+                            amount: `+MWK ${loanAmount.toLocaleString()}`,
+                            description: `Loan from ${group.name} (5% interest)`,
+                            time: 'Just now',
+                            status: 'completed'
+                          });
+                        }
+                        alert(`Loan of MWK ${loanAmount.toLocaleString()} approved with 5% interest`);
+                      } else if (amount) {
+                        alert(`Invalid amount. Maximum loan: MWK ${maxLoan.toLocaleString()}`);
+                      }
+                    }}
+                    className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white"
+                  >
+                    Request Loan
+                  </Button>
+                  
+                  <Button
+                    onClick={() => alert('Group details and member management coming soon!')}
+                    className="bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white"
+                  >
+                    <ArrowRight className="w-4 h-4 mr-2" />
+                    View Details
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+
+      {/* Create Goal Modal */}
+      <Dialog open={showCreateGoal} onOpenChange={setShowCreateGoal}>
+        <DialogContent className="bg-gray-800 border-gray-700 text-white">
+          <DialogHeader>
+            <DialogTitle>Create New Savings Goal</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label className="text-gray-300">Goal Name</Label>
+              <Input
+                value={newGoal.name}
+                onChange={(e) => setNewGoal({...newGoal, name: e.target.value})}
+                placeholder="e.g., New Car, Vacation"
+                className="bg-gray-700 border-gray-600 text-white"
+              />
+            </div>
+            
+            <div>
+              <Label className="text-gray-300">Target Amount (MWK)</Label>
+              <Input
+                type="number"
+                value={newGoal.targetAmount}
+                onChange={(e) => setNewGoal({...newGoal, targetAmount: e.target.value})}
+                placeholder="500000"
+                className="bg-gray-700 border-gray-600 text-white"
+              />
+            </div>
+            
+            <div>
+              <Label className="text-gray-300">Target Date</Label>
+              <Input
+                type="date"
+                value={newGoal.deadline}
+                onChange={(e) => setNewGoal({...newGoal, deadline: e.target.value})}
+                className="bg-gray-700 border-gray-600 text-white"
+              />
+            </div>
+            
+            <div>
+              <Label className="text-gray-300">Category</Label>
+              <Select value={newGoal.category} onValueChange={(value) => setNewGoal({...newGoal, category: value})}>
+                <SelectTrigger className="bg-gray-700 border-gray-600 text-white">
+                  <SelectValue placeholder="Select category" />
+                </SelectTrigger>
+                <SelectContent className="bg-gray-800 border-gray-700">
+                  <SelectItem value="Emergency" className="text-white">Emergency</SelectItem>
+                  <SelectItem value="Vehicle" className="text-white">Vehicle</SelectItem>
+                  <SelectItem value="Education" className="text-white">Education</SelectItem>
+                  <SelectItem value="Travel" className="text-white">Travel</SelectItem>
+                  <SelectItem value="Business" className="text-white">Business</SelectItem>
+                  <SelectItem value="General" className="text-white">General</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div>
+              <Label className="text-gray-300">Description</Label>
+              <Input
+                value={newGoal.description}
+                onChange={(e) => setNewGoal({...newGoal, description: e.target.value})}
+                placeholder="Brief description of your goal"
+                className="bg-gray-700 border-gray-600 text-white"
+              />
+            </div>
+            
+            <Button 
+              onClick={handleCreateGoal}
+              className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700"
+            >
+              Create Savings Goal
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Create Group Modal */}
+      <Dialog open={showCreateGroup} onOpenChange={setShowCreateGroup}>
+        <DialogContent className="bg-gray-800 border-gray-700 text-white">
+          <DialogHeader>
+            <DialogTitle>Create Village Bank Group</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label className="text-gray-300">Group Name</Label>
+              <Input
+                value={newGroup.name}
+                onChange={(e) => setNewGroup({...newGroup, name: e.target.value})}
+                placeholder="e.g., Business Owners Group"
+                className="bg-gray-700 border-gray-600 text-white"
+              />
+            </div>
+            
+            <div>
+              <Label className="text-gray-300">Monthly Contribution (MWK)</Label>
+              <Input
+                type="number"
+                value={newGroup.contributionAmount}
+                onChange={(e) => setNewGroup({...newGroup, contributionAmount: e.target.value})}
+                placeholder="10000"
+                className="bg-gray-700 border-gray-600 text-white"
+              />
+            </div>
+            
+            <div>
+              <Label className="text-gray-300">Maximum Members</Label>
+              <Input
+                type="number"
+                value={newGroup.maxMembers}
+                onChange={(e) => setNewGroup({...newGroup, maxMembers: e.target.value})}
+                placeholder="10"
+                className="bg-gray-700 border-gray-600 text-white"
+              />
+            </div>
+            
+            <div>
+              <Label className="text-gray-300">Description</Label>
+              <Input
+                value={newGroup.description}
+                onChange={(e) => setNewGroup({...newGroup, description: e.target.value})}
+                placeholder="Brief description of your group"
+                className="bg-gray-700 border-gray-600 text-white"
+              />
+            </div>
+            
+            <Button 
+              onClick={handleCreateGroup}
+              className="w-full bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700"
+            >
+              Create Group
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add Money Modal */}
+      <Dialog open={showAddMoney} onOpenChange={setShowAddMoney}>
+        <DialogContent className="bg-gray-800 border-gray-700 text-white">
+          <DialogHeader>
+            <DialogTitle>Add Money to {selectedGoal?.name}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="bg-gray-700/50 p-4 rounded-lg">
+              <div className="flex justify-between text-sm mb-2">
+                <span className="text-gray-300">Current Amount:</span>
+                <span className="text-white">MWK {selectedGoal?.currentAmount.toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-300">Target Amount:</span>
+                <span className="text-white">MWK {selectedGoal?.targetAmount.toLocaleString()}</span>
+              </div>
+            </div>
+            
+            <div>
+              <Label className="text-gray-300">Amount to Add (MWK)</Label>
+              <Input
+                type="number"
+                value={addMoneyAmount}
+                onChange={(e) => setAddMoneyAmount(e.target.value)}
+                placeholder="Enter amount"
+                className="bg-gray-700 border-gray-600 text-white"
+              />
+            </div>
+            
+            <Button 
+              onClick={handleAddMoney}
+              disabled={!addMoneyAmount}
+              className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700"
+            >
+              Add MWK {addMoneyAmount ? parseFloat(addMoneyAmount).toLocaleString() : '0'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

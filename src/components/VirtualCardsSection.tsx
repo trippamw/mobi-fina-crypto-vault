@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -31,7 +30,12 @@ interface MyCard {
   balance: number;
 }
 
-export const VirtualCardsSection = () => {
+interface VirtualCardsSectionProps {
+  onCardPurchase?: (cardType: string) => void;
+  purchasedCards?: any[];
+}
+
+export const VirtualCardsSection: React.FC<VirtualCardsSectionProps> = ({ onCardPurchase, purchasedCards = [] }) => {
   const [showCardDetails, setShowCardDetails] = useState(false);
   const [myCards, setMyCards] = useState<MyCard[]>([
     {
@@ -132,6 +136,11 @@ export const VirtualCardsSection = () => {
         balance: 0
       };
       setMyCards([...myCards, newCard]);
+      
+      // Call the onCardPurchase callback if provided
+      if (onCardPurchase) {
+        onCardPurchase(selectedTier.name);
+      }
     }
     
     setShowOrderCard(false);
@@ -165,7 +174,7 @@ export const VirtualCardsSection = () => {
   return (
     <div className="space-y-6">
       {/* My Cards */}
-      <Card className="bg-gray-800/50 border-gray-700">
+      <Card className="bg-gray-900/80 backdrop-blur-xl border-gray-700/50 shadow-2xl">
         <CardHeader>
           <CardTitle className="flex items-center space-x-2 text-white">
             <CreditCard className="w-5 h-5 text-green-400" />
@@ -257,7 +266,7 @@ export const VirtualCardsSection = () => {
       {/* Card Tiers */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {cardTiers.map((tier, index) => (
-          <Card key={index} className="bg-gray-800/50 border-gray-700 hover:scale-105 transition-transform">
+          <Card key={index} className="bg-gray-900/80 backdrop-blur-xl border-gray-700/50 shadow-2xl hover:scale-105 transition-transform">
             <CardHeader>
               <CardTitle className="flex items-center justify-between text-white">
                 <span>{tier.name}</span>
@@ -314,7 +323,7 @@ export const VirtualCardsSection = () => {
 
               <Button 
                 onClick={() => handleOrderCard(tier)}
-                className="w-full bg-green-600 hover:bg-green-700 text-white"
+                className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white"
               >
                 <Plus className="w-4 h-4 mr-2" />
                 Get {tier.name} Card
@@ -325,7 +334,7 @@ export const VirtualCardsSection = () => {
       </div>
 
       {/* Physical Card Option */}
-      <Card className="bg-gray-800/50 border-gray-700">
+      <Card className="bg-gray-900/80 backdrop-blur-xl border-gray-700/50 shadow-2xl">
         <CardHeader>
           <CardTitle className="flex items-center space-x-2 text-white">
             <Truck className="w-5 h-5 text-green-400" />
@@ -333,7 +342,7 @@ export const VirtualCardsSection = () => {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center justify-between p-4 rounded-lg bg-gray-700/50">
+          <div className="flex items-center justify-between p-4 rounded-lg bg-gray-800/60 border border-gray-600/50">
             <div className="flex items-center space-x-4">
               <div className="w-16 h-10 bg-gradient-to-r from-green-600 to-green-800 rounded flex items-center justify-center relative">
                 <div className="absolute top-1 left-1">
@@ -358,7 +367,7 @@ export const VirtualCardsSection = () => {
           </div>
           <Button 
             onClick={handleOrderPhysicalCard}
-            className="w-full mt-4 bg-green-600 hover:bg-green-700 text-white"
+            className="w-full mt-4 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white"
           >
             <Truck className="w-4 h-4 mr-2" />
             Order Physical Card
@@ -420,7 +429,7 @@ export const VirtualCardsSection = () => {
             <Button 
               onClick={() => processCardOrder(false)}
               disabled={!orderForm.fullName || !orderForm.email || !orderForm.phone}
-              className="w-full bg-green-600 hover:bg-green-700"
+              className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700"
             >
               Order Card - {selectedTier?.price}
             </Button>
@@ -495,7 +504,7 @@ export const VirtualCardsSection = () => {
             <Button 
               onClick={() => processCardOrder(true)}
               disabled={!orderForm.fullName || !orderForm.phone || !orderForm.address || !orderForm.city}
-              className="w-full bg-green-600 hover:bg-green-700"
+              className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700"
             >
               Order Physical Card - MWK 10,000
             </Button>

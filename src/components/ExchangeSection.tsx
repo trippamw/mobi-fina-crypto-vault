@@ -8,9 +8,10 @@ import { Badge } from '@/components/ui/badge';
 
 interface ExchangeSectionProps {
   onBalanceUpdate?: (currency: string, amount: number) => void;
+  onTransactionUpdate?: (transaction: any) => void;
 }
 
-export const ExchangeSection: React.FC<ExchangeSectionProps> = ({ onBalanceUpdate }) => {
+export const ExchangeSection: React.FC<ExchangeSectionProps> = ({ onBalanceUpdate, onTransactionUpdate }) => {
   const [fromCurrency, setFromCurrency] = useState('');
   const [toCurrency, setToCurrency] = useState('');
   const [amount, setAmount] = useState('');
@@ -86,6 +87,17 @@ export const ExchangeSection: React.FC<ExchangeSectionProps> = ({ onBalanceUpdat
       onBalanceUpdate(toCurrency, convertedAmount);
     }
 
+    // Add to transaction history
+    if (onTransactionUpdate) {
+      onTransactionUpdate({
+        type: 'Exchange',
+        amount: `${amount} ${fromCurrency} → ${convertedAmount.toFixed(2)} ${toCurrency}`,
+        description: `Currency exchange from ${fromCurrency} to ${toCurrency}`,
+        time: 'Just now',
+        status: 'completed'
+      });
+    }
+
     // Reset form
     setFromCurrency('');
     setToCurrency('');
@@ -112,14 +124,14 @@ export const ExchangeSection: React.FC<ExchangeSectionProps> = ({ onBalanceUpdat
   return (
     <div className="space-y-6 pb-24">
       {/* Exchange Rates */}
-      <Card className="bg-gray-900/50 backdrop-blur-md border-white/10">
+      <Card className="bg-gray-900/80 backdrop-blur-xl border-gray-700/50 shadow-2xl">
         <CardHeader>
           <CardTitle className="text-white">Live Exchange Rates</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {currencies.slice(1).map((currency) => (
-              <div key={currency.code} className="bg-gray-800/50 p-3 rounded-lg">
+              <div key={currency.code} className="bg-gray-800/60 p-3 rounded-lg border border-gray-600/50">
                 <div className="flex items-center space-x-2 mb-1">
                   <span className="text-lg">{currency.flag}</span>
                   <span className="font-medium text-white">{currency.code}</span>
@@ -136,7 +148,7 @@ export const ExchangeSection: React.FC<ExchangeSectionProps> = ({ onBalanceUpdat
       </Card>
 
       {/* Exchange Form */}
-      <Card className="bg-gray-900/50 backdrop-blur-md border-white/10">
+      <Card className="bg-gray-900/80 backdrop-blur-xl border-gray-700/50 shadow-2xl">
         <CardHeader>
           <CardTitle className="text-white">Currency Exchange</CardTitle>
         </CardHeader>
@@ -146,7 +158,7 @@ export const ExchangeSection: React.FC<ExchangeSectionProps> = ({ onBalanceUpdat
             <div className="col-span-2">
               <label className="block text-sm font-medium text-white mb-2">From</label>
               <Select value={fromCurrency} onValueChange={(value) => handleCurrencyChange('from', value)}>
-                <SelectTrigger className="bg-gray-800/50 border-white/20 text-white">
+                <SelectTrigger className="bg-gray-800/60 border-gray-600/50 text-white">
                   <SelectValue placeholder="Select currency" />
                 </SelectTrigger>
                 <SelectContent className="bg-gray-900 border-gray-700">
@@ -162,7 +174,7 @@ export const ExchangeSection: React.FC<ExchangeSectionProps> = ({ onBalanceUpdat
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
                 placeholder="Enter amount"
-                className="mt-2 bg-gray-800/50 border-white/20 text-white placeholder-white/60"
+                className="mt-2 bg-gray-800/60 border-gray-600/50 text-white placeholder-gray-400"
               />
             </div>
 
@@ -170,7 +182,7 @@ export const ExchangeSection: React.FC<ExchangeSectionProps> = ({ onBalanceUpdat
             <div className="col-span-1 flex justify-center">
               <Button
                 onClick={swapCurrencies}
-                className="bg-gray-800/50 hover:bg-gray-700/50 border-white/20 rounded-full p-3"
+                className="bg-gray-800/60 hover:bg-gray-700/60 border-gray-600/50 rounded-full p-3"
               >
                 <ArrowUpDown className="w-4 h-4 text-white" />
               </Button>
@@ -180,7 +192,7 @@ export const ExchangeSection: React.FC<ExchangeSectionProps> = ({ onBalanceUpdat
             <div className="col-span-2">
               <label className="block text-sm font-medium text-white mb-2">To</label>
               <Select value={toCurrency} onValueChange={(value) => handleCurrencyChange('to', value)}>
-                <SelectTrigger className="bg-gray-800/50 border-white/20 text-white">
+                <SelectTrigger className="bg-gray-800/60 border-gray-600/50 text-white">
                   <SelectValue placeholder="Select currency" />
                 </SelectTrigger>
                 <SelectContent className="bg-gray-900 border-gray-700">
@@ -191,7 +203,7 @@ export const ExchangeSection: React.FC<ExchangeSectionProps> = ({ onBalanceUpdat
                   ))}
                 </SelectContent>
               </Select>
-              <div className="mt-2 p-3 bg-gray-800/50 rounded-lg">
+              <div className="mt-2 p-3 bg-gray-800/60 rounded-lg border border-gray-600/50">
                 <p className="text-white font-medium">
                   {convertedAmount > 0 ? convertedAmount.toLocaleString() : '0'} {toCurrency || ''}
                 </p>
@@ -200,13 +212,13 @@ export const ExchangeSection: React.FC<ExchangeSectionProps> = ({ onBalanceUpdat
           </div>
 
           {exchangeRate > 0 && (
-            <div className="bg-gray-800/50 p-3 rounded-lg">
+            <div className="bg-gray-800/60 p-3 rounded-lg border border-gray-600/30">
               <div className="flex justify-between text-sm">
-                <span className="text-white/60">Exchange Rate:</span>
+                <span className="text-gray-300">Exchange Rate:</span>
                 <span className="text-white">1 {fromCurrency} = {exchangeRate.toFixed(6)} {toCurrency}</span>
               </div>
               <div className="flex justify-between text-sm">
-                <span className="text-white/60">Fee (0.5%):</span>
+                <span className="text-gray-300">Fee (0.5%):</span>
                 <span className="text-white">{(parseFloat(amount || '0') * 0.005).toFixed(2)} {fromCurrency}</span>
               </div>
             </div>
@@ -214,7 +226,7 @@ export const ExchangeSection: React.FC<ExchangeSectionProps> = ({ onBalanceUpdat
 
           <Button 
             onClick={handleExchange}
-            className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold"
+            className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold"
             disabled={!fromCurrency || !toCurrency || !amount}
           >
             Exchange Currency
@@ -223,22 +235,22 @@ export const ExchangeSection: React.FC<ExchangeSectionProps> = ({ onBalanceUpdat
       </Card>
 
       {/* Recent Exchanges */}
-      <Card className="bg-gray-900/50 backdrop-blur-md border-white/10">
+      <Card className="bg-gray-900/80 backdrop-blur-xl border-gray-700/50 shadow-2xl">
         <CardHeader>
           <CardTitle className="text-white">Recent Exchanges</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
             {recentExchanges.map((exchange) => (
-              <div key={exchange.id} className="flex items-center justify-between p-3 rounded-lg bg-gray-800/50 hover:bg-gray-700/50 transition-colors">
+              <div key={exchange.id} className="flex items-center justify-between p-3 rounded-lg bg-gray-800/50 hover:bg-gray-700/50 transition-colors border border-gray-600/30">
                 <div className="min-w-0 flex-1">
                   <p className="font-medium text-sm text-white truncate">
                     {exchange.amount} {exchange.from} → {exchange.converted} {exchange.to}
                   </p>
-                  <p className="text-xs text-white/60 truncate">Rate: {exchange.rate}</p>
+                  <p className="text-xs text-gray-300 truncate">Rate: {exchange.rate}</p>
                 </div>
                 <div className="text-right ml-2">
-                  <p className="text-xs text-white/60">{exchange.date}</p>
+                  <p className="text-xs text-gray-300">{exchange.date}</p>
                   <Badge className="bg-green-500/20 text-green-300 border-green-400/30 text-xs">
                     {exchange.status}
                   </Badge>
