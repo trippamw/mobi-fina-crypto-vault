@@ -244,88 +244,111 @@ const Index = () => {
       default:
         return (
           <div className="space-y-4 sm:space-y-6 pb-32 sm:pb-24">
-            {/* Total Balance Card - Made darker */}
-            <Card className="bg-white/5 backdrop-blur-md border-white/10 card-hover">
+            {/* Total Balance Card - Enhanced Design */}
+            <Card className="bg-gradient-to-br from-gray-900/80 to-gray-800/60 backdrop-blur-2xl border-white/20 card-hover shadow-2xl">
               <CardHeader className="pb-3 sm:pb-6">
                 <CardTitle className="flex items-center justify-between text-base sm:text-lg text-white">
-                  <span>Total Balance</span>
-                  <Badge className="bg-green-500/20 text-green-300 border-green-400/30 text-xs">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                      <Wallet className="w-5 h-5 text-white" />
+                    </div>
+                    <span className="font-wealth text-xl">Total Portfolio</span>
+                  </div>
+                  <Badge className="bg-green-500/20 text-green-300 border-green-400/30 text-xs px-3 py-1">
                     <TrendingUp className="w-3 h-3 mr-1" />
                     +8.7%
                   </Badge>
                 </CardTitle>
               </CardHeader>
               <CardContent className="pt-0">
-                <div className="text-2xl sm:text-3xl font-bold mb-2">
+                <div className="mb-4">
                   {balanceVisible ? (
-                    <span className="text-premium">
-                      MWK {wallets.reduce((total, wallet) => total + (wallet.currency === 'MWK' ? wallet.balance : 0), 0).toLocaleString()}
-                    </span>
+                    <div className="space-y-2">
+                      <h2 className="text-4xl sm:text-5xl font-black font-wealth bg-gradient-to-r from-white via-blue-100 to-purple-200 bg-clip-text text-transparent">
+                        MWK {wallets.reduce((total, wallet) => total + (wallet.currency === 'MWK' ? wallet.balance : 0), 0).toLocaleString()}
+                      </h2>
+                      <p className="text-lg sm:text-xl font-semibold text-white/80">
+                        ≈ $1,625 USD
+                      </p>
+                    </div>
                   ) : (
-                    <span className="text-white/40">••••••••</span>
+                    <div className="space-y-2">
+                      <h2 className="text-4xl sm:text-5xl font-black text-white/20">
+                        ••••••••••
+                      </h2>
+                      <p className="text-lg sm:text-xl font-semibold text-white/20">
+                        ••••••••
+                      </p>
+                    </div>
                   )}
                 </div>
-                <p className="text-xs sm:text-sm text-white/60">
-                  ≈ $1,625 USD • Updated now
-                </p>
+                <div className="flex items-center justify-between">
+                  <p className="text-sm text-white/60 font-medium">
+                    🔄 Updated just now
+                  </p>
+                  <div className="flex items-center space-x-2 text-green-400">
+                    <span className="text-sm font-semibold">+MWK 47,300</span>
+                    <span className="text-xs">Today</span>
+                  </div>
+                </div>
               </CardContent>
             </Card>
 
-            {/* Quick Actions Dashboard - Made darker */}
-            <Card className="bg-white/5 backdrop-blur-md border-white/10">
+            {/* Quick Actions Dashboard - Enhanced */}
+            <Card className="bg-gray-900/60 backdrop-blur-xl border-white/20 shadow-xl">
               <CardContent className="p-4">
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                   <Button
-                    className="quick-action h-20 flex-col space-y-2 bg-green-500/20 hover:bg-green-500/30 text-green-300 border-green-400/30"
+                    className="quick-action h-20 flex-col space-y-2 bg-green-500/20 hover:bg-green-500/30 text-green-300 border-green-400/30 backdrop-blur-sm"
                     onClick={() => setActiveTab('deposit')}
                   >
                     <Plus className="w-6 h-6" />
                     <span className="text-xs font-medium">Deposit</span>
                   </Button>
                   <Button
-                    className="quick-action h-20 flex-col space-y-2 bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 border-blue-400/30"
+                    className="quick-action h-20 flex-col space-y-2 bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 border-blue-400/30 backdrop-blur-sm"
                     onClick={() => setActiveTab('send')}
                   >
                     <Send className="w-6 h-6" />
                     <span className="text-xs font-medium">Send</span>
                   </Button>
                   <Button
-                    className="quick-action h-20 flex-col space-y-2 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border-emerald-400/30"
+                    className="quick-action h-20 flex-col space-y-2 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border-emerald-400/30 backdrop-blur-sm"
                     onClick={() => setActiveTab('receive')}
                   >
                     <ArrowDownLeft className="w-6 h-6" />
                     <span className="text-xs font-medium">Receive</span>
                   </Button>
                   <Button
-                    className="quick-action h-20 flex-col space-y-2 bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 border-purple-400/30"
+                    className="quick-action h-20 flex-col space-y-2 bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 border-purple-400/30 backdrop-blur-sm"
                     onClick={() => setActiveTab('cards')}
                   >
                     <CreditCard className="w-6 h-6" />
                     <span className="text-xs font-medium">Cards</span>
                   </Button>
                   <Button
-                    className="quick-action h-20 flex-col space-y-2 bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-300 border-yellow-400/30"
+                    className="quick-action h-20 flex-col space-y-2 bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-300 border-yellow-400/30 backdrop-blur-sm"
                     onClick={() => setActiveTab('exchange')}
                   >
                     <Bitcoin className="w-6 h-6" />
                     <span className="text-xs font-medium">Exchange</span>
                   </Button>
                   <Button
-                    className="quick-action h-20 flex-col space-y-2 bg-pink-500/20 hover:bg-pink-500/30 text-pink-300 border-pink-400/30"
+                    className="quick-action h-20 flex-col space-y-2 bg-pink-500/20 hover:bg-pink-500/30 text-pink-300 border-pink-400/30 backdrop-blur-sm"
                     onClick={() => setActiveTab('invest')}
                   >
                     <PiggyBank className="w-6 h-6" />
                     <span className="text-xs font-medium">Save</span>
                   </Button>
                   <Button
-                    className="quick-action h-20 flex-col space-y-2 bg-orange-500/20 hover:bg-orange-500/30 text-orange-300 border-orange-400/30"
+                    className="quick-action h-20 flex-col space-y-2 bg-orange-500/20 hover:bg-orange-500/30 text-orange-300 border-orange-400/30 backdrop-blur-sm"
                     onClick={() => setActiveTab('bills')}
                   >
                     <Zap className="w-6 h-6" />
                     <span className="text-xs font-medium">Bills</span>
                   </Button>
                   <Button
-                    className="quick-action h-20 flex-col space-y-2 bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 border-cyan-400/30"
+                    className="quick-action h-20 flex-col space-y-2 bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 border-cyan-400/30 backdrop-blur-sm"
                     onClick={() => setActiveTab('invite')}
                   >
                     <UserPlus className="w-6 h-6" />
@@ -346,10 +369,10 @@ const Index = () => {
               ))}
             </div>
 
-            {/* Recent Activity - Made darker */}
-            <Card className="bg-white/5 backdrop-blur-md border-white/10">
+            {/* Recent Activity - Enhanced */}
+            <Card className="bg-gray-900/60 backdrop-blur-xl border-white/20 shadow-xl">
               <CardHeader className="pb-3 sm:pb-6">
-                <CardTitle className="text-base sm:text-lg text-white">Recent Activity</CardTitle>
+                <CardTitle className="text-base sm:text-lg text-white font-wealth">Recent Activity</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3 sm:space-y-4">
@@ -358,7 +381,7 @@ const Index = () => {
                     { type: 'Exchange', amount: '0.001 BTC → MWK 294,000', from: 'Crypto Exchange', time: '1 hour ago', status: 'completed' },
                     { type: 'Investment', amount: '+MWK 25,000', from: 'Savings Goal', time: '3 hours ago', status: 'pending' }
                   ].map((activity, index) => (
-                    <div key={index} className="flex items-center justify-between p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors">
+                    <div key={index} className="flex items-center justify-between p-3 rounded-lg bg-gray-800/50 hover:bg-gray-700/50 transition-colors border border-white/10">
                       <div className="min-w-0 flex-1">
                         <p className="font-medium text-sm sm:text-base truncate text-white">{activity.type}</p>
                         <p className="text-xs sm:text-sm text-white/60 truncate">{activity.from}</p>
@@ -388,7 +411,7 @@ const Index = () => {
                 <Wallet className="w-4 h-4 sm:w-6 sm:h-6 text-white" />
               </div>
               <div>
-                <h1 className="text-lg sm:text-2xl font-bold text-premium">
+                <h1 className="text-lg sm:text-2xl font-bold text-premium font-wealth">
                   NeoVault
                 </h1>
                 <p className="text-[10px] sm:text-xs text-white/60">All Things Money. One App</p>
@@ -425,22 +448,24 @@ const Index = () => {
         {renderContent()}
       </div>
 
-      {/* Mobile Navigation - Fixed at bottom with safe area padding */}
-      <MobileNavigation 
-        activeTab={activeTab} 
-        onTabChange={(tab) => {
-          if (tab === 'home') {
-            setActiveTab('dashboard');
-          } else if (tab === 'wallet') {
-            setActiveTab('cards');
-          } else if (tab === 'save') {
-            setActiveTab('invest');
-          } else {
-            setActiveTab(tab);
-          }
-        }}
-        notificationCount={notificationCount}
-      />
+      {/* Mobile Navigation - Fixed with proper padding */}
+      <div className="fixed bottom-0 left-0 right-0 z-50 pb-safe-area-inset-bottom">
+        <MobileNavigation 
+          activeTab={activeTab} 
+          onTabChange={(tab) => {
+            if (tab === 'home') {
+              setActiveTab('dashboard');
+            } else if (tab === 'wallet') {
+              setActiveTab('cards');
+            } else if (tab === 'save') {
+              setActiveTab('invest');
+            } else {
+              setActiveTab(tab);
+            }
+          }}
+          notificationCount={notificationCount}
+        />
+      </div>
 
       {/* Transaction Confirmation Modal */}
       <TransactionConfirmation
