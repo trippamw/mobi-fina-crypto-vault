@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Zap, GraduationCap, Droplets, Wifi, Phone, Car, Home, CreditCard, Building, Smartphone } from 'lucide-react';
 
 interface BillsSectionProps {
-  onBalanceUpdate?: (currency: string, amount: number) => void;
+  onBalanceUpdate: (currency: string, amount: number) => void;
 }
 
 export const BillsSection = ({ onBalanceUpdate }: BillsSectionProps) => {
@@ -112,9 +111,7 @@ export const BillsSection = ({ onBalanceUpdate }: BillsSectionProps) => {
     // Simulate payment processing
     setTimeout(() => {
       // Deduct from wallet balance
-      if (onBalanceUpdate) {
-        onBalanceUpdate('MWK', -paymentAmount);
-      }
+      onBalanceUpdate('MWK', -paymentAmount);
       
       // Add to recent payments
       const newPayment = {
@@ -142,9 +139,9 @@ export const BillsSection = ({ onBalanceUpdate }: BillsSectionProps) => {
 
   return (
     <div className="space-y-6">
-      <Card className="gradient-card border-white/20">
+      <Card className="bg-gradient-to-br from-blue-600/20 via-purple-600/20 to-indigo-600/20 backdrop-blur-xl border-white/10 shadow-2xl">
         <CardHeader>
-          <CardTitle className="flex items-center space-x-2 text-glass">
+          <CardTitle className="flex items-center space-x-2 text-white/90 font-semibold">
             <Zap className="w-5 h-5 text-yellow-400" />
             <span>Pay Bills</span>
           </CardTitle>
@@ -152,7 +149,7 @@ export const BillsSection = ({ onBalanceUpdate }: BillsSectionProps) => {
         <CardContent className="space-y-6">
           {/* Bill Categories */}
           <div>
-            <Label className="text-glass mb-3 block">Select Bill Category</Label>
+            <Label className="text-white/80 mb-3 block font-medium">Select Bill Category</Label>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               {billCategories.map((category) => (
                 <Button
@@ -162,10 +159,10 @@ export const BillsSection = ({ onBalanceUpdate }: BillsSectionProps) => {
                     setSelectedCategory(category.id);
                     setSelectedProvider('');
                   }}
-                  className={`h-20 flex-col space-y-2 transition-all duration-300 ${
+                  className={`h-20 flex-col space-y-2 transition-all duration-300 rounded-2xl ${
                     selectedCategory === category.id
-                      ? 'bg-gradient-primary text-white shadow-lg'
-                      : 'bg-white/10 hover:bg-white/20 text-glass border border-white/20'
+                      ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg scale-105'
+                      : 'bg-white/10 hover:bg-white/20 text-white/80 border border-white/20 hover:scale-102'
                   }`}
                 >
                   <category.icon className={`w-6 h-6 ${category.color}`} />
@@ -178,14 +175,14 @@ export const BillsSection = ({ onBalanceUpdate }: BillsSectionProps) => {
           {/* Service Provider Selection */}
           {selectedCategory && selectedCategoryData && (
             <div>
-              <Label className="text-glass">Service Provider</Label>
+              <Label className="text-white/80 font-medium">Service Provider</Label>
               <Select value={selectedProvider} onValueChange={setSelectedProvider}>
-                <SelectTrigger className="bg-white/10 border-white/20 text-glass">
+                <SelectTrigger className="bg-white/10 border-white/20 text-white/90 rounded-2xl">
                   <SelectValue placeholder="Select provider" />
                 </SelectTrigger>
-                <SelectContent className="bg-gray-900 border-gray-700">
+                <SelectContent className="bg-gray-900/95 border-gray-700 backdrop-blur-xl">
                   {selectedCategoryData.providers.map((provider) => (
-                    <SelectItem key={provider} value={provider} className="text-white">
+                    <SelectItem key={provider} value={provider} className="text-white hover:bg-white/10">
                       {provider}
                     </SelectItem>
                   ))}
@@ -197,12 +194,12 @@ export const BillsSection = ({ onBalanceUpdate }: BillsSectionProps) => {
           {/* Account/Reference Number */}
           {selectedProvider && (
             <div>
-              <Label className="text-glass">Account/Reference Number</Label>
+              <Label className="text-white/80 font-medium">Account/Reference Number</Label>
               <Input
                 placeholder="Enter your account or reference number"
                 value={accountNumber}
                 onChange={(e) => setAccountNumber(e.target.value)}
-                className="bg-white/10 border-white/20 text-glass placeholder-white/60"
+                className="bg-white/10 border-white/20 text-white/90 placeholder-white/50 rounded-2xl"
               />
             </div>
           )}
@@ -210,13 +207,13 @@ export const BillsSection = ({ onBalanceUpdate }: BillsSectionProps) => {
           {/* Amount */}
           {selectedProvider && (
             <div>
-              <Label className="text-glass">Amount (MWK)</Label>
+              <Label className="text-white/80 font-medium">Amount (MWK)</Label>
               <Input
                 type="number"
                 placeholder="Enter amount to pay"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
-                className="bg-white/10 border-white/20 text-glass placeholder-white/60 text-lg font-semibold"
+                className="bg-white/10 border-white/20 text-white/90 placeholder-white/50 text-lg font-semibold rounded-2xl"
               />
             </div>
           )}
@@ -226,7 +223,7 @@ export const BillsSection = ({ onBalanceUpdate }: BillsSectionProps) => {
             <Button 
               onClick={handlePayment}
               disabled={loading}
-              className="w-full gradient-primary text-white font-semibold"
+              className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold rounded-2xl h-12 shadow-lg"
             >
               {loading ? 'Processing Payment...' : `Pay MWK ${amount || '0'}`}
             </Button>
@@ -235,20 +232,20 @@ export const BillsSection = ({ onBalanceUpdate }: BillsSectionProps) => {
       </Card>
 
       {/* Recent Bill Payments */}
-      <Card className="gradient-card border-white/20">
+      <Card className="bg-gradient-to-br from-blue-600/20 via-purple-600/20 to-indigo-600/20 backdrop-blur-xl border-white/10 shadow-2xl">
         <CardHeader>
-          <CardTitle className="text-glass">Recent Bill Payments</CardTitle>
+          <CardTitle className="text-white/90 font-semibold">Recent Bill Payments</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
             {recentPayments.map((payment, index) => (
-              <div key={index} className="flex items-center justify-between p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors">
+              <div key={index} className="flex items-center justify-between p-3 rounded-2xl bg-white/5 hover:bg-white/10 transition-colors">
                 <div>
-                  <p className="font-medium text-glass">{payment.provider}</p>
+                  <p className="font-medium text-white/90">{payment.provider}</p>
                   <p className="text-sm text-white/60">{payment.date}</p>
                 </div>
                 <div className="text-right">
-                  <p className="font-medium text-glass">MWK {payment.amount.toLocaleString()}</p>
+                  <p className="font-medium text-white/90">MWK {payment.amount.toLocaleString()}</p>
                   <p className="text-xs text-green-400">{payment.status}</p>
                 </div>
               </div>
