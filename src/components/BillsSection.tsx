@@ -5,111 +5,140 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Zap, Wifi, Car, Home, Droplets, Phone, Tv, GraduationCap, Heart, ShoppingCart } from 'lucide-react';
+import { Zap, GraduationCap, Droplets, Wifi, Phone, Car, Home, CreditCard, Building, Smartphone } from 'lucide-react';
 
-interface BillProvider {
-  name: string;
-  category: string;
-  icon: any;
-  accountFormat: string;
-  accountPlaceholder: string;
-  fee: string;
+interface BillsSectionProps {
+  onBalanceUpdate?: (currency: string, amount: number) => void;
 }
 
-export const BillsSection = () => {
+export const BillsSection = ({ onBalanceUpdate }: BillsSectionProps) => {
   const [selectedCategory, setSelectedCategory] = useState('');
   const [selectedProvider, setSelectedProvider] = useState('');
-  const [accountNumber, setAccountNumber] = useState('');
   const [amount, setAmount] = useState('');
+  const [accountNumber, setAccountNumber] = useState('');
   const [loading, setLoading] = useState(false);
-  const [paidBills, setPaidBills] = useState<any[]>([]);
+  const [recentPayments, setRecentPayments] = useState([
+    { provider: 'ESCOM', amount: 15000, date: '2024-01-10', status: 'Paid' },
+    { provider: 'TNM', amount: 5000, date: '2024-01-09', status: 'Paid' }
+  ]);
 
-  const categories = [
-    { name: 'Electricity', icon: Zap, color: 'from-yellow-400 to-orange-500' },
-    { name: 'Water', icon: Droplets, color: 'from-blue-400 to-cyan-500' },
-    { name: 'Mobile', icon: Phone, color: 'from-green-400 to-emerald-500' },
-    { name: 'Internet', icon: Wifi, color: 'from-purple-400 to-indigo-500' },
-    { name: 'TV', icon: Tv, color: 'from-red-400 to-pink-500' },
-    { name: 'Education', icon: GraduationCap, color: 'from-indigo-400 to-purple-500' },
-    { name: 'Insurance', icon: Heart, color: 'from-pink-400 to-rose-500' },
-    { name: 'Vehicle', icon: Car, color: 'from-gray-400 to-gray-600' }
+  const billCategories = [
+    { 
+      id: 'electricity', 
+      name: 'Electricity', 
+      icon: Zap, 
+      color: 'text-yellow-400',
+      providers: ['ESCOM (Electricity Supply Corporation of Malawi)']
+    },
+    { 
+      id: 'education', 
+      name: 'Education', 
+      icon: GraduationCap, 
+      color: 'text-blue-400',
+      providers: [
+        'University of Malawi',
+        'Mzuzu University', 
+        'Lilongwe University of Agriculture',
+        'Malawi University of Science and Technology',
+        'Catholic University of Malawi',
+        'Daeyang University',
+        'Kamuzu University of Health Sciences'
+      ]
+    },
+    { 
+      id: 'water', 
+      name: 'Water', 
+      icon: Droplets, 
+      color: 'text-cyan-400',
+      providers: [
+        'Blantyre Water Board',
+        'Lilongwe Water Board', 
+        'Northern Region Water Board',
+        'Central Region Water Board',
+        'Southern Region Water Board'
+      ]
+    },
+    { 
+      id: 'internet', 
+      name: 'Internet', 
+      icon: Wifi, 
+      color: 'text-purple-400',
+      providers: ['TNM', 'Airtel Malawi', 'Access Communications']
+    },
+    { 
+      id: 'mobile', 
+      name: 'Mobile', 
+      icon: Smartphone, 
+      color: 'text-green-400',
+      providers: ['TNM', 'Airtel Malawi']
+    },
+    { 
+      id: 'transport', 
+      name: 'Transport', 
+      icon: Car, 
+      color: 'text-orange-400',
+      providers: ['Road Fund Administration', 'Traffic Police Fines']
+    },
+    { 
+      id: 'insurance', 
+      name: 'Insurance', 
+      icon: Home, 
+      color: 'text-red-400',
+      providers: ['NICO General Insurance', 'Prime Insurance', 'United General Insurance']
+    },
+    { 
+      id: 'loan', 
+      name: 'Loan Payments', 
+      icon: CreditCard, 
+      color: 'text-pink-400',
+      providers: ['Standard Bank', 'National Bank of Malawi', 'NBS Bank', 'FDH Bank']
+    }
   ];
 
-  const billProviders: { [key: string]: BillProvider[] } = {
-    'Electricity': [
-      { name: 'ESCOM', category: 'Electricity', icon: Zap, accountFormat: 'Customer Number', accountPlaceholder: 'Enter ESCOM customer number', fee: 'MWK 150' }
-    ],
-    'Water': [
-      { name: 'Lilongwe Water Board', category: 'Water', icon: Droplets, accountFormat: 'Account Number', accountPlaceholder: 'Enter LWB account number', fee: 'MWK 100' },
-      { name: 'Blantyre Water Board', category: 'Water', icon: Droplets, accountFormat: 'Account Number', accountPlaceholder: 'Enter BWB account number', fee: 'MWK 100' },
-      { name: 'Northern Region Water Board', category: 'Water', icon: Droplets, accountFormat: 'Account Number', accountPlaceholder: 'Enter NRWB account number', fee: 'MWK 100' },
-      { name: 'Central Region Water Board', category: 'Water', icon: Droplets, accountFormat: 'Account Number', accountPlaceholder: 'Enter CRWB account number', fee: 'MWK 100' },
-      { name: 'Southern Region Water Board', category: 'Water', icon: Droplets, accountFormat: 'Account Number', accountPlaceholder: 'Enter SRWB account number', fee: 'MWK 100' }
-    ],
-    'Mobile': [
-      { name: 'TNM Postpaid', category: 'Mobile', icon: Phone, accountFormat: 'Phone Number', accountPlaceholder: '088xxxxxxx', fee: 'MWK 50' },
-      { name: 'Airtel Postpaid', category: 'Mobile', icon: Phone, accountFormat: 'Phone Number', accountPlaceholder: '099xxxxxxx', fee: 'MWK 50' }
-    ],
-    'Internet': [
-      { name: 'Skyband', category: 'Internet', icon: Wifi, accountFormat: 'Account Number', accountPlaceholder: 'Enter Skyband account', fee: 'MWK 200' },
-      { name: 'Access Communications', category: 'Internet', icon: Wifi, accountFormat: 'Account Number', accountPlaceholder: 'Enter Access account', fee: 'MWK 200' }
-    ],
-    'TV': [
-      { name: 'DSTV', category: 'TV', icon: Tv, accountFormat: 'Smartcard Number', accountPlaceholder: 'Enter DSTV smartcard number', fee: 'MWK 300' },
-      { name: 'GOtv', category: 'TV', icon: Tv, accountFormat: 'IUC Number', accountPlaceholder: 'Enter GOtv IUC number', fee: 'MWK 200' }
-    ],
-    'Education': [
-      { name: 'University of Malawi', category: 'Education', icon: GraduationCap, accountFormat: 'Student ID', accountPlaceholder: 'Enter student ID', fee: 'MWK 500' },
-      { name: 'Malawi University of Business', category: 'Education', icon: GraduationCap, accountFormat: 'Student ID', accountPlaceholder: 'Enter student ID', fee: 'MWK 500' },
-      { name: 'Mzuzu University', category: 'Education', icon: GraduationCap, accountFormat: 'Student ID', accountPlaceholder: 'Enter student ID', fee: 'MWK 500' },
-      { name: 'Lilongwe University of Agriculture', category: 'Education', icon: GraduationCap, accountFormat: 'Student ID', accountPlaceholder: 'Enter student ID', fee: 'MWK 500' }
-    ],
-    'Insurance': [
-      { name: 'NICO General Insurance', category: 'Insurance', icon: Heart, accountFormat: 'Policy Number', accountPlaceholder: 'Enter policy number', fee: 'MWK 250' },
-      { name: 'NICO Life Insurance', category: 'Insurance', icon: Heart, accountFormat: 'Policy Number', accountPlaceholder: 'Enter policy number', fee: 'MWK 250' }
-    ],
-    'Vehicle': [
-      { name: 'Road Traffic Directorate', category: 'Vehicle', icon: Car, accountFormat: 'Registration Number', accountPlaceholder: 'Enter vehicle reg number', fee: 'MWK 300' }
-    ]
-  };
-
-  const handleCategorySelect = (category: string) => {
-    setSelectedCategory(category);
-    setSelectedProvider('');
-    setAccountNumber('');
-  };
-
-  const handlePayBill = async () => {
-    if (!selectedProvider || !accountNumber || !amount) {
+  const handlePayment = async () => {
+    if (!selectedCategory || !selectedProvider || !amount || !accountNumber) {
       alert('Please fill in all required fields');
       return;
     }
 
+    const paymentAmount = parseFloat(amount);
+    if (paymentAmount <= 0) {
+      alert('Please enter a valid amount');
+      return;
+    }
+
     setLoading(true);
-
-    // Simulate processing delay
+    
+    // Simulate payment processing
     setTimeout(() => {
-      const billAmount = parseFloat(amount);
-      const newBill = {
+      // Deduct from wallet balance
+      if (onBalanceUpdate) {
+        onBalanceUpdate('MWK', -paymentAmount);
+      }
+      
+      // Add to recent payments
+      const newPayment = {
         provider: selectedProvider,
-        amount: `MWK ${billAmount.toLocaleString()}`,
-        account: `****${accountNumber.slice(-4)}`,
-        time: 'Just now',
-        status: 'Success'
+        amount: paymentAmount,
+        date: new Date().toISOString().split('T')[0],
+        status: 'Paid'
       };
-
-      setPaidBills(prev => [newBill, ...prev.slice(0, 4)]); // Keep only 5 recent bills
+      setRecentPayments(prev => [newPayment, ...prev]);
+      
       setLoading(false);
       
-      alert(`Successfully paid MWK ${billAmount.toLocaleString()} to ${selectedProvider}`);
+      // Show success message
+      alert(`Successfully paid MWK ${paymentAmount.toLocaleString()} to ${selectedProvider}`);
       
       // Reset form
+      setSelectedCategory('');
+      setSelectedProvider('');
       setAmount('');
       setAccountNumber('');
     }, 2000);
   };
 
-  const availableProviders = selectedCategory ? billProviders[selectedCategory] || [] : [];
+  const selectedCategoryData = billCategories.find(cat => cat.id === selectedCategory);
 
   return (
     <div className="space-y-6">
@@ -121,43 +150,43 @@ export const BillsSection = () => {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
-          {/* Quick Payments Grid */}
+          {/* Bill Categories */}
           <div>
-            <h3 className="text-lg font-semibold mb-4 text-glass">Quick Payments</h3>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              {categories.map((category) => (
+            <Label className="text-glass mb-3 block">Select Bill Category</Label>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              {billCategories.map((category) => (
                 <Button
-                  key={category.name}
-                  variant="outline"
-                  className={`h-20 flex-col space-y-2 border-white/20 text-glass hover:bg-white/10 transition-all duration-300 ${
-                    selectedCategory === category.name 
-                      ? `bg-gradient-to-r ${category.color} text-white border-transparent` 
-                      : 'bg-white/5'
+                  key={category.id}
+                  variant="ghost"
+                  onClick={() => {
+                    setSelectedCategory(category.id);
+                    setSelectedProvider('');
+                  }}
+                  className={`h-20 flex-col space-y-2 transition-all duration-300 ${
+                    selectedCategory === category.id
+                      ? 'bg-gradient-primary text-white shadow-lg'
+                      : 'bg-white/10 hover:bg-white/20 text-glass border border-white/20'
                   }`}
-                  onClick={() => handleCategorySelect(category.name)}
                 >
-                  <category.icon className="w-6 h-6" />
-                  <span className="text-xs">{category.name}</span>
+                  <category.icon className={`w-6 h-6 ${category.color}`} />
+                  <span className="text-xs font-medium">{category.name}</span>
                 </Button>
               ))}
             </div>
           </div>
 
-          {/* Bill Provider Selection */}
-          {selectedCategory && (
+          {/* Service Provider Selection */}
+          {selectedCategory && selectedCategoryData && (
             <div>
-              <Label className="text-glass">Select {selectedCategory} Provider</Label>
+              <Label className="text-glass">Service Provider</Label>
               <Select value={selectedProvider} onValueChange={setSelectedProvider}>
                 <SelectTrigger className="bg-white/10 border-white/20 text-glass">
-                  <SelectValue placeholder={`Choose a ${selectedCategory.toLowerCase()} provider`} />
+                  <SelectValue placeholder="Select provider" />
                 </SelectTrigger>
                 <SelectContent className="bg-gray-900 border-gray-700">
-                  {availableProviders.map((provider) => (
-                    <SelectItem key={provider.name} value={provider.name} className="text-white">
-                      <div className="flex items-center space-x-2">
-                        <provider.icon className="w-4 h-4" />
-                        <span>{provider.name}</span>
-                      </div>
+                  {selectedCategoryData.providers.map((provider) => (
+                    <SelectItem key={provider} value={provider} className="text-white">
+                      {provider}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -168,67 +197,65 @@ export const BillsSection = () => {
           {/* Account/Reference Number */}
           {selectedProvider && (
             <div>
-              <Label className="text-glass">
-                {availableProviders.find(p => p.name === selectedProvider)?.accountFormat}
-              </Label>
+              <Label className="text-glass">Account/Reference Number</Label>
               <Input
+                placeholder="Enter your account or reference number"
                 value={accountNumber}
                 onChange={(e) => setAccountNumber(e.target.value)}
-                placeholder={availableProviders.find(p => p.name === selectedProvider)?.accountPlaceholder}
                 className="bg-white/10 border-white/20 text-glass placeholder-white/60"
               />
-              <p className="text-xs text-white/60 mt-1">
-                Fee: {availableProviders.find(p => p.name === selectedProvider)?.fee}
-              </p>
             </div>
           )}
 
           {/* Amount */}
-          <div>
-            <Label className="text-glass">Amount (MWK)</Label>
-            <Input
-              type="number"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              placeholder="Enter amount to pay"
-              className="bg-white/10 border-white/20 text-glass placeholder-white/60"
-            />
-          </div>
+          {selectedProvider && (
+            <div>
+              <Label className="text-glass">Amount (MWK)</Label>
+              <Input
+                type="number"
+                placeholder="Enter amount to pay"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                className="bg-white/10 border-white/20 text-glass placeholder-white/60 text-lg font-semibold"
+              />
+            </div>
+          )}
 
-          <Button 
-            onClick={handlePayBill}
-            disabled={!selectedProvider || !accountNumber || !amount || loading}
-            className="w-full gradient-success text-white font-semibold"
-          >
-            {loading ? 'Processing Payment...' : 'Pay Bill'}
-          </Button>
+          {/* Pay Button */}
+          {selectedProvider && amount && accountNumber && (
+            <Button 
+              onClick={handlePayment}
+              disabled={loading}
+              className="w-full gradient-primary text-white font-semibold"
+            >
+              {loading ? 'Processing Payment...' : `Pay MWK ${amount || '0'}`}
+            </Button>
+          )}
         </CardContent>
       </Card>
 
       {/* Recent Bill Payments */}
-      {paidBills.length > 0 && (
-        <Card className="gradient-card border-white/20">
-          <CardHeader>
-            <CardTitle className="text-glass">Recent Bill Payments</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {paidBills.map((payment, index) => (
-                <div key={index} className="flex items-center justify-between p-3 rounded-lg bg-white/5">
-                  <div>
-                    <p className="font-medium text-glass">{payment.provider}</p>
-                    <p className="text-sm text-white/60">{payment.account} • {payment.time}</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-medium text-glass">{payment.amount}</p>
-                    <p className="text-xs text-green-400">{payment.status}</p>
-                  </div>
+      <Card className="gradient-card border-white/20">
+        <CardHeader>
+          <CardTitle className="text-glass">Recent Bill Payments</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            {recentPayments.map((payment, index) => (
+              <div key={index} className="flex items-center justify-between p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors">
+                <div>
+                  <p className="font-medium text-glass">{payment.provider}</p>
+                  <p className="text-sm text-white/60">{payment.date}</p>
                 </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
+                <div className="text-right">
+                  <p className="font-medium text-glass">MWK {payment.amount.toLocaleString()}</p>
+                  <p className="text-xs text-green-400">{payment.status}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };
