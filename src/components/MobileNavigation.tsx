@@ -65,9 +65,9 @@ export const MobileNavigation = ({ activeTab, onTabChange, notificationCount = 0
   };
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 mobile-safe-area">
-      <div className="bg-white/10 backdrop-blur-2xl border-t border-white/20 mx-4 mb-4 rounded-3xl shadow-2xl">
-        <div className="flex items-center justify-around py-3 px-2">
+    <div className="mobile-nav-fixed">
+      <div className="bg-gradient-to-r from-blue-600/30 via-purple-600/30 to-indigo-600/30 backdrop-blur-3xl border-t border-white/20 mx-3 mb-3 rounded-3xl shadow-2xl">
+        <div className="flex items-center justify-around py-4 px-2">
           {navItems.map((item) => {
             const isActive = getActiveMainTab() === item.id;
             return (
@@ -76,9 +76,9 @@ export const MobileNavigation = ({ activeTab, onTabChange, notificationCount = 0
                 variant="ghost"
                 size="sm"
                 onClick={() => onTabChange(item.id)}
-                className={`flex-1 flex-col h-16 space-y-1 relative rounded-2xl transition-all duration-300 ${
+                className={`flex-1 flex-col h-16 space-y-1 relative rounded-2xl transition-all duration-300 font-premium ${
                   isActive 
-                    ? 'text-white bg-white/20 shadow-lg' 
+                    ? 'text-white bg-gradient-to-r from-blue-500/40 to-purple-500/40 shadow-lg border border-white/20' 
                     : 'text-white/70 hover:text-white hover:bg-white/10'
                 }`}
               >

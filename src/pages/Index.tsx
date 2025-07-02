@@ -238,12 +238,12 @@ const Index = () => {
       case 'village':
         return <VillageBankSection />;
       case 'bills':
-        return <BillsSection />;
+        return <BillsSection onBalanceUpdate={handleBalanceUpdate} />;
       case 'profile':
         return <UserProfile />;
       default:
         return (
-          <div className="space-y-4 sm:space-y-6">
+          <div className="space-y-4 sm:space-y-6 pb-24">
             {/* Total Balance Card */}
             <Card className="gradient-card border-white/20 card-hover">
               <CardHeader className="pb-3 sm:pb-6">
@@ -346,10 +346,10 @@ const Index = () => {
               ))}
             </div>
 
-            {/* Recent Activity */}
+            {/* Recent Activity - Updated text to white */}
             <Card className="gradient-card border-white/20">
               <CardHeader className="pb-3 sm:pb-6">
-                <CardTitle className="text-base sm:text-lg text-glass">Recent Activity</CardTitle>
+                <CardTitle className="text-base sm:text-lg text-white">Recent Activity</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3 sm:space-y-4">
@@ -360,11 +360,11 @@ const Index = () => {
                   ].map((activity, index) => (
                     <div key={index} className="flex items-center justify-between p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors">
                       <div className="min-w-0 flex-1">
-                        <p className="font-medium text-sm sm:text-base truncate text-glass">{activity.type}</p>
+                        <p className="font-medium text-sm sm:text-base truncate text-white">{activity.type}</p>
                         <p className="text-xs sm:text-sm text-white/60 truncate">{activity.from}</p>
                       </div>
                       <div className="text-right ml-2">
-                        <p className="font-medium text-xs sm:text-sm text-glass">{activity.amount}</p>
+                        <p className="font-medium text-xs sm:text-sm text-white">{activity.amount}</p>
                         <p className="text-[10px] sm:text-xs text-white/60">{activity.time}</p>
                       </div>
                     </div>
@@ -378,7 +378,7 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen pb-20 md:pb-0">
+    <div className="min-h-screen">
       {/* Header */}
       <header className="bg-white/10 backdrop-blur-2xl border-b border-white/20 sticky top-0 z-40">
         <div className="container mx-auto px-3 sm:px-4 py-3 sm:py-4">
@@ -421,11 +421,11 @@ const Index = () => {
         </div>
       </header>
 
-      <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6">
+      <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 pb-24">
         {renderContent()}
       </div>
 
-      {/* Mobile Navigation */}
+      {/* Mobile Navigation - Fixed at bottom with safe area padding */}
       <MobileNavigation 
         activeTab={activeTab} 
         onTabChange={(tab) => {
