@@ -5,28 +5,40 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { CreditCard, Plus, Settings, Eye, EyeOff, Copy, Check, Lock, Trash2, DollarSign } from 'lucide-react';
+import { useTranslation } from '@/utils/languageApi';
 
 interface VirtualCardsSectionProps {
   onCardPurchase?: (cardType: string) => void;
   purchasedCards?: any[];
+  walletBalances?: { [key: string]: number };
 }
 
-export const VirtualCardsSection = ({ onCardPurchase, purchasedCards = [] }: VirtualCardsSectionProps) => {
+export const VirtualCardsSection = ({ onCardPurchase, purchasedCards = [], walletBalances = {} }: VirtualCardsSectionProps) => {
+  const { t } = useTranslation();
   const [showCardDetails, setShowCardDetails] = useState(false);
   const [selectedCard, setSelectedCard] = useState<any>(null);
   const [showPurchaseModal, setShowPurchaseModal] = useState(false);
+  const [showPhysicalCardModal, setShowPhysicalCardModal] = useState(false);
   const [showCustomerDetails, setShowCustomerDetails] = useState(false);
   const [showCardSettings, setShowCardSettings] = useState(false);
+  const [showAddMoneyModal, setShowAddMoneyModal] = useState(false);
   const [selectedCardType, setSelectedCardType] = useState<any>(null);
   const [copiedField, setCopiedField] = useState('');
+  const [addMoneyAmount, setAddMoneyAmount] = useState('');
+  const [selectedCurrency, setSelectedCurrency] = useState('MWK');
   const [customerDetails, setCustomerDetails] = useState({
     fullName: '',
     email: '',
     phone: '',
     address: '',
-    idNumber: ''
+    idNumber: '',
+    city: '',
+    postalCode: ''
   });
+
+  const availableCurrencies = ['MWK', 'USD', 'EUR', 'GBP', 'ZAR'];
 
   const availableCards = [
     {
@@ -35,7 +47,7 @@ export const VirtualCardsSection = ({ onCardPurchase, purchasedCards = [] }: Vir
       features: ['Basic transactions', 'Online payments', 'ATM withdrawals'],
       gradient: 'bg-gradient-to-br from-slate-800 to-slate-900',
       textColor: 'text-white',
-      brand: 'VISA',
+      brand: 'NEOVAULT',
       isDefault: true
     },
     {
@@ -44,7 +56,7 @@ export const VirtualCardsSection = ({ onCardPurchase, purchasedCards = [] }: Vir
       features: ['All Standard features', 'Higher limits', 'Priority support', 'Cashback rewards'],
       gradient: 'bg-gradient-to-br from-yellow-600 to-yellow-800',
       textColor: 'text-white',
-      brand: 'MASTERCARD'
+      brand: 'NEOVAULT'
     },
     {
       type: 'Platinum',
@@ -52,7 +64,16 @@ export const VirtualCardsSection = ({ onCardPurchase, purchasedCards = [] }: Vir
       features: ['All Gold features', 'Premium support', 'Travel insurance', 'Airport lounge access'],
       gradient: 'bg-gradient-to-br from-gray-400 to-gray-600',
       textColor: 'text-white',
-      brand: 'VISA'
+      brand: 'NEOVAULT'
+    },
+    {
+      type: 'Physical',
+      price: 50000,
+      features: ['All Platinum features', 'Physical card for ATM', 'Worldwide acceptance', 'Express delivery'],
+      gradient: 'bg-gradient-to-br from-purple-600 to-indigo-800',
+      textColor: 'text-white',
+      brand: 'NEOVAULT',
+      isPhysical: true
     }
   ];
 
@@ -67,27 +88,29 @@ export const VirtualCardsSection = ({ onCardPurchase, purchasedCards = [] }: Vir
       textColor: 'text-white',
       cvv: '123',
       expiry: '12/26',
-      holderName: 'John Doe',
-      brand: 'VISA',
+      holderName: customerDetails.fullName || 'JOHN DOE',
+      brand: 'NEOVAULT',
       isBlocked: false,
-      spendingLimit: 500000
+      spendingLimit: 500000,
+      currency: 'MWK'
     },
-    ...purchasedCards.slice(0, 2).map(card => ({
+    ...purchasedCards.slice(0, 3).map(card => ({
       ...card,
       gradient: availableCards.find(ac => ac.type === card.type)?.gradient || 'bg-gradient-to-br from-slate-800 to-slate-900',
       textColor: availableCards.find(ac => ac.type === card.type)?.textColor || 'text-white',
-      brand: availableCards.find(ac => ac.type === card.type)?.brand || 'VISA',
+      brand: 'NEOVAULT',
       cvv: '123',
       expiry: '12/26',
-      holderName: customerDetails.fullName || 'John Doe',
+      holderName: (customerDetails.fullName || 'JOHN DOE').toUpperCase(),
       isBlocked: false,
-      spendingLimit: card.type === 'Gold' ? 1000000 : 2000000
+      spendingLimit: card.type === 'Gold' ? 1000000 : card.type === 'Platinum' ? 2000000 : 3000000,
+      currency: card.currency || 'MWK'
     }))
   ];
 
   const handlePurchaseStep1 = (cardType: any) => {
-    if (myCards.length >= 3) {
-      alert('You can only have a maximum of 3 cards');
+    if (myCards.length >= 4) {
+      alert('You can only have a maximum of 4 cards');
       return;
     }
 
@@ -98,7 +121,11 @@ export const VirtualCardsSection = ({ onCardPurchase, purchasedCards = [] }: Vir
     }
 
     setSelectedCardType(cardType);
-    setShowCustomerDetails(true);
+    if (cardType.isPhysical) {
+      setShowPhysicalCardModal(true);
+    } else {
+      setShowCustomerDetails(true);
+    }
   };
 
   const handleCustomerDetailsSubmit = () => {
@@ -111,14 +138,50 @@ export const VirtualCardsSection = ({ onCardPurchase, purchasedCards = [] }: Vir
     setShowPurchaseModal(true);
   };
 
+  const handlePhysicalCardSubmit = () => {
+    if (!customerDetails.fullName || !customerDetails.email || !customerDetails.phone || !customerDetails.address || !customerDetails.city) {
+      alert('Please fill in all required fields for physical card delivery');
+      return;
+    }
+
+    setShowPhysicalCardModal(false);
+    setShowPurchaseModal(true);
+  };
+
   const handleCardPurchase = () => {
     if (selectedCardType && onCardPurchase) {
-      onCardPurchase(selectedCardType.type);
+      const cardData = {
+        ...selectedCardType,
+        currency: selectedCurrency,
+        customerDetails
+      };
+      onCardPurchase(cardData);
       alert(`${selectedCardType.type} card purchased successfully for MWK ${selectedCardType.price.toLocaleString()}!`);
     }
     setShowPurchaseModal(false);
     setSelectedCardType(null);
-    setCustomerDetails({ fullName: '', email: '', phone: '', address: '', idNumber: '' });
+    setSelectedCurrency('MWK');
+    setCustomerDetails({ fullName: '', email: '', phone: '', address: '', idNumber: '', city: '', postalCode: '' });
+  };
+
+  const handleAddMoney = () => {
+    if (!addMoneyAmount || parseFloat(addMoneyAmount) <= 0) {
+      alert('Please enter a valid amount');
+      return;
+    }
+
+    const amount = parseFloat(addMoneyAmount);
+    const currency = selectedCard?.currency || 'MWK';
+    
+    if (walletBalances[currency] < amount) {
+      alert(`Insufficient balance in ${currency} wallet`);
+      return;
+    }
+
+    // Simulate adding money to card
+    alert(`MWK ${amount.toLocaleString()} added to card successfully!`);
+    setShowAddMoneyModal(false);
+    setAddMoneyAmount('');
   };
 
   const handleCardAction = (cardId: string, action: string) => {
@@ -127,7 +190,6 @@ export const VirtualCardsSection = ({ onCardPurchase, purchasedCards = [] }: Vir
 
     switch (action) {
       case 'freeze':
-        // Toggle card status
         myCards[cardIndex].isBlocked = !myCards[cardIndex].isBlocked;
         alert(`Card ${myCards[cardIndex].isBlocked ? 'frozen' : 'unfrozen'} successfully`);
         break;
@@ -137,7 +199,6 @@ export const VirtualCardsSection = ({ onCardPurchase, purchasedCards = [] }: Vir
           return;
         }
         if (confirm('Are you sure you want to delete this card?')) {
-          // Remove from purchased cards array
           alert('Card deleted successfully');
         }
         break;
@@ -163,10 +224,10 @@ export const VirtualCardsSection = ({ onCardPurchase, purchasedCards = [] }: Vir
       {/* My Virtual Cards */}
       <Card className="bg-gray-900/80 backdrop-blur-xl border-gray-700/50 shadow-2xl">
         <CardHeader>
-          <CardTitle className="text-white">My Virtual Cards ({myCards.length}/3)</CardTitle>
+          <CardTitle className="text-white">My Cards ({myCards.length}/4)</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {myCards.map((card) => (
               <div
                 key={card.id}
@@ -176,9 +237,9 @@ export const VirtualCardsSection = ({ onCardPurchase, purchasedCards = [] }: Vir
                   setShowCardDetails(true);
                 }}
               >
-                {/* Brand Logo */}
+                {/* NEOVAULT Logo */}
                 <div className="absolute top-4 right-4">
-                  <div className="bg-white/20 px-2 py-1 rounded text-xs font-bold text-white">
+                  <div className="bg-white/20 px-3 py-1 rounded text-xs font-bold text-white">
                     {card.brand}
                   </div>
                 </div>
@@ -187,6 +248,9 @@ export const VirtualCardsSection = ({ onCardPurchase, purchasedCards = [] }: Vir
                   <div>
                     <Badge className="bg-white/20 text-white border-white/30 text-xs">
                       {card.type}
+                    </Badge>
+                    <Badge className="ml-2 bg-blue-500/20 text-blue-300 border-blue-400/30 text-xs">
+                      {card.currency}
                     </Badge>
                     <Badge className={`ml-2 text-xs ${
                       card.isBlocked 
@@ -212,7 +276,7 @@ export const VirtualCardsSection = ({ onCardPurchase, purchasedCards = [] }: Vir
                     <div>
                       <p className={`text-xs ${card.textColor} opacity-70`}>Balance</p>
                       <p className={`text-lg font-semibold ${card.textColor}`}>
-                        MWK {card.balance.toLocaleString()}
+                        {card.currency} {card.balance.toLocaleString()}
                       </p>
                     </div>
                     <div className="text-right">
@@ -223,7 +287,7 @@ export const VirtualCardsSection = ({ onCardPurchase, purchasedCards = [] }: Vir
 
                   <div className="pt-2">
                     <p className={`text-sm ${card.textColor} opacity-90 font-medium`}>
-                      {card.holderName.toUpperCase()}
+                      {card.holderName}
                     </p>
                   </div>
                 </div>
@@ -239,10 +303,10 @@ export const VirtualCardsSection = ({ onCardPurchase, purchasedCards = [] }: Vir
           <CardTitle className="text-white">Available Cards</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {availableCards.map((card) => {
               const alreadyOwned = myCards.some(owned => owned.type === card.type);
-              const canPurchase = myCards.length < 3 && !alreadyOwned;
+              const canPurchase = myCards.length < 4 && !alreadyOwned;
               
               return (
                 <div key={card.type} className="p-6 rounded-lg bg-gray-800/50 hover:bg-gray-700/50 transition-colors border border-gray-600/30">
@@ -257,6 +321,11 @@ export const VirtualCardsSection = ({ onCardPurchase, purchasedCards = [] }: Vir
                     <p className="text-2xl font-bold text-white">
                       {card.price === 0 ? 'FREE' : `MWK ${card.price.toLocaleString()}`}
                     </p>
+                    {card.isPhysical && (
+                      <Badge className="mt-2 bg-purple-500/20 text-purple-300 border-purple-400/30">
+                        Physical Card
+                      </Badge>
+                    )}
                   </div>
                   
                   <ul className="space-y-2 mb-6">
@@ -271,7 +340,7 @@ export const VirtualCardsSection = ({ onCardPurchase, purchasedCards = [] }: Vir
                   <Button
                     onClick={() => {
                       if (!canPurchase) {
-                        alert(alreadyOwned ? 'You already own this card type!' : 'Maximum 3 cards allowed');
+                        alert(alreadyOwned ? 'You already own this card type!' : 'Maximum 4 cards allowed');
                         return;
                       }
                       handlePurchaseStep1(card);
@@ -283,7 +352,7 @@ export const VirtualCardsSection = ({ onCardPurchase, purchasedCards = [] }: Vir
                         : 'bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white'
                     }`}
                   >
-                    {alreadyOwned ? 'Owned' : myCards.length >= 3 ? 'Limit Reached' : (card.price === 0 ? 'Get Card' : 'Purchase')}
+                    {alreadyOwned ? 'Owned' : myCards.length >= 4 ? 'Limit Reached' : (card.price === 0 ? 'Get Card' : t('purchaseCard'))}
                   </Button>
                 </div>
               );
@@ -300,6 +369,22 @@ export const VirtualCardsSection = ({ onCardPurchase, purchasedCards = [] }: Vir
           </DialogHeader>
           <div className="space-y-4">
             <div>
+              <Label className="text-gray-300">Card Currency</Label>
+              <Select value={selectedCurrency} onValueChange={setSelectedCurrency}>
+                <SelectTrigger className="bg-gray-700/50 border-gray-600/50 text-white">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-gray-900 border-gray-700">
+                  {availableCurrencies.map((currency) => (
+                    <SelectItem key={currency} value={currency} className="text-white">
+                      {currency}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div>
               <Label className="text-gray-300">Full Name *</Label>
               <Input
                 value={customerDetails.fullName}
@@ -308,6 +393,7 @@ export const VirtualCardsSection = ({ onCardPurchase, purchasedCards = [] }: Vir
                 placeholder="John Doe"
               />
             </div>
+            
             <div>
               <Label className="text-gray-300">Email Address *</Label>
               <Input
@@ -318,6 +404,7 @@ export const VirtualCardsSection = ({ onCardPurchase, purchasedCards = [] }: Vir
                 placeholder="john@example.com"
               />
             </div>
+            
             <div>
               <Label className="text-gray-300">Phone Number *</Label>
               <Input
@@ -327,24 +414,37 @@ export const VirtualCardsSection = ({ onCardPurchase, purchasedCards = [] }: Vir
                 placeholder="+265 123 456 789"
               />
             </div>
+            
             <div>
-              <Label className="text-gray-300">Address</Label>
+              <Label className="text-gray-300">Delivery Address *</Label>
               <Input
                 value={customerDetails.address}
                 onChange={(e) => setCustomerDetails({ ...customerDetails, address: e.target.value })}
                 className="bg-gray-700/50 border-gray-600/50 text-white"
-                placeholder="123 Main Street, Lilongwe"
+                placeholder="123 Main Street"
               />
             </div>
+            
             <div>
-              <Label className="text-gray-300">ID Number</Label>
+              <Label className="text-gray-300">City *</Label>
               <Input
-                value={customerDetails.idNumber}
-                onChange={(e) => setCustomerDetails({ ...customerDetails, idNumber: e.target.value })}
+                value={customerDetails.city}
+                onChange={(e) => setCustomerDetails({ ...customerDetails, city: e.target.value })}
                 className="bg-gray-700/50 border-gray-600/50 text-white"
-                placeholder="National ID or Passport"
+                placeholder="Lilongwe"
               />
             </div>
+            
+            <div>
+              <Label className="text-gray-300">Postal Code</Label>
+              <Input
+                value={customerDetails.postalCode}
+                onChange={(e) => setCustomerDetails({ ...customerDetails, postalCode: e.target.value })}
+                className="bg-gray-700/50 border-gray-600/50 text-white"
+                placeholder="Area 10"
+              />
+            </div>
+            
             <div className="flex space-x-3 pt-4">
               <Button
                 variant="outline"
@@ -364,65 +464,149 @@ export const VirtualCardsSection = ({ onCardPurchase, purchasedCards = [] }: Vir
         </DialogContent>
       </Dialog>
 
-      {/* Purchase Confirmation Modal */}
-      <Dialog open={showPurchaseModal} onOpenChange={setShowPurchaseModal}>
-        <DialogContent className="bg-gray-800 border-gray-700 text-white">
+      {/* Physical Card Purchase Modal */}
+      <Dialog open={showPhysicalCardModal} onOpenChange={setShowPhysicalCardModal}>
+        <DialogContent className="bg-gray-800 border-gray-700 text-white max-w-md">
           <DialogHeader>
-            <DialogTitle>Confirm Card Purchase</DialogTitle>
+            <DialogTitle>Physical Card Details</DialogTitle>
           </DialogHeader>
-          {selectedCardType && (
-            <div className="space-y-4">
-              <div className="text-center">
-                <div className={`w-20 h-12 ${selectedCardType.gradient} rounded-lg mx-auto mb-4 flex items-center justify-center relative`}>
-                  <CreditCard className="w-8 h-8 text-white" />
-                  <div className="absolute top-1 right-1 bg-white/20 px-1 rounded text-xs font-bold text-white">
-                    {selectedCardType.brand}
-                  </div>
-                </div>
-                <h3 className="text-xl font-semibold text-white">{selectedCardType.type} Card</h3>
-                <p className="text-2xl font-bold text-white mt-2">
-                  MWK {selectedCardType.price.toLocaleString()}
-                </p>
-              </div>
-              
-              <div className="bg-gray-700/50 p-4 rounded-lg">
-                <h4 className="font-medium text-white mb-2">Customer Details:</h4>
-                <div className="space-y-1 text-sm text-gray-300">
-                  <p>Name: {customerDetails.fullName}</p>
-                  <p>Email: {customerDetails.email}</p>
-                  <p>Phone: {customerDetails.phone}</p>
-                </div>
-              </div>
-              
-              <div className="bg-gray-700/50 p-4 rounded-lg">
-                <h4 className="font-medium text-white mb-2">Features included:</h4>
-                <ul className="space-y-1">
-                  {selectedCardType.features.map((feature, index) => (
-                    <li key={index} className="text-sm text-gray-300 flex items-center">
-                      <Check className="w-4 h-4 text-green-400 mr-2" />
-                      {feature}
-                    </li>
+          <div className="space-y-4">
+            <div>
+              <Label className="text-gray-300">Card Currency</Label>
+              <Select value={selectedCurrency} onValueChange={setSelectedCurrency}>
+                <SelectTrigger className="bg-gray-700/50 border-gray-600/50 text-white">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-gray-900 border-gray-700">
+                  {availableCurrencies.map((currency) => (
+                    <SelectItem key={currency} value={currency} className="text-white">
+                      {currency}
+                    </SelectItem>
                   ))}
-                </ul>
-              </div>
-              
-              <div className="flex space-x-3">
-                <Button
-                  variant="outline"
-                  onClick={() => setShowPurchaseModal(false)}
-                  className="flex-1 border-gray-600 text-gray-300 hover:text-white"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  onClick={handleCardPurchase}
-                  className="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white"
-                >
-                  Confirm Purchase
-                </Button>
-              </div>
+                </SelectContent>
+              </Select>
             </div>
-          )}
+            
+            <div>
+              <Label className="text-gray-300">Full Name *</Label>
+              <Input
+                value={customerDetails.fullName}
+                onChange={(e) => setCustomerDetails({ ...customerDetails, fullName: e.target.value })}
+                className="bg-gray-700/50 border-gray-600/50 text-white"
+                placeholder="John Doe"
+              />
+            </div>
+            
+            <div>
+              <Label className="text-gray-300">Email Address *</Label>
+              <Input
+                type="email"
+                value={customerDetails.email}
+                onChange={(e) => setCustomerDetails({ ...customerDetails, email: e.target.value })}
+                className="bg-gray-700/50 border-gray-600/50 text-white"
+                placeholder="john@example.com"
+              />
+            </div>
+            
+            <div>
+              <Label className="text-gray-300">Phone Number *</Label>
+              <Input
+                value={customerDetails.phone}
+                onChange={(e) => setCustomerDetails({ ...customerDetails, phone: e.target.value })}
+                className="bg-gray-700/50 border-gray-600/50 text-white"
+                placeholder="+265 123 456 789"
+              />
+            </div>
+            
+            <div>
+              <Label className="text-gray-300">Delivery Address *</Label>
+              <Input
+                value={customerDetails.address}
+                onChange={(e) => setCustomerDetails({ ...customerDetails, address: e.target.value })}
+                className="bg-gray-700/50 border-gray-600/50 text-white"
+                placeholder="123 Main Street"
+              />
+            </div>
+            
+            <div>
+              <Label className="text-gray-300">City *</Label>
+              <Input
+                value={customerDetails.city}
+                onChange={(e) => setCustomerDetails({ ...customerDetails, city: e.target.value })}
+                className="bg-gray-700/50 border-gray-600/50 text-white"
+                placeholder="Lilongwe"
+              />
+            </div>
+            
+            <div>
+              <Label className="text-gray-300">Postal Code</Label>
+              <Input
+                value={customerDetails.postalCode}
+                onChange={(e) => setCustomerDetails({ ...customerDetails, postalCode: e.target.value })}
+                className="bg-gray-700/50 border-gray-600/50 text-white"
+                placeholder="Area 10"
+              />
+            </div>
+            
+            <div className="flex space-x-3 pt-4">
+              <Button
+                variant="outline"
+                onClick={() => setShowPhysicalCardModal(false)}
+                className="flex-1 border-gray-600 text-gray-300 hover:text-white"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handlePhysicalCardSubmit}
+                className="flex-1 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white"
+              >
+                Continue
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add Money Modal */}
+      <Dialog open={showAddMoneyModal} onOpenChange={setShowAddMoneyModal}>
+        <DialogContent className="bg-gray-800 border-gray-700 text-white max-w-md">
+          <DialogHeader>
+            <DialogTitle>{t('addMoney')} to Card</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label className="text-gray-300">Amount</Label>
+              <Input
+                type="number"
+                value={addMoneyAmount}
+                onChange={(e) => setAddMoneyAmount(e.target.value)}
+                className="bg-gray-700/50 border-gray-600/50 text-white"
+                placeholder="Enter amount"
+              />
+            </div>
+            
+            <div className="bg-gray-700/50 p-3 rounded-lg">
+              <p className="text-sm text-gray-300">
+                Available in {selectedCard?.currency} wallet: {selectedCard?.currency} {walletBalances[selectedCard?.currency]?.toLocaleString() || '0'}
+              </p>
+            </div>
+            
+            <div className="flex space-x-3 pt-4">
+              <Button
+                variant="outline"
+                onClick={() => setShowAddMoneyModal(false)}
+                className="flex-1 border-gray-600 text-gray-300 hover:text-white"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleAddMoney}
+                className="flex-1 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white"
+              >
+                Add Money
+              </Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
 
@@ -439,9 +623,14 @@ export const VirtualCardsSection = ({ onCardPurchase, purchasedCards = [] }: Vir
                   {selectedCard.brand}
                 </div>
                 <div className="flex justify-between items-start mb-8">
-                  <Badge className="bg-white/20 text-white border-white/30">
-                    {selectedCard.type}
-                  </Badge>
+                  <div className="space-x-2">
+                    <Badge className="bg-white/20 text-white border-white/30">
+                      {selectedCard.type}
+                    </Badge>
+                    <Badge className="bg-blue-500/20 text-blue-300 border-blue-400/30">
+                      {selectedCard.currency}
+                    </Badge>
+                  </div>
                   <CreditCard className="w-8 h-8 text-white" />
                 </div>
                 
@@ -455,7 +644,7 @@ export const VirtualCardsSection = ({ onCardPurchase, purchasedCards = [] }: Vir
                   <div className="flex justify-between">
                     <div>
                       <p className="text-xs text-white opacity-70">Card Holder</p>
-                      <p className="text-sm text-white font-medium">{selectedCard.holderName.toUpperCase()}</p>
+                      <p className="text-sm text-white font-medium">{selectedCard.holderName}</p>
                     </div>
                     <div>
                       <p className="text-xs text-white opacity-70">Valid Thru</p>
@@ -518,15 +707,12 @@ export const VirtualCardsSection = ({ onCardPurchase, purchasedCards = [] }: Vir
                 <Button
                   className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700"
                   onClick={() => {
-                    const amount = prompt('Enter amount to add to card:');
-                    if (amount && parseFloat(amount) > 0) {
-                      alert(`MWK ${parseFloat(amount).toLocaleString()} added to card successfully!`);
-                      setShowCardDetails(false);
-                    }
+                    setShowCardDetails(false);
+                    setShowAddMoneyModal(true);
                   }}
                 >
                   <DollarSign className="w-4 h-4 mr-2" />
-                  Add Money
+                  {t('addMoney')}
                 </Button>
                 <Button
                   variant="outline"
@@ -549,14 +735,15 @@ export const VirtualCardsSection = ({ onCardPurchase, purchasedCards = [] }: Vir
       <Dialog open={showCardSettings} onOpenChange={setShowCardSettings}>
         <DialogContent className="bg-gray-800 border-gray-700 text-white max-w-md">
           <DialogHeader>
-            <DialogTitle>Card Settings</DialogTitle>
+            <DialogTitle>{t('cardSettings')}</DialogTitle>
           </DialogHeader>
           {selectedCard && (
             <div className="space-y-4">
               <div className="p-4 bg-gray-700/50 rounded-lg">
                 <h4 className="font-medium text-white mb-2">{selectedCard.type} Card</h4>
                 <p className="text-sm text-gray-300">Current Status: {selectedCard.isBlocked ? 'Frozen' : 'Active'}</p>
-                <p className="text-sm text-gray-300">Spending Limit: MWK {selectedCard.spendingLimit.toLocaleString()}</p>
+                <p className="text-sm text-gray-300">Currency: {selectedCard.currency}</p>
+                <p className="text-sm text-gray-300">Spending Limit: {selectedCard.currency} {selectedCard.spendingLimit.toLocaleString()}</p>
               </div>
 
               <div className="space-y-3">
@@ -584,9 +771,71 @@ export const VirtualCardsSection = ({ onCardPurchase, purchasedCards = [] }: Vir
                     className="w-full border-red-600 text-red-400 hover:text-red-300 hover:bg-red-500/10"
                   >
                     <Trash2 className="w-4 h-4 mr-2" />
-                    Delete Card
+                    {t('deleteCard')}
                   </Button>
                 )}
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Purchase Confirmation Modal */}
+      <Dialog open={showPurchaseModal} onOpenChange={setShowPurchaseModal}>
+        <DialogContent className="bg-gray-800 border-gray-700 text-white">
+          <DialogHeader>
+            <DialogTitle>Confirm Card Purchase</DialogTitle>
+          </DialogHeader>
+          {selectedCardType && (
+            <div className="space-y-4">
+              <div className="text-center">
+                <div className={`w-20 h-12 ${selectedCardType.gradient} rounded-lg mx-auto mb-4 flex items-center justify-center relative`}>
+                  <CreditCard className="w-8 h-8 text-white" />
+                  <div className="absolute top-1 right-1 bg-white/20 px-1 rounded text-xs font-bold text-white">
+                    {selectedCardType.brand}
+                  </div>
+                </div>
+                <h3 className="text-xl font-semibold text-white">{selectedCardType.type} Card</h3>
+                <p className="text-2xl font-bold text-white mt-2">
+                  MWK {selectedCardType.price.toLocaleString()}
+                </p>
+              </div>
+              
+              <div className="bg-gray-700/50 p-4 rounded-lg">
+                <h4 className="font-medium text-white mb-2">Customer Details:</h4>
+                <div className="space-y-1 text-sm text-gray-300">
+                  <p>Name: {customerDetails.fullName}</p>
+                  <p>Email: {customerDetails.email}</p>
+                  <p>Phone: {customerDetails.phone}</p>
+                </div>
+              </div>
+              
+              <div className="bg-gray-700/50 p-4 rounded-lg">
+                <h4 className="font-medium text-white mb-2">Features included:</h4>
+                <ul className="space-y-1">
+                  {selectedCardType.features.map((feature, index) => (
+                    <li key={index} className="text-sm text-gray-300 flex items-center">
+                      <Check className="w-4 h-4 text-green-400 mr-2" />
+                      {feature}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              
+              <div className="flex space-x-3">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowPurchaseModal(false)}
+                  className="flex-1 border-gray-600 text-gray-300 hover:text-white"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleCardPurchase}
+                  className="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white"
+                >
+                  Confirm Purchase
+                </Button>
               </div>
             </div>
           )}

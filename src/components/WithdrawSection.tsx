@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ArrowLeft, Download, Building, Smartphone, CreditCard, User as UserIcon } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useTranslation } from '@/utils/languageApi';
 
 interface WithdrawSectionProps {
   onBack?: () => void;
@@ -15,6 +16,7 @@ interface WithdrawSectionProps {
 }
 
 export const WithdrawSection = ({ onBack, onBalanceUpdate, onTransactionUpdate }: WithdrawSectionProps) => {
+  const { t } = useTranslation();
   const [amount, setAmount] = useState('');
   const [selectedMethod, setSelectedMethod] = useState('');
   const [accountNumber, setAccountNumber] = useState('');
@@ -28,7 +30,7 @@ export const WithdrawSection = ({ onBack, onBalanceUpdate, onTransactionUpdate }
     {
       name: 'Mobile Money',
       icon: Smartphone,
-      fee: 1.5,
+      fee: 2.5,
       providers: [
         'TNM Mpamba',
         'Airtel Money',
@@ -41,7 +43,7 @@ export const WithdrawSection = ({ onBack, onBalanceUpdate, onTransactionUpdate }
     {
       name: 'Bank Transfer',
       icon: Building,
-      fee: 1.0,
+      fee: 1.5,
       providers: [
         'Standard Bank',
         'FDH Bank',
@@ -53,13 +55,18 @@ export const WithdrawSection = ({ onBack, onBalanceUpdate, onTransactionUpdate }
         'Opportunity Bank',
         'MyBucks Banking Corporation',
         'Nedbank',
-        'Malawi Savings Bank'
+        'Malawi Savings Bank',
+        'Centenary Bank',
+        'FCB',
+        'Malawi Rural Finance Company',
+        'Sunrise Microfinance',
+        'Pride Microfinance'
       ]
     },
     {
       name: 'Agent Network',
       icon: UserIcon,
-      fee: 2.0,
+      fee: 3.0,
       providers: [
         'NeoVault Agents',
         'Mukuru Agents',
@@ -69,7 +76,7 @@ export const WithdrawSection = ({ onBack, onBalanceUpdate, onTransactionUpdate }
     {
       name: 'ATM Withdrawal',
       icon: CreditCard,
-      fee: 0.5,
+      fee: 1.0,
       providers: [
         'Standard Bank ATM',
         'FDH Bank ATM',
@@ -142,7 +149,7 @@ export const WithdrawSection = ({ onBack, onBalanceUpdate, onTransactionUpdate }
 
       // Show success message
       toast({
-        title: "Withdrawal Successful",
+        title: t('transactionSuccessful'),
         description: `Successfully withdrawn MWK ${withdrawAmount.toLocaleString()} via ${selectedProvider}`,
       });
 
@@ -184,7 +191,7 @@ export const WithdrawSection = ({ onBack, onBalanceUpdate, onTransactionUpdate }
           >
             <ArrowLeft className="w-4 h-4" />
           </Button>
-          <h2 className="text-2xl font-bold text-white">Withdraw Money</h2>
+          <h2 className="text-2xl font-bold text-white">{t('withdraw')} Money</h2>
         </div>
       )}
 
@@ -194,12 +201,12 @@ export const WithdrawSection = ({ onBack, onBalanceUpdate, onTransactionUpdate }
             <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-r from-orange-500 to-red-600 rounded-lg flex items-center justify-center">
               <Download className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
             </div>
-            <span>Withdraw Money</span>
+            <span>{t('withdraw')} Money</span>
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
-            <Label htmlFor="amount" className="text-sm text-white">Amount to Withdraw (MWK)</Label>
+            <Label htmlFor="amount" className="text-sm text-white">{t('amount')} to Withdraw (MWK)</Label>
             <Input
               id="amount"
               type="number"

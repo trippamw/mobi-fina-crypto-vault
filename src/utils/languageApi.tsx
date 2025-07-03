@@ -1,3 +1,4 @@
+import React from 'react';
 
 export interface LanguageTranslations {
   [key: string]: {
@@ -81,6 +82,10 @@ export const translations: LanguageTranslations = {
     physicalCard: 'Physical Card',
     cardSettings: 'Card Settings',
     addMoney: 'Add Money',
+    purchaseCard: 'Purchase Card',
+    selectCurrency: 'Select Currency',
+    cardCurrency: 'Card Currency',
+    deleteCard: 'Delete Card',
     
     // Compliance
     kycVerification: 'KYC Verification',
@@ -170,6 +175,10 @@ export const translations: LanguageTranslations = {
     physicalCard: 'Kadi Yeniyeni',
     cardSettings: 'Makonzedwe A Kadi',
     addMoney: 'Onjezera Ndalama',
+    purchaseCard: 'Gulani Kadi',
+    selectCurrency: 'Sankhani Ndalama',
+    cardCurrency: 'Ndalama Ya Kadi',
+    deleteCard: 'Chotsani Kadi',
     
     // Compliance
     kycVerification: 'Kutsimikizira KYC',
@@ -259,6 +268,10 @@ export const translations: LanguageTranslations = {
     physicalCard: 'Kadi Yeniyeni',
     cardSettings: 'Vikongolozo Vya Kadi',
     addMoney: 'Onjezera Mali',
+    purchaseCard: 'Gulani Kadi',
+    selectCurrency: 'Sankhani Ndalama',
+    cardCurrency: 'Ndalama Ya Kadi',
+    deleteCard: 'Fufutani Kadi',
     
     // Compliance
     kycVerification: 'Kutsimikizira KYC',
@@ -348,6 +361,10 @@ export const translations: LanguageTranslations = {
     physicalCard: 'Kadi ya Kimwili',
     cardSettings: 'Mipangilio ya Kadi',
     addMoney: 'Ongeza Pesa',
+    purchaseCard: 'Nunua Kadi',
+    selectCurrency: 'Chagua Sarafu',
+    cardCurrency: 'Sarafu ya Kadi',
+    deleteCard: 'Futa Kadi',
     
     // Compliance
     kycVerification: 'Uthibitisho wa KYC',
@@ -389,4 +406,22 @@ export const applyLanguageToApp = (language: string) => {
 
 export const getCurrentLanguage = (): string => {
   return localStorage.getItem('preferredLanguage') || 'English';
+};
+
+// Hook for components to use translations
+export const useTranslation = () => {
+  const [currentLanguage, setCurrentLanguage] = React.useState(getCurrentLanguage());
+  
+  React.useEffect(() => {
+    const handleLanguageChange = (event: CustomEvent) => {
+      setCurrentLanguage(event.detail.language);
+    };
+    
+    window.addEventListener('languageChanged', handleLanguageChange as EventListener);
+    return () => window.removeEventListener('languageChanged', handleLanguageChange as EventListener);
+  }, []);
+  
+  const t = (key: string) => translateText(key, currentLanguage);
+  
+  return { t, currentLanguage };
 };
