@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ArrowLeft, Plus, CreditCard, Eye, EyeOff, Settings, DollarSign } from 'lucide-react';
 import { CardSettings } from '@/components/CardSettings';
+import { AddMoneyToCard } from '@/components/AddMoneyToCard';
 import { useToast } from '@/hooks/use-toast';
 
 interface Card {
@@ -47,7 +48,7 @@ interface VirtualCardsSectionProps {
   wallets?: any[];
 }
 
-export const VirtualCardsSection = ({ onBack, onBalanceUpdate, onTransactionUpdate, wallets }: VirtualCardsSectionProps) => {
+export const VirtualCardsSection = ({ onBack, onBalanceUpdate, onTransactionUpdate, wallets = [] }: VirtualCardsSectionProps) => {
   const { toast } = useToast();
   
   const [cards, setCards] = useState<Card[]>([
@@ -87,6 +88,8 @@ export const VirtualCardsSection = ({ onBack, onBalanceUpdate, onTransactionUpda
   const [selectedCard, setSelectedCard] = useState<Card | null>(null);
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [pendingCard, setPendingCard] = useState<any>(null);
+  const [showAddMoney, setShowAddMoney] = useState(false);
+  const [selectedCardForMoney, setSelectedCardForMoney] = useState<Card | null>(null);
 
   const [cardForm, setCardForm] = useState({
     holderName: '',
@@ -341,36 +344,59 @@ export const VirtualCardsSection = ({ onBack, onBalanceUpdate, onTransactionUpda
   };
 
   const handleAddMoney = (card: Card) => {
-    const amount = prompt(`Enter amount to add to your ${card.currency} card:`);
-    if (amount && !isNaN(Number(amount))) {
-      const numAmount = Number(amount);
-      setCards(prevCards => 
-        prevCards.map(c => 
-          c.id === card.id 
-            ? { ...c, balance: c.balance + numAmount }
-            : c
-        )
-      );
+    setSelectedCardForMoney(card);
+    setShowAddMoney(true);
+  };
+
+  const handleAddMoneyConfirm = (cardId: string, amount: number, fromCurrency: string, toCurrency: string, conversionFee = 0) => {
+    // Update card balance
+    setCards(prevCards => 
+      prevCards.map(c => 
+        c.id === cardId 
+          ? { ...c, balance: c.balance + amount }
+          : c
+      )
+    );
+    
+    // Update wallet balance
+    if (onBalanceUpdate) {
+      const totalDeducted = amount / getExchangeRate(fromCurrency, toCurrency) + conversionFee;
+      onBalanceUpdate(fromCurrency, -totalDeducted);
+    }
+    
+    // Add transaction record
+    if (onTransactionUpdate) {
+      const conversionText = fromCurrency !== toCurrency 
+        ? ` (converted from ${fromCurrency}${conversionFee > 0 ? ` + ${conversionFee.toFixed(2)} fee` : ''})`
+        : '';
       
-      if (onBalanceUpdate) {
-        onBalanceUpdate(card.currency, numAmount);
-      }
-      
-      if (onTransactionUpdate) {
-        onTransactionUpdate({
-          type: 'Card Top-up',
-          amount: `+${card.currency} ${numAmount.toFixed(2)}`,
-          description: `Added money to ${card.type} card`,
-          time: 'Just now',
-          status: 'completed'
-        });
-      }
-      
-      toast({
-        title: "Money Added",
-        description: `Successfully added ${card.currency} ${numAmount.toFixed(2)} to your card`
+      onTransactionUpdate({
+        type: 'Card Top-up',
+        amount: `+${toCurrency} ${amount.toFixed(2)}`,
+        description: `Added money to card${conversionText}`,
+        time: 'Just now',
+        status: 'completed'
       });
     }
+  };
+
+  const getExchangeRate = (from: string, to: string): number => {
+    if (from === to) return 1;
+    
+    const rates: { [key: string]: number } = {
+      'USD': 1,
+      'MWK': 0.00061,
+      'GBP': 1.27,
+      'EUR': 1.09,
+      'ZAR': 0.055,
+      'BTC': 67500,
+      'ETH': 3800
+    };
+    
+    const fromRate = rates[from] || 1;
+    const toRate = rates[to] || 1;
+    
+    return toRate / fromRate;
   };
 
   return (
@@ -494,7 +520,7 @@ export const VirtualCardsSection = ({ onBack, onBalanceUpdate, onTransactionUpda
                   <Button
                     size="sm"
                     variant="outline"
-                    className="border-gray-600 text-white hover:bg-gray-700"
+                    className="bg-white text-black border-white hover:bg-gray-100"
                     onClick={() => openCardSettings(card)}
                   >
                     <Settings className="w-3 h-3 mr-1" />
@@ -717,6 +743,20 @@ export const VirtualCardsSection = ({ onBack, onBalanceUpdate, onTransactionUpda
           card={selectedCard}
           onClose={() => setShowCardSettings(false)}
           onCardAction={handleCardAction}
+        />
+      )}
+
+      {/* Add Money Modal */}
+      {showAddMoney && selectedCardForMoney && (
+        <AddMoneyToCard
+          isOpen={showAddMoney}
+          card={selectedCardForMoney}
+          wallets={wallets}
+          onAddMoney={handleAddMoneyConfirm}
+          onClose={() => {
+            setShowAddMoney(false);
+            setSelectedCardForMoney(null);
+          }}
         />
       )}
     </div>

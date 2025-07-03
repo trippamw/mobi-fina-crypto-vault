@@ -287,6 +287,7 @@ const Index = () => {
               onBalanceUpdate={handleBalanceUpdate}
               onTransactionUpdate={handleTransactionUpdate}
               onBack={() => setActiveTab('dashboard')}
+              wallets={wallets}
             />
           </div>
         );
