@@ -22,10 +22,10 @@ import { TransactionConfirmation } from '@/components/TransactionConfirmation';
 import { WalletManagement } from '@/components/WalletManagement';
 import { VillageBankManagement } from '@/components/VillageBankManagement';
 import { VillageBankGroupCreation } from '@/components/VillageBankGroupCreation';
-import { useTranslation } from '@/utils/simpleTranslation';
+import { useLanguage } from '@/utils/languageApi';
 
 const Index = () => {
-  const { t } = useTranslation();
+  const { t } = useLanguage();
   const [balanceVisible, setBalanceVisible] = useState(true);
   const [activeTab, setActiveTab] = useState('dashboard');
   const [selectedWallet, setSelectedWallet] = useState<any>(null);
@@ -114,7 +114,6 @@ const Index = () => {
   });
 
   const handleBalanceUpdate = (currency: string, amount: number) => {
-    console.log(`Updating balance for ${currency}: ${amount}`);
     setWallets(prevWallets => 
       prevWallets.map(wallet => 
         wallet.currency === currency 
@@ -122,59 +121,6 @@ const Index = () => {
           : wallet
       )
     );
-  };
-
-  const handleCardBalanceUpdate = (cardId: string, amount: number) => {
-    console.log(`Updating card balance for card ${cardId}: ${amount}`);
-    setPurchasedCards(prevCards => 
-      prevCards.map(card => 
-        card.id === cardId 
-          ? { ...card, balance: Math.max(0, card.balance + amount) }
-          : card
-      )
-    );
-  };
-
-  const handleAddMoneyToCard = (cardId: string, amount: number, fromCurrency: string, toCurrency: string, conversionFee: number = 0) => {
-    console.log(`Adding money to card ${cardId}: ${amount} ${toCurrency} from ${fromCurrency}`);
-    
-    // Deduct from wallet (including conversion fee)
-    const totalDeduction = fromCurrency === toCurrency ? amount : amount / getExchangeRate(fromCurrency, toCurrency) + conversionFee;
-    handleBalanceUpdate(fromCurrency, -totalDeduction);
-    
-    // Add to card
-    handleCardBalanceUpdate(cardId, amount);
-    
-    // Add transaction to history
-    handleTransactionUpdate({
-      type: 'Add Money to Card',
-      amount: `+${toCurrency} ${amount.toFixed(2)}`,
-      description: `Added to card ending in ${cardId.toString().slice(-4)}`,
-      time: 'Just now',
-      status: 'completed'
-    });
-  };
-
-  const getExchangeRate = (from: string, to: string): number => {
-    if (from === to) return 1;
-    
-    // Updated realistic rates - December 2024
-    const usdRates: { [key: string]: number } = {
-      'USD': 1,
-      'MWK': 1730,      // 1 USD = 1730 MWK
-      'GBP': 0.79,      // 1 USD = 0.79 GBP  
-      'EUR': 0.93,      // 1 USD = 0.93 EUR
-      'ZAR': 18.5,      // 1 USD = 18.5 ZAR
-      'BTC': 0.000025,  // 1 USD = 0.000025 BTC
-      'ETH': 0.0003,    // 1 USD = 0.0003 ETH
-      'USDT': 1,        // 1 USD = 1 USDT
-      'USDC': 1         // 1 USD = 1 USDC
-    };
-    
-    const fromToUsd = 1 / usdRates[from];
-    const usdToTarget = usdRates[to];
-    
-    return fromToUsd * usdToTarget;
   };
 
   const handleTransactionUpdate = (transaction: any) => {
@@ -333,7 +279,7 @@ const Index = () => {
                 >
                   <ArrowLeft className="w-4 h-4" />
                 </Button>
-                <h2 className="text-lg sm:text-2xl font-bold text-white">Wallet & Cards</h2>
+                <h2 className="text-lg sm:text-2xl font-bold text-white">{t('wallet')} & {t('cards')}</h2>
               </div>
               <CreateWalletModal onCreateWallet={handleCreateWallet} />
             </div>
@@ -342,7 +288,6 @@ const Index = () => {
               onTransactionUpdate={handleTransactionUpdate}
               onBack={() => setActiveTab('dashboard')}
               wallets={wallets}
-              onAddMoneyToCard={handleAddMoneyToCard}
             />
           </div>
         );
