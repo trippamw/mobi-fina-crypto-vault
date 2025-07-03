@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -107,7 +108,7 @@ export const SendSection = ({ onBalanceUpdate, onTransactionUpdate, onBack }: Se
           >
             <ArrowLeft className="w-4 h-4" />
           </Button>
-          <h2 className="text-2xl font-bold text-white">Send Money</h2>
+          <h2 className="text-xl sm:text-2xl font-bold text-white">Send Money</h2>
         </div>
       )}
 
@@ -134,15 +135,22 @@ export const SendSection = ({ onBalanceUpdate, onTransactionUpdate, onBack }: Se
           </div>
 
           <Tabs defaultValue="mobile" className="w-full">
-            <TabsList className="grid w-full grid-cols-4 mb-4 h-auto bg-gray-800/60 border-gray-600/50">
+            <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 mb-4 h-auto bg-gray-800/60 border-gray-600/50">
               {sendMethods.map((method) => (
-                <TabsTrigger key={method.name} value={method.name.toLowerCase().replace(' ', '')} className="text-xs p-2 text-white data-[state=active]:bg-gray-700/60">{method.name}</TabsTrigger>
+                <TabsTrigger 
+                  key={method.name} 
+                  value={method.name.toLowerCase().replace(' ', '')} 
+                  className="text-xs sm:text-sm p-2 text-white data-[state=active]:bg-gray-700/60 break-words"
+                >
+                  <span className="hidden sm:inline">{method.name}</span>
+                  <span className="sm:hidden">{method.name.split(' ')[0]}</span>
+                </TabsTrigger>
               ))}
             </TabsList>
 
             <TabsContent value="mobile" className="space-y-4">
               <div>
-                <Label className="text-white">Mobile Number</Label>
+                <Label className="text-white text-sm">Mobile Number</Label>
                 <Input
                   placeholder="Enter recipient's mobile number"
                   value={recipient}
@@ -151,9 +159,9 @@ export const SendSection = ({ onBalanceUpdate, onTransactionUpdate, onBack }: Se
                 />
               </div>
               <div>
-                <Label className="text-white">Select Provider</Label>
+                <Label className="text-white text-sm">Select Provider</Label>
                 <Select onValueChange={setSelectedMethod}>
-                  <SelectTrigger className="bg-gray-800/60 border-gray-600/50 text-white">
+                  <SelectTrigger className="bg-gray-800/60 border-gray-600/50 text-white mt-1">
                     <SelectValue placeholder="Choose provider" />
                   </SelectTrigger>
                   <SelectContent className="bg-gray-900 border-gray-700">
@@ -167,7 +175,7 @@ export const SendSection = ({ onBalanceUpdate, onTransactionUpdate, onBack }: Se
 
             <TabsContent value="neovaultuser" className="space-y-4">
               <div>
-                <Label className="text-white">NeoVault Username/Email</Label>
+                <Label className="text-white text-sm">NeoVault Username/Email</Label>
                 <Input
                   placeholder="Enter recipient's username or email"
                   value={recipient}
@@ -179,7 +187,7 @@ export const SendSection = ({ onBalanceUpdate, onTransactionUpdate, onBack }: Se
 
             <TabsContent value="banktransfer" className="space-y-4">
               <div>
-                <Label className="text-white">Bank Account Number</Label>
+                <Label className="text-white text-sm">Bank Account Number</Label>
                 <Input
                   placeholder="Enter recipient's bank account number"
                   value={recipient}
@@ -188,9 +196,9 @@ export const SendSection = ({ onBalanceUpdate, onTransactionUpdate, onBack }: Se
                 />
               </div>
               <div>
-                <Label className="text-white">Select Bank</Label>
+                <Label className="text-white text-sm">Select Bank</Label>
                 <Select onValueChange={setSelectedMethod}>
-                  <SelectTrigger className="bg-gray-800/60 border-gray-600/50 text-white">
+                  <SelectTrigger className="bg-gray-800/60 border-gray-600/50 text-white mt-1">
                     <SelectValue placeholder="Choose bank" />
                   </SelectTrigger>
                   <SelectContent className="bg-gray-900 border-gray-700">
@@ -204,7 +212,7 @@ export const SendSection = ({ onBalanceUpdate, onTransactionUpdate, onBack }: Se
 
             <TabsContent value="bulktransfer" className="space-y-4">
               <div>
-                <Label className="text-white">Upload CSV File</Label>
+                <Label className="text-white text-sm">Upload CSV File</Label>
                 <Input
                   type="file"
                   className="bg-gray-800/60 border-gray-600/50 text-white placeholder-gray-400 mt-1"

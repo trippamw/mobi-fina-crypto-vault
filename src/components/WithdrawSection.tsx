@@ -1,11 +1,10 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowLeft, Download, Building, Smartphone, CreditCard, User as UserIcon } from 'lucide-react';
+import { ArrowLeft, Download, Building, Smartphone, User as UserIcon } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useTranslation } from '@/utils/languageApi';
 
@@ -34,10 +33,7 @@ export const WithdrawSection = ({ onBack, onBalanceUpdate, onTransactionUpdate }
       providers: [
         'TNM Mpamba',
         'Airtel Money',
-        'Mo626',
-        'Mukuru',
-        'WorldRemit',
-        'Remitly'
+        'Mo626'
       ]
     },
     {
@@ -46,21 +42,12 @@ export const WithdrawSection = ({ onBack, onBalanceUpdate, onTransactionUpdate }
       fee: 1.5,
       providers: [
         'Standard Bank',
-        'FDH Bank',
+        'FDH Bank', 
         'NBS Bank',
         'National Bank',
-        'First Capital Bank',
         'CDH Investment Bank',
-        'Ecobank',
-        'Opportunity Bank',
-        'MyBucks Banking Corporation',
-        'Nedbank',
-        'Malawi Savings Bank',
         'Centenary Bank',
-        'FCB',
-        'Malawi Rural Finance Company',
-        'Sunrise Microfinance',
-        'Pride Microfinance'
+        'FCB'
       ]
     },
     {
@@ -68,21 +55,7 @@ export const WithdrawSection = ({ onBack, onBalanceUpdate, onTransactionUpdate }
       icon: UserIcon,
       fee: 3.0,
       providers: [
-        'NeoVault Agents',
-        'Mukuru Agents',
-        'WorldRemit Agents'
-      ]
-    },
-    {
-      name: 'ATM Withdrawal',
-      icon: CreditCard,
-      fee: 1.0,
-      providers: [
-        'Standard Bank ATM',
-        'FDH Bank ATM',
-        'NBS Bank ATM',
-        'National Bank ATM',
-        'Any Visa ATM'
+        'NeoVault Agents'
       ]
     }
   ];
@@ -171,8 +144,6 @@ export const WithdrawSection = ({ onBack, onBalanceUpdate, onTransactionUpdate }
         return 'Enter account number';
       case 'Agent Network':
         return 'Enter reference number or ID';
-      case 'ATM Withdrawal':
-        return 'Card number (last 4 digits)';
       default:
         return 'Enter account/reference number';
     }
@@ -296,7 +267,7 @@ export const WithdrawSection = ({ onBack, onBalanceUpdate, onTransactionUpdate }
 
           <div className="text-xs text-gray-400 text-center">
             <p>Processing time varies by method:</p>
-            <p>Mobile Money: Instant • Bank Transfer: 1-2 days • Agents: Instant • ATM: Instant</p>
+            <p>Mobile Money: Instant • Bank Transfer: 1-2 days • Agents: Instant</p>
           </div>
         </CardContent>
       </Card>

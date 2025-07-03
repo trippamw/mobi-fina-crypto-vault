@@ -1,9 +1,10 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { QrCode, Copy, Share2, Link, Smartphone, ArrowLeft } from 'lucide-react';
+import { QrCode, Copy, Share2, Link, Smartphone, ArrowLeft, Download } from 'lucide-react';
 
 interface ReceiveSectionProps {
   onBack?: () => void;
@@ -21,6 +22,64 @@ export const ReceiveSection = ({ onBack }: ReceiveSectionProps) => {
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
+  };
+
+  const downloadQRCode = () => {
+    // Create a canvas element to generate QR code image
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    
+    canvas.width = 300;
+    canvas.height = 300;
+    
+    // Create a simple QR code representation
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, 300, 300);
+    
+    ctx.fillStyle = '#000000';
+    // Simple pattern to represent QR code
+    for (let i = 0; i < 15; i++) {
+      for (let j = 0; j < 15; j++) {
+        if ((i + j) % 2 === 0) {
+          ctx.fillRect(i * 20, j * 20, 20, 20);
+        }
+      }
+    }
+    
+    // Convert to blob and download
+    canvas.toBlob((blob) => {
+      if (blob) {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `neovault-qr-${amount}-mwk.png`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }
+    });
+  };
+
+  const sharePaymentLink = async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'NeoVault Payment Link',
+          text: `Pay me MWK ${amount} via NeoVault`,
+          url: paymentLink
+        });
+      } catch (error) {
+        // Fallback to clipboard
+        copyToClipboard(paymentLink);
+        alert('Payment link copied to clipboard!');
+      }
+    } else {
+      // Fallback to clipboard
+      copyToClipboard(paymentLink);
+      alert('Payment link copied to clipboard!');
+    }
   };
 
   return (
@@ -109,7 +168,7 @@ export const ReceiveSection = ({ onBack }: ReceiveSectionProps) => {
                   <Button size="sm" onClick={() => copyToClipboard(paymentLink)} className="bg-cyan-500 hover:bg-cyan-600">
                     <Copy className="w-4 h-4" />
                   </Button>
-                  <Button size="sm" className="bg-blue-500 hover:bg-blue-600">
+                  <Button size="sm" onClick={sharePaymentLink} className="bg-blue-500 hover:bg-blue-600">
                     <Share2 className="w-4 h-4" />
                   </Button>
                 </div>
@@ -124,13 +183,22 @@ export const ReceiveSection = ({ onBack }: ReceiveSectionProps) => {
               </div>
               <p className="text-lg font-semibold text-gray-800">MWK {amount}</p>
               <p className="text-sm text-gray-600">Scan to pay via NeoVault</p>
-              <Button
-                variant="outline"
-                className="mt-4"
-                onClick={() => setShowQRCode(false)}
-              >
-                Close
-              </Button>
+              <div className="flex gap-2 mt-4">
+                <Button
+                  onClick={downloadQRCode}
+                  className="flex-1 bg-blue-600 hover:bg-blue-700"
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  Download
+                </Button>
+                <Button
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => setShowQRCode(false)}
+                >
+                  Close
+                </Button>
+              </div>
             </Card>
           )}
         </CardContent>
