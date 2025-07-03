@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Send, Users, Smartphone, Building, User, ArrowLeft } from 'lucide-react';
+import { TransactionConfirmation } from './TransactionConfirmation';
 
 interface SendSectionProps {
   onBalanceUpdate?: (currency: string, amount: number) => void;
@@ -23,6 +23,12 @@ export const SendSection = ({ onBalanceUpdate, onTransactionUpdate, onBack }: Se
   const [transactionFee, setTransactionFee] = useState(0);
   const [totalAmount, setTotalAmount] = useState(0);
   const [isProcessing, setIsProcessing] = useState(false);
+
+  const [transactionModal, setTransactionModal] = useState({
+    isOpen: false,
+    showSuccess: false,
+    transaction: null as any
+  });
 
   const sendMethods = [
     { name: 'Mobile Money', icon: Smartphone },
@@ -70,50 +76,68 @@ export const SendSection = ({ onBalanceUpdate, onTransactionUpdate, onBack }: Se
       return;
     }
 
-    setIsProcessing(true);
+    const sendAmount = parseFloat(amount);
+    const recipientInfo = selectedMethod === 'mobile' ? recipientPhone : recipient;
+    const methodInfo = selectedMethod === 'mobile' ? mobileMoneyProvider : selectedMethod;
 
-    // Simulate processing delay
-    setTimeout(() => {
-      const sendAmount = parseFloat(amount);
-
-      // Update wallet balance
-      if (onBalanceUpdate) {
-        onBalanceUpdate('MWK', -totalAmount);
+    // Show transaction confirmation
+    setTransactionModal({
+      isOpen: true,
+      showSuccess: false,
+      transaction: {
+        type: 'Send Money',
+        amount: `MWK ${sendAmount.toLocaleString()}`,
+        recipient: recipientInfo,
+        reference: `SEND${Date.now()}`,
+        fee: `MWK ${transactionFee.toLocaleString()}`,
+        total: `MWK ${totalAmount.toLocaleString()}`,
+        returnTo: 'Send Money'
       }
+    });
+  };
 
-      // Add to transaction history
-      if (onTransactionUpdate) {
-        const description = selectedMethod === 'mobile' 
-          ? `Sent to ${recipientPhone} via ${mobileMoneyProvider}`
-          : `Sent to ${recipient} via ${selectedMethod}`;
-        
-        onTransactionUpdate({
-          type: 'Send Money',
-          amount: `-MWK ${sendAmount.toLocaleString()}`,
-          description: description,
-          time: 'Just now',
-          status: 'completed'
-        });
-      }
+  const confirmTransaction = () => {
+    const sendAmount = parseFloat(amount);
 
-      setIsProcessing(false);
+    // Update wallet balance
+    if (onBalanceUpdate) {
+      onBalanceUpdate('MWK', -totalAmount);
+    }
 
-      // Show success message
-      const successMessage = selectedMethod === 'mobile'
-        ? `Successfully sent MWK ${sendAmount.toLocaleString()} to ${recipientPhone} via ${mobileMoneyProvider}`
-        : `Successfully sent MWK ${sendAmount.toLocaleString()} to ${recipient}`;
+    // Add to transaction history
+    if (onTransactionUpdate) {
+      const description = selectedMethod === 'mobile' 
+        ? `Sent to ${recipientPhone} via ${mobileMoneyProvider}`
+        : `Sent to ${recipient} via ${selectedMethod}`;
       
-      alert(successMessage);
+      onTransactionUpdate({
+        type: 'Send Money',
+        amount: `-MWK ${sendAmount.toLocaleString()}`,
+        description: description,
+        time: 'Just now',
+        status: 'completed'
+      });
+    }
 
-      // Reset form
-      setAmount('');
-      setRecipient('');
-      setRecipientPhone('');
-      setMobileMoneyProvider('');
-      setSelectedMethod('');
-      setTransactionFee(0);
-      setTotalAmount(0);
-    }, 2000);
+    // Show success
+    setTransactionModal(prev => ({ ...prev, showSuccess: true }));
+
+    // Reset form
+    setAmount('');
+    setRecipient('');
+    setRecipientPhone('');
+    setMobileMoneyProvider('');
+    setSelectedMethod('');
+    setTransactionFee(0);
+    setTotalAmount(0);
+  };
+
+  const closeTransactionModal = () => {
+    setTransactionModal({
+      isOpen: false,
+      showSuccess: false,
+      transaction: null
+    });
   };
 
   return (
@@ -284,6 +308,16 @@ export const SendSection = ({ onBalanceUpdate, onTransactionUpdate, onBack }: Se
           </Button>
         </CardContent>
       </Card>
+
+      {/* Transaction Confirmation Modal */}
+      <TransactionConfirmation
+        isOpen={transactionModal.isOpen}
+        onClose={closeTransactionModal}
+        onConfirm={confirmTransaction}
+        onSuccess={closeTransactionModal}
+        transaction={transactionModal.transaction}
+        showSuccess={transactionModal.showSuccess}
+      />
     </div>
   );
 };

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,6 +8,7 @@ import { ArrowUpDown, TrendingUp, TrendingDown, ArrowLeft, RefreshCw } from 'luc
 import { Badge } from '@/components/ui/badge';
 import { TransactionConfirmation } from './TransactionConfirmation';
 import { useLanguage } from '@/utils/languageApi';
+import { fetchLiveExchangeRates, getExchangeRate, convertCurrency } from '@/utils/currencyService';
 
 interface ExchangeSectionProps {
   onBalanceUpdate?: (currency: string, amount: number) => void;
@@ -24,7 +26,6 @@ export const ExchangeSection: React.FC<ExchangeSectionProps> = ({ onBalanceUpdat
   const [isLoading, setIsLoading] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
   const [exchangeRates, setExchangeRates] = useState<any>({});
-  const [cryptoRates, setCryptoRates] = useState<any>({});
 
   const [transactionModal, setTransactionModal] = useState({
     isOpen: false,
@@ -43,54 +44,19 @@ export const ExchangeSection: React.FC<ExchangeSectionProps> = ({ onBalanceUpdat
   const cryptoCurrencies = [
     { code: 'BTC', name: 'Bitcoin', flag: '₿' },
     { code: 'ETH', name: 'Ethereum', flag: 'Ξ' },
+    { code: 'USDT', name: 'Tether', flag: '₮' },
+    { code: 'USDC', name: 'USD Coin', flag: '$' },
   ];
 
   const allCurrencies = [...fiatCurrencies, ...cryptoCurrencies];
 
-  // Fetch live exchange rates from exchangerate-api.com
-  const fetchFiatRates = async () => {
-    try {
-      const response = await fetch(`https://v6.exchangerate-api.com/v6/d207f2d63914bbf2254a0652/latest/USD`);
-      const data = await response.json();
-      
-      if (data.result === 'success') {
-        setExchangeRates(data.conversion_rates);
-        return true;
-      }
-      return false;
-    } catch (error) {
-      console.error('Failed to fetch fiat rates:', error);
-      return false;
-    }
-  };
-
-  // Fetch crypto rates (simulated since we don't have a crypto API key)
-  const fetchCryptoRates = async () => {
-    try {
-      // Simulated crypto rates - in production, use a real crypto API
-      const cryptoData = {
-        BTC: 67500, // BTC price in USD
-        ETH: 3800,  // ETH price in USD
-      };
-      setCryptoRates(cryptoData);
-      return true;
-    } catch (error) {
-      console.error('Failed to fetch crypto rates:', error);
-      return false;
-    }
-  };
-
+  // Fetch live exchange rates using the currency service
   const fetchAllRates = async () => {
     setIsLoading(true);
     try {
-      const [fiatSuccess, cryptoSuccess] = await Promise.all([
-        fetchFiatRates(),
-        fetchCryptoRates()
-      ]);
-      
-      if (fiatSuccess || cryptoSuccess) {
-        setLastUpdated(new Date());
-      }
+      const rates = await fetchLiveExchangeRates();
+      setExchangeRates(rates);
+      setLastUpdated(new Date());
       
       // Recalculate if exchange is already set up
       if (fromCurrency && toCurrency && amount) {
@@ -108,48 +74,18 @@ export const ExchangeSection: React.FC<ExchangeSectionProps> = ({ onBalanceUpdat
     fetchAllRates();
   }, []);
 
-  const getExchangeRate = (from: string, to: string): number => {
-    if (from === to) return 1;
-
-    // Handle fiat to fiat
-    if (fiatCurrencies.find(c => c.code === from) && fiatCurrencies.find(c => c.code === to)) {
-      const fromRate = exchangeRates[from] || 1;
-      const toRate = exchangeRates[to] || 1;
-      return toRate / fromRate;
-    }
-
-    // Handle crypto to fiat
-    if (cryptoCurrencies.find(c => c.code === from) && fiatCurrencies.find(c => c.code === to)) {
-      const cryptoUsdPrice = cryptoRates[from] || 0;
-      const fiatUsdRate = exchangeRates[to] || 1;
-      return cryptoUsdPrice * fiatUsdRate;
-    }
-
-    // Handle fiat to crypto
-    if (fiatCurrencies.find(c => c.code === from) && cryptoCurrencies.find(c => c.code === to)) {
-      const fiatUsdRate = exchangeRates[from] || 1;
-      const cryptoUsdPrice = cryptoRates[to] || 0;
-      return fiatUsdRate / cryptoUsdPrice;
-    }
-
-    // Handle crypto to crypto
-    if (cryptoCurrencies.find(c => c.code === from) && cryptoCurrencies.find(c => c.code === to)) {
-      const fromUsdPrice = cryptoRates[from] || 0;
-      const toUsdPrice = cryptoRates[to] || 0;
-      return fromUsdPrice / toUsdPrice;
-    }
-
-    return 0;
-  };
-
-  const calculateExchange = () => {
+  const calculateExchange = async () => {
     if (!fromCurrency || !toCurrency || !amount) return;
 
-    const rate = getExchangeRate(fromCurrency, toCurrency);
-    const converted = parseFloat(amount) * rate;
-    
-    setExchangeRate(rate);
-    setConvertedAmount(converted);
+    try {
+      const rate = await getExchangeRate(fromCurrency, toCurrency);
+      const converted = await convertCurrency(parseFloat(amount), fromCurrency, toCurrency);
+      
+      setExchangeRate(rate);
+      setConvertedAmount(converted);
+    } catch (error) {
+      console.error('Error calculating exchange:', error);
+    }
   };
 
   const handleExchange = () => {
@@ -171,7 +107,8 @@ export const ExchangeSection: React.FC<ExchangeSectionProps> = ({ onBalanceUpdat
         recipient: `${fromCurrency} to ${toCurrency}`,
         reference: `EXC${Date.now()}`,
         fee: `${fee.toFixed(6)} ${fromCurrency}`,
-        total: `${total.toFixed(6)} ${fromCurrency}`
+        total: `${total.toFixed(6)} ${fromCurrency}`,
+        returnTo: 'Exchange'
       }
     });
   };
@@ -225,10 +162,10 @@ export const ExchangeSection: React.FC<ExchangeSectionProps> = ({ onBalanceUpdat
   };
 
   useEffect(() => {
-    if (fromCurrency && toCurrency && amount && (Object.keys(exchangeRates).length > 0 || Object.keys(cryptoRates).length > 0)) {
+    if (fromCurrency && toCurrency && amount && Object.keys(exchangeRates).length > 0) {
       calculateExchange();
     }
-  }, [fromCurrency, toCurrency, amount, exchangeRates, cryptoRates]);
+  }, [fromCurrency, toCurrency, amount, exchangeRates]);
 
   return (
     <div className="space-y-6 pb-24">
@@ -268,33 +205,19 @@ export const ExchangeSection: React.FC<ExchangeSectionProps> = ({ onBalanceUpdat
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-            {/* Fiat Currencies */}
-            {fiatCurrencies.filter(c => c.code !== 'USD').map((currency) => {
-              const rate = exchangeRates[currency.code];
+            {/* Display exchange rates using the currency service data */}
+            {Object.entries(exchangeRates).map(([currency, rate]) => {
+              const currencyInfo = allCurrencies.find(c => c.code === currency);
+              if (!currencyInfo || currency === 'USD') return null;
+              
               return (
-                <div key={currency.code} className="bg-gray-800/60 p-3 rounded-lg border border-gray-600/50">
+                <div key={currency} className="bg-gray-800/60 p-3 rounded-lg border border-gray-600/50">
                   <div className="flex items-center space-x-2 mb-1">
-                    <span className="text-lg">{currency.flag}</span>
-                    <span className="font-medium text-white">{currency.code}</span>
+                    <span className="text-lg">{currencyInfo.flag}</span>
+                    <span className="font-medium text-white">{currency}</span>
                   </div>
                   <p className="text-sm text-white/60">
-                    1 USD = {rate ? rate.toFixed(2) : 'Loading...'} {currency.code}
-                  </p>
-                </div>
-              );
-            })}
-            
-            {/* Crypto Currencies */}
-            {cryptoCurrencies.map((currency) => {
-              const rate = cryptoRates[currency.code];
-              return (
-                <div key={currency.code} className="bg-gray-800/60 p-3 rounded-lg border border-gray-600/50">
-                  <div className="flex items-center space-x-2 mb-1">
-                    <span className="text-lg">{currency.flag}</span>
-                    <span className="font-medium text-white">{currency.code}</span>
-                  </div>
-                  <p className="text-sm text-white/60">
-                    1 {currency.code} = ${rate ? rate.toLocaleString() : 'Loading...'} USD
+                    1 USD = {typeof rate === 'number' ? rate.toFixed(2) : rate} {currency}
                   </p>
                 </div>
               );

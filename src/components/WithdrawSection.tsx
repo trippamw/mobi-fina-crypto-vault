@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { ArrowLeft, Download, Building, Smartphone, User as UserIcon } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useTranslation } from '@/utils/languageApi';
+import { TransactionConfirmation } from './TransactionConfirmation';
 
 interface WithdrawSectionProps {
   onBack?: () => void;
@@ -24,6 +25,12 @@ export const WithdrawSection = ({ onBack, onBalanceUpdate, onTransactionUpdate }
   const [totalAmount, setTotalAmount] = useState(0);
   const [isProcessing, setIsProcessing] = useState(false);
   const { toast } = useToast();
+
+  const [transactionModal, setTransactionModal] = useState({
+    isOpen: false,
+    showSuccess: false,
+    transaction: null as any
+  });
 
   const withdrawMethods = [
     {
@@ -96,44 +103,61 @@ export const WithdrawSection = ({ onBack, onBalanceUpdate, onTransactionUpdate }
       return;
     }
 
-    setIsProcessing(true);
+    const withdrawAmount = parseFloat(amount);
 
-    // Simulate processing delay
-    setTimeout(() => {
-      const withdrawAmount = parseFloat(amount);
-
-      // Update wallet balance
-      if (onBalanceUpdate) {
-        onBalanceUpdate('MWK', -totalAmount);
+    // Show transaction confirmation
+    setTransactionModal({
+      isOpen: true,
+      showSuccess: false,
+      transaction: {
+        type: 'Withdrawal',
+        amount: `MWK ${withdrawAmount.toLocaleString()}`,
+        recipient: selectedProvider,
+        reference: `WTH${Date.now()}`,
+        fee: `MWK ${transactionFee.toLocaleString()}`,
+        total: `MWK ${totalAmount.toLocaleString()}`,
+        returnTo: 'Withdraw Money'
       }
+    });
+  };
 
-      // Add to transaction history
-      if (onTransactionUpdate) {
-        onTransactionUpdate({
-          type: 'Withdrawal',
-          amount: `-MWK ${withdrawAmount.toLocaleString()}`,
-          description: `Withdrawn via ${selectedProvider} (Fee: MWK ${transactionFee.toLocaleString()})`,
-          time: 'Just now',
-          status: 'completed'
-        });
-      }
+  const confirmTransaction = () => {
+    const withdrawAmount = parseFloat(amount);
 
-      setIsProcessing(false);
+    // Update wallet balance
+    if (onBalanceUpdate) {
+      onBalanceUpdate('MWK', -totalAmount);
+    }
 
-      // Show success message
-      toast({
-        title: t('transactionSuccessful'),
-        description: `Successfully withdrawn MWK ${withdrawAmount.toLocaleString()} via ${selectedProvider}`,
+    // Add to transaction history
+    if (onTransactionUpdate) {
+      onTransactionUpdate({
+        type: 'Withdrawal',
+        amount: `-MWK ${withdrawAmount.toLocaleString()}`,
+        description: `Withdrawn via ${selectedProvider} (Fee: MWK ${transactionFee.toLocaleString()})`,
+        time: 'Just now',
+        status: 'completed'
       });
+    }
 
-      // Reset form
-      setAmount('');
-      setAccountNumber('');
-      setSelectedMethod('');
-      setSelectedProvider('');
-      setTransactionFee(0);
-      setTotalAmount(0);
-    }, 2000);
+    // Show success
+    setTransactionModal(prev => ({ ...prev, showSuccess: true }));
+
+    // Reset form
+    setAmount('');
+    setAccountNumber('');
+    setSelectedMethod('');
+    setSelectedProvider('');
+    setTransactionFee(0);
+    setTotalAmount(0);
+  };
+
+  const closeTransactionModal = () => {
+    setTransactionModal({
+      isOpen: false,
+      showSuccess: false,
+      transaction: null
+    });
   };
 
   const getPlaceholderText = () => {
@@ -271,6 +295,16 @@ export const WithdrawSection = ({ onBack, onBalanceUpdate, onTransactionUpdate }
           </div>
         </CardContent>
       </Card>
+
+      {/* Transaction Confirmation Modal */}
+      <TransactionConfirmation
+        isOpen={transactionModal.isOpen}
+        onClose={closeTransactionModal}
+        onConfirm={confirmTransaction}
+        onSuccess={closeTransactionModal}
+        transaction={transactionModal.transaction}
+        showSuccess={transactionModal.showSuccess}
+      />
     </div>
   );
 };
