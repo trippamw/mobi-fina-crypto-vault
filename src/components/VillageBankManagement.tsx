@@ -60,7 +60,8 @@ export const VillageBankManagement = ({ villageBank, onBack, onCreateGroup, onIn
       status: 'active',
       nextContribution: '2025-01-15',
       contributionAmount: 5000,
-      frequency: 'monthly'
+      frequency: 'monthly',
+      inviteCode: 'FAM123'
     },
     {
       id: '2',
@@ -74,7 +75,8 @@ export const VillageBankManagement = ({ villageBank, onBack, onCreateGroup, onIn
       status: 'active',
       nextContribution: '2025-01-10',
       contributionAmount: 10000,
-      frequency: 'weekly'
+      frequency: 'weekly',
+      inviteCode: 'BIZ456'
     }
   ]);
 

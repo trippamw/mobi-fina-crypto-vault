@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { CreditCard, Check, Star, Crown, Wallet, Plus, Settings, Freeze, Trash2, DollarSign, Lock, ArrowLeft } from 'lucide-react';
+import { CreditCard, Check, Star, Crown, Wallet, Plus, Settings, Lock, Trash2, DollarSign, ArrowLeft } from 'lucide-react';
 import { useLanguage } from '@/utils/languageApi';
 import { useToast } from '@/hooks/use-toast';
 import { Switch } from '@/components/ui/switch';
