@@ -41,9 +41,10 @@ interface VirtualCardsSectionProps {
   onBack: () => void;
   onBalanceUpdate?: (currency: string, amount: number) => void;
   onTransactionUpdate?: (transaction: any) => void;
+  wallets?: any[];
 }
 
-export const VirtualCardsSection = ({ onBack, onBalanceUpdate, onTransactionUpdate }: VirtualCardsSectionProps) => {
+export const VirtualCardsSection = ({ onBack, onBalanceUpdate, onTransactionUpdate, wallets }: VirtualCardsSectionProps) => {
   const [cards, setCards] = useState<Card[]>([
     {
       id: '1',
@@ -59,8 +60,8 @@ export const VirtualCardsSection = ({ onBack, onBalanceUpdate, onTransactionUpda
     },
     {
       id: '2',
-      type: 'mastercard',
-      number: '5555 4444 3333 2222',
+      type: 'visa',
+      number: '4555 4444 3333 2222',
       holderName: 'JOHN BANDA',
       expiryDate: '03/26',
       cvv: '456',
@@ -102,19 +103,6 @@ export const VirtualCardsSection = ({ onBack, onBalanceUpdate, onTransactionUpda
       ]
     },
     {
-      id: 'mastercard-standard',
-      name: 'Mastercard Standard',
-      type: 'mastercard',
-      annualFee: 30000,
-      color: 'from-orange-500 to-red-600',
-      benefits: [
-        { feature: 'Worldwide Acceptance', description: 'Accepted at millions of locations' },
-        { feature: 'Contactless Payments', description: 'Tap and pay technology' },
-        { feature: 'Travel Benefits', description: 'Special travel offers and discounts' },
-        { feature: 'Fraud Protection', description: 'Advanced security monitoring' }
-      ]
-    },
-    {
       id: 'visa-gold',
       name: 'Visa Gold',
       type: 'visa',
@@ -125,6 +113,21 @@ export const VirtualCardsSection = ({ onBack, onBalanceUpdate, onTransactionUpda
         { feature: 'Travel Insurance', description: 'Comprehensive travel coverage' },
         { feature: 'Airport Lounge', description: 'Access to premium lounges' },
         { feature: 'Concierge Service', description: '24/7 lifestyle assistance' }
+      ]
+    },
+    {
+      id: 'visa-platinum',
+      name: 'Visa Platinum',
+      type: 'visa',
+      annualFee: 150000,
+      color: 'from-gray-400 to-gray-600',
+      benefits: [
+        { feature: 'Premium Support', description: 'Priority customer service' },
+        { feature: 'Travel Insurance', description: 'Comprehensive travel coverage' },
+        { feature: 'Airport Lounge', description: 'Access to premium lounges' },
+        { feature: 'Concierge Service', description: '24/7 lifestyle assistance' },
+        { feature: 'Cash Back', description: 'Up to 2% cash back on purchases' },
+        { feature: 'Extended Warranty', description: 'Extended warranty on purchases' }
       ]
     }
   ];
@@ -152,12 +155,12 @@ export const VirtualCardsSection = ({ onBack, onBalanceUpdate, onTransactionUpda
 
     const newCard: Card = {
       id: Date.now().toString(),
-      type: selectedType.type,
-      number: generateCardNumber(selectedType.type),
+      type: 'visa',
+      number: generateCardNumber('visa'),
       holderName: cardForm.holderName || 'JOHN BANDA',
       expiryDate: generateExpiryDate(),
       cvv: generateCVV(),
-      currency: selectedType.type === 'visa' ? 'USD' : 'EUR',
+      currency: 'USD',
       balance: 0,
       isBlocked: false,
       isPhysical: isPhysicalCard,
@@ -183,7 +186,7 @@ export const VirtualCardsSection = ({ onBack, onBalanceUpdate, onTransactionUpda
   };
 
   const generateCardNumber = (type: 'visa' | 'mastercard') => {
-    const prefix = type === 'visa' ? '4' : '5';
+    const prefix = '4';
     const remaining = Array.from({length: 15}, () => Math.floor(Math.random() * 10)).join('');
     const fullNumber = prefix + remaining.substring(0, 14);
     return fullNumber.replace(/(.{4})/g, '$1 ').trim();
@@ -214,7 +217,7 @@ export const VirtualCardsSection = ({ onBack, onBalanceUpdate, onTransactionUpda
             case 'unblock':
               return { ...card, status: 'active' as const, isBlocked: false };
             case 'delete':
-              return card; // Will be filtered out below
+              return card;
             default:
               return card;
           }
@@ -297,13 +300,11 @@ export const VirtualCardsSection = ({ onBack, onBalanceUpdate, onTransactionUpda
         {cards.map((card) => (
           <div key={card.id} className="space-y-3">
             {/* Card Visual */}
-            <div className={`relative w-full h-48 rounded-2xl p-6 text-white shadow-2xl bg-gradient-to-br ${
-              card.type === 'visa' ? 'from-blue-600 to-blue-800' : 'from-orange-500 to-red-600'
-            }`}>
-              {/* Card Brand Logo */}
+            <div className="relative w-full h-48 rounded-2xl p-6 text-white shadow-2xl bg-gradient-to-br from-blue-600 to-blue-800">
+              {/* Card Brand Logo and Status */}
               <div className="flex justify-between items-start mb-4">
-                <div className={`text-2xl font-bold ${card.type === 'visa' ? 'text-white' : 'text-white'}`}>
-                  {card.type.toUpperCase()}
+                <div className="text-xl font-bold text-white">
+                  NEOVAULT
                 </div>
                 <div className="flex items-center space-x-1">
                   {card.isPhysical && (
@@ -323,8 +324,8 @@ export const VirtualCardsSection = ({ onBack, onBalanceUpdate, onTransactionUpda
                 </div>
               </div>
 
-              {/* Card Number - Positioned higher */}
-              <div className="mb-8">
+              {/* Card Number - Positioned at top */}
+              <div className="mb-4">
                 <div className="text-lg font-mono tracking-wider">
                   {showCardNumbers[card.id] ? card.number : '**** **** **** ' + card.number.slice(-4)}
                 </div>
@@ -351,6 +352,13 @@ export const VirtualCardsSection = ({ onBack, onBalanceUpdate, onTransactionUpda
                   <div className="text-sm font-semibold">{card.cvv}</div>
                 </div>
               )}
+
+              {/* VISA Logo at bottom right */}
+              <div className="absolute bottom-6 right-6">
+                <div className="text-lg font-bold italic text-white/90">
+                  VISA
+                </div>
+              </div>
             </div>
 
             {/* Card Info */}
