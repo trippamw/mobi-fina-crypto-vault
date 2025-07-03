@@ -114,6 +114,7 @@ const Index = () => {
   });
 
   const handleBalanceUpdate = (currency: string, amount: number) => {
+    console.log(`Updating balance for ${currency}: ${amount}`);
     setWallets(prevWallets => 
       prevWallets.map(wallet => 
         wallet.currency === currency 
@@ -121,6 +122,58 @@ const Index = () => {
           : wallet
       )
     );
+  };
+
+  const handleCardBalanceUpdate = (cardId: string, amount: number) => {
+    console.log(`Updating card balance for card ${cardId}: ${amount}`);
+    setPurchasedCards(prevCards => 
+      prevCards.map(card => 
+        card.id === cardId 
+          ? { ...card, balance: Math.max(0, card.balance + amount) }
+          : card
+      )
+    );
+  };
+
+  const handleAddMoneyToCard = (cardId: string, amount: number, fromCurrency: string, toCurrency: string, conversionFee: number = 0) => {
+    console.log(`Adding money to card ${cardId}: ${amount} ${toCurrency} from ${fromCurrency}`);
+    
+    // Deduct from wallet (including conversion fee)
+    const totalDeduction = fromCurrency === toCurrency ? amount : amount / getExchangeRate(fromCurrency, toCurrency) + conversionFee;
+    handleBalanceUpdate(fromCurrency, -totalDeduction);
+    
+    // Add to card
+    handleCardBalanceUpdate(cardId, amount);
+    
+    // Add transaction to history
+    handleTransactionUpdate({
+      type: 'Add Money to Card',
+      amount: `+${toCurrency} ${amount.toFixed(2)}`,
+      description: `Added to card ending in ${cardId.toString().slice(-4)}`,
+      time: 'Just now',
+      status: 'completed'
+    });
+  };
+
+  const getExchangeRate = (from: string, to: string): number => {
+    if (from === to) return 1;
+    
+    const usdRates: { [key: string]: number } = {
+      'USD': 1,
+      'MWK': 1730,
+      'GBP': 0.79,
+      'EUR': 0.93,
+      'ZAR': 18.5,
+      'BTC': 0.000025,
+      'ETH': 0.0003,
+      'USDT': 1,
+      'USDC': 1
+    };
+    
+    const fromToUsd = 1 / usdRates[from];
+    const usdToTarget = usdRates[to];
+    
+    return fromToUsd * usdToTarget;
   };
 
   const handleTransactionUpdate = (transaction: any) => {
@@ -279,7 +332,7 @@ const Index = () => {
                 >
                   <ArrowLeft className="w-4 h-4" />
                 </Button>
-                <h2 className="text-lg sm:text-2xl font-bold text-white">{t('wallet')} & {t('cards')}</h2>
+                <h2 className="text-lg sm:text-2xl font-bold text-white">Wallet & Cards</h2>
               </div>
               <CreateWalletModal onCreateWallet={handleCreateWallet} />
             </div>
@@ -288,6 +341,7 @@ const Index = () => {
               onTransactionUpdate={handleTransactionUpdate}
               onBack={() => setActiveTab('dashboard')}
               wallets={wallets}
+              onAddMoneyToCard={handleAddMoneyToCard}
             />
           </div>
         );
