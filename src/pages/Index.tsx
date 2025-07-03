@@ -264,28 +264,11 @@ const Index = () => {
           onBack={() => setActiveTab('dashboard')}
         />;
       case 'cards':
-        return (
-          <div className="space-y-4 pb-24">
-            <div className="flex justify-between items-center">
-              <div className="flex items-center space-x-3">
-                <Button
-                  onClick={() => setActiveTab('dashboard')}
-                  variant="ghost"
-                  size="sm"
-                  className="text-white/70 hover:text-white hover:bg-white/10"
-                >
-                  <ArrowLeft className="w-4 h-4" />
-                </Button>
-                <h2 className="text-lg sm:text-2xl font-bold text-white">Wallet & Cards</h2>
-              </div>
-              <CreateWalletModal onCreateWallet={handleCreateWallet} />
-            </div>
-            <VirtualCardsSection 
-              onCardPurchase={handleCardPurchase}
-              purchasedCards={purchasedCards}
-            />
-          </div>
-        );
+        return <VirtualCardsSection 
+          onBack={() => setActiveTab('dashboard')}
+          onBalanceUpdate={handleBalanceUpdate}
+          onTransactionUpdate={handleTransactionUpdate}
+        />;
       case 'invest':
         return <InvestmentSection 
           onBalanceUpdate={handleBalanceUpdate}
