@@ -180,7 +180,9 @@ export const ExchangeSection: React.FC<ExchangeSectionProps> = ({ onBalanceUpdat
           >
             <ArrowLeft className="w-4 h-4" />
           </Button>
-          <h2 className="text-2xl font-bold text-white">{String(t('exchange') || 'Exchange')} {String(t('currency') || 'Currency')}</h2>
+          <h2 className="text-2xl font-bold text-white">
+            {String(t('exchange') || 'Exchange')} {String(t('currency') || 'Currency')}
+          </h2>
         </div>
       )}
 
@@ -229,7 +231,9 @@ export const ExchangeSection: React.FC<ExchangeSectionProps> = ({ onBalanceUpdat
       {/* Exchange Form */}
       <Card className="bg-gray-900/80 backdrop-blur-xl border-gray-700/50 shadow-2xl">
         <CardHeader>
-          <CardTitle className="text-white">{String(t('exchange') || 'Exchange')} {String(t('currency') || 'Currency')}</CardTitle>
+          <CardTitle className="text-white">
+            {String(t('exchange') || 'Exchange')} {String(t('currency') || 'Currency')}
+          </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-5 gap-4 items-end">
