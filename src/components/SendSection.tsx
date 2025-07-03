@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -5,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Send, Users, Smartphone, Building, User, ArrowLeft } from 'lucide-react';
+import { Send, Smartphone, Building, User, ArrowLeft } from 'lucide-react';
 import { TransactionConfirmation } from './TransactionConfirmation';
 
 interface SendSectionProps {
@@ -20,6 +21,7 @@ export const SendSection = ({ onBalanceUpdate, onTransactionUpdate, onBack }: Se
   const [recipient, setRecipient] = useState('');
   const [recipientPhone, setRecipientPhone] = useState('');
   const [mobileMoneyProvider, setMobileMoneyProvider] = useState('');
+  const [selectedBank, setSelectedBank] = useState('');
   const [transactionFee, setTransactionFee] = useState(0);
   const [totalAmount, setTotalAmount] = useState(0);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -29,13 +31,6 @@ export const SendSection = ({ onBalanceUpdate, onTransactionUpdate, onBack }: Se
     showSuccess: false,
     transaction: null as any
   });
-
-  const sendMethods = [
-    { name: 'Mobile Money', icon: Smartphone },
-    { name: 'NeoVault User', icon: User },
-    { name: 'Bank Transfer', icon: Building },
-    { name: 'Bulk Transfer', icon: Users }
-  ];
 
   const mobileMoneyProviders = [
     { name: 'TNM Mpamba', fee: '1%', prefix: '088' },
@@ -65,20 +60,49 @@ export const SendSection = ({ onBalanceUpdate, onTransactionUpdate, onBack }: Se
   };
 
   const handleSendMoney = async () => {
-    if (!amount || !recipient) {
+    if (!amount || !selectedMethod) {
       alert('Please fill in all required fields.');
       return;
     }
 
-    // Validate mobile money specific fields
+    // Validate method-specific fields
     if (selectedMethod === 'mobile' && (!recipientPhone || !mobileMoneyProvider)) {
       alert('Please enter recipient phone number and select mobile money provider.');
       return;
     }
 
+    if (selectedMethod === 'neovault' && !recipient) {
+      alert('Please enter recipient username or email.');
+      return;
+    }
+
+    if (selectedMethod === 'bank' && (!recipient || !selectedBank)) {
+      alert('Please enter bank account number and select bank.');
+      return;
+    }
+
     const sendAmount = parseFloat(amount);
-    const recipientInfo = selectedMethod === 'mobile' ? recipientPhone : recipient;
-    const methodInfo = selectedMethod === 'mobile' ? mobileMoneyProvider : selectedMethod;
+    let recipientInfo = '';
+    let methodInfo = '';
+
+    // Set recipient info based on method
+    switch (selectedMethod) {
+      case 'mobile':
+        recipientInfo = recipientPhone;
+        methodInfo = mobileMoneyProvider;
+        break;
+      case 'neovault':
+        recipientInfo = recipient;
+        methodInfo = 'NeoVault User';
+        break;
+      case 'bank':
+        recipientInfo = recipient;
+        methodInfo = selectedBank;
+        break;
+      default:
+        recipientInfo = recipient;
+        methodInfo = selectedMethod;
+    }
 
     // Show transaction confirmation
     setTransactionModal({
@@ -89,8 +113,8 @@ export const SendSection = ({ onBalanceUpdate, onTransactionUpdate, onBack }: Se
         amount: `MWK ${sendAmount.toLocaleString()}`,
         recipient: recipientInfo,
         reference: `SEND${Date.now()}`,
-        fee: `MWK ${transactionFee.toLocaleString()}`,
-        total: `MWK ${totalAmount.toLocaleString()}`,
+        fee: `MWK ${transactionFee.toFixed(2)}`,
+        total: `MWK ${totalAmount.toFixed(2)}`,
         returnTo: 'Send Money'
       }
     });
@@ -106,9 +130,20 @@ export const SendSection = ({ onBalanceUpdate, onTransactionUpdate, onBack }: Se
 
     // Add to transaction history
     if (onTransactionUpdate) {
-      const description = selectedMethod === 'mobile' 
-        ? `Sent to ${recipientPhone} via ${mobileMoneyProvider}`
-        : `Sent to ${recipient} via ${selectedMethod}`;
+      let description = '';
+      switch (selectedMethod) {
+        case 'mobile':
+          description = `Sent to ${recipientPhone} via ${mobileMoneyProvider}`;
+          break;
+        case 'neovault':
+          description = `Sent to ${recipient} via NeoVault`;
+          break;
+        case 'bank':
+          description = `Sent to ${recipient} via ${selectedBank}`;
+          break;
+        default:
+          description = `Sent to ${recipient}`;
+      }
       
       onTransactionUpdate({
         type: 'Send Money',
@@ -127,6 +162,7 @@ export const SendSection = ({ onBalanceUpdate, onTransactionUpdate, onBack }: Se
     setRecipient('');
     setRecipientPhone('');
     setMobileMoneyProvider('');
+    setSelectedBank('');
     setSelectedMethod('');
     setTransactionFee(0);
     setTotalAmount(0);
@@ -180,7 +216,7 @@ export const SendSection = ({ onBalanceUpdate, onTransactionUpdate, onBack }: Se
           </div>
 
           <Tabs value={selectedMethod} onValueChange={setSelectedMethod} className="w-full">
-            <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 mb-4 h-auto bg-gray-800/60 border-gray-600/50">
+            <TabsList className="grid w-full grid-cols-3 mb-4 h-auto bg-gray-800/60 border-gray-600/50">
               <TabsTrigger 
                 value="mobile"
                 className="text-xs sm:text-sm p-2 text-white data-[state=active]:bg-gray-700/60"
@@ -201,13 +237,6 @@ export const SendSection = ({ onBalanceUpdate, onTransactionUpdate, onBack }: Se
               >
                 <span className="hidden sm:inline">Bank Transfer</span>
                 <span className="sm:hidden">Bank</span>
-              </TabsTrigger>
-              <TabsTrigger 
-                value="bulk"
-                className="text-xs sm:text-sm p-2 text-white data-[state=active]:bg-gray-700/60"
-              >
-                <span className="hidden sm:inline">Bulk Transfer</span>
-                <span className="sm:hidden">Bulk</span>
               </TabsTrigger>
             </TabsList>
 
@@ -262,7 +291,7 @@ export const SendSection = ({ onBalanceUpdate, onTransactionUpdate, onBack }: Se
               </div>
               <div>
                 <Label className="text-white text-sm">Select Bank</Label>
-                <Select onValueChange={setSelectedMethod}>
+                <Select value={selectedBank} onValueChange={setSelectedBank}>
                   <SelectTrigger className="bg-gray-800/60 border-gray-600/50 text-white mt-1">
                     <SelectValue placeholder="Choose bank" />
                   </SelectTrigger>
@@ -274,27 +303,17 @@ export const SendSection = ({ onBalanceUpdate, onTransactionUpdate, onBack }: Se
                 </Select>
               </div>
             </TabsContent>
-
-            <TabsContent value="bulk" className="space-y-4">
-              <div>
-                <Label className="text-white text-sm">Upload CSV File</Label>
-                <Input
-                  type="file"
-                  className="bg-gray-800/60 border-gray-600/50 text-white placeholder-gray-400 mt-1"
-                />
-              </div>
-            </TabsContent>
           </Tabs>
 
           {transactionFee > 0 && (
             <div className="bg-gray-800/40 p-3 rounded-lg border border-gray-600/30">
               <div className="flex justify-between text-sm">
                 <span className="text-gray-300">Transaction Fee:</span>
-                <span className="text-white">MWK {transactionFee.toLocaleString()}</span>
+                <span className="text-white">MWK {transactionFee.toFixed(2)}</span>
               </div>
               <div className="flex justify-between text-base font-semibold border-t border-gray-600/30 pt-2 mt-2">
                 <span className="text-white">Total:</span>
-                <span className="text-white">MWK {totalAmount.toLocaleString()}</span>
+                <span className="text-white">MWK {totalAmount.toFixed(2)}</span>
               </div>
             </div>
           )}
@@ -302,7 +321,7 @@ export const SendSection = ({ onBalanceUpdate, onTransactionUpdate, onBack }: Se
           <Button
             className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold"
             onClick={handleSendMoney}
-            disabled={isProcessing || !amount || (selectedMethod === 'mobile' ? (!recipientPhone || !mobileMoneyProvider) : !recipient)}
+            disabled={isProcessing || !amount || !selectedMethod}
           >
             {isProcessing ? 'Processing...' : 'Send Money'}
           </Button>
