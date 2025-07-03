@@ -11,9 +11,11 @@ interface DepositSectionProps {
   onBalanceUpdate?: (currency: string, amount: number) => void;
   onTransactionUpdate?: (transaction: any) => void;
   onBack?: () => void;
+  walletCurrency?: string;
+  walletBalance?: number;
 }
 
-export const DepositSection = ({ onBalanceUpdate, onTransactionUpdate, onBack }: DepositSectionProps) => {
+export const DepositSection = ({ onBalanceUpdate, onTransactionUpdate, onBack, walletCurrency, walletBalance }: DepositSectionProps) => {
   const [amount, setAmount] = useState('');
   const [selectedMethod, setSelectedMethod] = useState('');
   const [paymentLink, setPaymentLink] = useState('');
@@ -58,14 +60,14 @@ export const DepositSection = ({ onBalanceUpdate, onTransactionUpdate, onBack }:
       
       // Update wallet balance
       if (onBalanceUpdate) {
-        onBalanceUpdate('MWK', depositAmount);
+        onBalanceUpdate(walletCurrency || 'MWK', depositAmount);
       }
 
       // Add to transaction history
       if (onTransactionUpdate) {
         onTransactionUpdate({
           type: 'Deposit',
-          amount: `+MWK ${depositAmount.toLocaleString()}`,
+          amount: `+${walletCurrency || 'MWK'} ${depositAmount.toLocaleString()}`,
           description: `Deposit via ${method}`,
           time: 'Just now',
           status: 'completed'
@@ -75,7 +77,7 @@ export const DepositSection = ({ onBalanceUpdate, onTransactionUpdate, onBack }:
       setLoading(false);
       
       // Show success message
-      alert(`Successfully deposited MWK ${depositAmount.toLocaleString()} via ${method}`);
+      alert(`Successfully deposited ${walletCurrency || 'MWK'} ${depositAmount.toLocaleString()} via ${method}`);
       
       // Reset form
       setAmount('');
@@ -127,11 +129,11 @@ export const DepositSection = ({ onBalanceUpdate, onTransactionUpdate, onBack }:
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
-            <Label htmlFor="amount" className="text-sm text-white">Amount to Deposit</Label>
+            <Label htmlFor="amount" className="text-sm text-white">Amount to Deposit ({walletCurrency || 'MWK'})</Label>
             <Input
               id="amount"
               type="number"
-              placeholder="Enter amount in MWK"
+              placeholder={`Enter amount in ${walletCurrency || 'MWK'}`}
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
               className="text-base sm:text-lg font-semibold bg-gray-800/60 border-gray-600/50 text-white placeholder-gray-400 mt-1"
@@ -369,7 +371,7 @@ export const DepositSection = ({ onBalanceUpdate, onTransactionUpdate, onBack }:
                   <div className="w-48 h-48 mx-auto bg-gradient-to-br from-blue-500 to-cyan-500 rounded-lg flex items-center justify-center mb-4">
                     <QrCode className="w-24 h-24 text-white" />
                   </div>
-                  <p className="text-lg font-semibold text-gray-800">MWK {amount}</p>
+                  <p className="text-lg font-semibold text-gray-800">{walletCurrency || 'MWK'} {amount}</p>
                   <p className="text-sm text-gray-600">Scan to pay via NeoVault</p>
                   <Button 
                     variant="outline" 
