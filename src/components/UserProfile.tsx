@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { User, Settings, Bell, Shield, CreditCard, HelpCircle, LogOut, ArrowLeft, FileText, MessageCircle, Eye, Upload, Download, Globe, Fingerprint, Camera, Lock } from 'lucide-react';
 import { PasswordChangeModal } from './PasswordChangeModal';
-import { translateText, applyLanguageToApp, getCurrentLanguage } from '@/utils/languageApi';
+import { useLanguage } from '@/utils/languageApi';
 import { useToast } from '@/hooks/use-toast';
 
 interface UserProfileProps {
@@ -23,7 +23,7 @@ export const UserProfile = ({ onBack, onLanguageChange }: UserProfileProps) => {
   const [showPrivacy, setShowPrivacy] = useState(false);
   const [showBiometric, setShowBiometric] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
-  const [currentLanguage, setCurrentLanguage] = useState(getCurrentLanguage());
+  const { currentLanguage, setLanguage, t } = useLanguage();
   const { toast } = useToast();
 
   const [chatMessages, setChatMessages] = useState([
@@ -68,14 +68,14 @@ export const UserProfile = ({ onBack, onLanguageChange }: UserProfileProps) => {
   const languages = [
     { code: 'en', name: 'English' },
     { code: 'ny', name: 'Chichewa' },
-    { code: 'tu', name: 'Tumbuka' },
+    { code: 'tum', name: 'Tumbuka' },
     { code: 'sw', name: 'Swahili' }
   ];
 
   // Listen for language changes
   useEffect(() => {
     const handleLanguageChange = (event: CustomEvent) => {
-      setCurrentLanguage(event.detail.language);
+      // Language change is handled by the context
     };
 
     window.addEventListener('languageChanged', handleLanguageChange as EventListener);
@@ -91,13 +91,12 @@ export const UserProfile = ({ onBack, onLanguageChange }: UserProfileProps) => {
   };
 
   const handleLanguageChange = (newLanguage: string) => {
-    setCurrentLanguage(newLanguage);
-    applyLanguageToApp(newLanguage);
+    setLanguage(newLanguage);
     onLanguageChange?.(newLanguage);
     
     toast({
-      title: translateText('languageChanged', newLanguage),
-      description: `${translateText('language', newLanguage)} changed to ${newLanguage}`,
+      title: t('languageChanged'),
+      description: `${t('language')} changed to ${newLanguage}`,
     });
   };
 
@@ -105,8 +104,8 @@ export const UserProfile = ({ onBack, onLanguageChange }: UserProfileProps) => {
     // Simulate API call
     setTimeout(() => {
       toast({
-        title: translateText('profileSaved', currentLanguage),
-        description: translateText('profileSaved', currentLanguage),
+        title: t('profileSaved'),
+        description: t('profileSaved'),
       });
     }, 1000);
   };
@@ -185,7 +184,7 @@ export const UserProfile = ({ onBack, onLanguageChange }: UserProfileProps) => {
           <div className="space-y-3">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <Label className="text-gray-300 text-xs">{translateText('firstName', currentLanguage)}</Label>
+                <Label className="text-gray-300 text-xs">{t('firstName')}</Label>
                 <Input
                   value={profile.firstName}
                   onChange={(e) => handleInputChange('firstName', e.target.value)}
@@ -193,7 +192,7 @@ export const UserProfile = ({ onBack, onLanguageChange }: UserProfileProps) => {
                 />
               </div>
               <div>
-                <Label className="text-gray-300 text-xs">{translateText('lastName', currentLanguage)}</Label>
+                <Label className="text-gray-300 text-xs">{t('lastName')}</Label>
                 <Input
                   value={profile.lastName}
                   onChange={(e) => handleInputChange('lastName', e.target.value)}
@@ -203,7 +202,7 @@ export const UserProfile = ({ onBack, onLanguageChange }: UserProfileProps) => {
             </div>
             
             <div>
-              <Label className="text-gray-300 text-xs">{translateText('email', currentLanguage)}</Label>
+              <Label className="text-gray-300 text-xs">{t('email')}</Label>
               <Input
                 type="email"
                 value={profile.email}
@@ -212,7 +211,7 @@ export const UserProfile = ({ onBack, onLanguageChange }: UserProfileProps) => {
               />
             </div>
             <div>
-              <Label className="text-gray-300 text-xs">{translateText('phone', currentLanguage)}</Label>
+              <Label className="text-gray-300 text-xs">{t('phone')}</Label>
               <Input
                 value={profile.phone}
                 onChange={(e) => handleInputChange('phone', e.target.value)}
@@ -220,7 +219,7 @@ export const UserProfile = ({ onBack, onLanguageChange }: UserProfileProps) => {
               />
             </div>
             <div>
-              <Label className="text-gray-300 text-xs">{translateText('address', currentLanguage)}</Label>
+              <Label className="text-gray-300 text-xs">{t('address')}</Label>
               <Input
                 value={profile.address}
                 onChange={(e) => handleInputChange('address', e.target.value)}
@@ -229,7 +228,7 @@ export const UserProfile = ({ onBack, onLanguageChange }: UserProfileProps) => {
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <Label className="text-gray-300 text-xs">{translateText('dateOfBirth', currentLanguage)}</Label>
+                <Label className="text-gray-300 text-xs">{t('dateOfBirth')}</Label>
                 <Input
                   type="date"
                   value={profile.dateOfBirth}
@@ -238,7 +237,7 @@ export const UserProfile = ({ onBack, onLanguageChange }: UserProfileProps) => {
                 />
               </div>
               <div>
-                <Label className="text-gray-300 text-xs">{translateText('nationality', currentLanguage)}</Label>
+                <Label className="text-gray-300 text-xs">{t('nationality')}</Label>
                 <Input
                   value={profile.nationality}
                   onChange={(e) => handleInputChange('nationality', e.target.value)}
@@ -248,7 +247,7 @@ export const UserProfile = ({ onBack, onLanguageChange }: UserProfileProps) => {
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <Label className="text-gray-300 text-xs">{translateText('occupation', currentLanguage)}</Label>
+                <Label className="text-gray-300 text-xs">{t('occupation')}</Label>
                 <Input
                   value={profile.occupation}
                   onChange={(e) => handleInputChange('occupation', e.target.value)}
@@ -256,7 +255,7 @@ export const UserProfile = ({ onBack, onLanguageChange }: UserProfileProps) => {
                 />
               </div>
               <div>
-                <Label className="text-gray-300 text-xs">{translateText('idNumber', currentLanguage)}</Label>
+                <Label className="text-gray-300 text-xs">{t('idNumber')}</Label>
                 <Input
                   value={profile.idNumber}
                   onChange={(e) => handleInputChange('idNumber', e.target.value)}
@@ -265,7 +264,7 @@ export const UserProfile = ({ onBack, onLanguageChange }: UserProfileProps) => {
               </div>
             </div>
             <Button onClick={handleSaveProfile} className="w-full bg-green-600 hover:bg-green-700 text-white text-sm">
-              {translateText('save', currentLanguage)}
+              {t('save')}
             </Button>
           </div>
         );
@@ -274,28 +273,28 @@ export const UserProfile = ({ onBack, onLanguageChange }: UserProfileProps) => {
         return (
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <Label className="text-white text-sm">{translateText('twoFactorAuth', currentLanguage)}</Label>
+              <Label className="text-white text-sm">{t('twoFactorAuth')}</Label>
               <Switch 
                 checked={securitySettings.twoFactorEnabled} 
                 onCheckedChange={(value) => handleSecurityChange('twoFactorEnabled', value)}
               />
             </div>
             <div className="flex items-center justify-between">
-              <Label className="text-white text-sm">{translateText('pushNotifications', currentLanguage)}</Label>
+              <Label className="text-white text-sm">{t('pushNotifications')}</Label>
               <Switch 
                 checked={securitySettings.notificationsEnabled} 
                 onCheckedChange={(value) => handleSecurityChange('notificationsEnabled', value)}
               />
             </div>
             <div className="flex items-center justify-between">
-              <Label className="text-white text-sm">{translateText('biometricLogin', currentLanguage)}</Label>
+              <Label className="text-white text-sm">{t('biometricLogin')}</Label>
               <Switch 
                 checked={securitySettings.biometricEnabled} 
                 onCheckedChange={(value) => handleSecurityChange('biometricEnabled', value)}
               />
             </div>
             <div className="flex items-center justify-between">
-              <Label className="text-white text-sm">{translateText('loginAlerts', currentLanguage)}</Label>
+              <Label className="text-white text-sm">{t('loginAlerts')}</Label>
               <Switch 
                 checked={securitySettings.loginAlerts} 
                 onCheckedChange={(value) => handleSecurityChange('loginAlerts', value)}
@@ -303,7 +302,7 @@ export const UserProfile = ({ onBack, onLanguageChange }: UserProfileProps) => {
             </div>
             <Button onClick={handleChangePassword} className="w-full bg-orange-600 hover:bg-orange-700 text-white text-sm">
               <Lock className="w-4 h-4 mr-2" />
-              {translateText('changePassword', currentLanguage)}
+              {t('changePassword')}
             </Button>
           </div>
         );
@@ -352,14 +351,14 @@ export const UserProfile = ({ onBack, onLanguageChange }: UserProfileProps) => {
         return (
           <div className="space-y-4">
             <div>
-              <Label className="text-white text-sm">{translateText('language', currentLanguage)}</Label>
+              <Label className="text-white text-sm">{t('language')}</Label>
               <Select value={currentLanguage} onValueChange={handleLanguageChange}>
                 <SelectTrigger className="bg-gray-800/60 border-gray-600/50 text-white text-sm">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="bg-gray-900 border-gray-700">
                   {languages.map((lang) => (
-                    <SelectItem key={lang.code} value={lang.name} className="text-white text-sm">
+                    <SelectItem key={lang.code} value={lang.code} className="text-white text-sm">
                       <div className="flex items-center space-x-2">
                         <Globe className="w-3 h-3" />
                         <span>{lang.name}</span>
@@ -372,7 +371,7 @@ export const UserProfile = ({ onBack, onLanguageChange }: UserProfileProps) => {
             
             <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white text-sm">
               <Download className="w-3 h-3 mr-2" />
-              {translateText('downloadStatement', currentLanguage)}
+              {t('downloadStatement')}
             </Button>
           </div>
         );
@@ -451,7 +450,7 @@ export const UserProfile = ({ onBack, onLanguageChange }: UserProfileProps) => {
                 className="w-full border-gray-600 text-gray-300 hover:text-white text-sm"
               >
                 <FileText className="w-3 h-3 mr-2" />
-                Terms and Conditions
+                {t('termsAndConditions')}
               </Button>
               <Button 
                 onClick={() => setShowPrivacy(true)}
@@ -459,7 +458,7 @@ export const UserProfile = ({ onBack, onLanguageChange }: UserProfileProps) => {
                 className="w-full border-gray-600 text-gray-300 hover:text-white text-sm"
               >
                 <Shield className="w-3 h-3 mr-2" />
-                Privacy Policy
+                {t('privacyPolicy')}
               </Button>
             </div>
           </div>
@@ -483,19 +482,19 @@ export const UserProfile = ({ onBack, onLanguageChange }: UserProfileProps) => {
           >
             <ArrowLeft className="w-4 h-4" />
           </Button>
-          <h2 className="text-lg sm:text-2xl font-bold text-white">{translateText('profile', currentLanguage)}</h2>
+          <h2 className="text-lg sm:text-2xl font-bold text-white">{t('profile')}</h2>
         </div>
       )}
 
       {/* Tab Navigation */}
       <div className="grid grid-cols-3 gap-1 bg-gray-800/50 p-1 rounded-lg">
         {[
-          { key: 'personal', label: translateText('personalInfo', currentLanguage), icon: User },
-          { key: 'security', label: translateText('security', currentLanguage), icon: Shield },
-          { key: 'ekyc', label: translateText('ekyc', currentLanguage), icon: FileText },
-          { key: 'settings', label: translateText('settings', currentLanguage), icon: Settings },
-          { key: 'compliance', label: translateText('compliance', currentLanguage), icon: CreditCard },
-          { key: 'help', label: translateText('help', currentLanguage), icon: HelpCircle }
+          { key: 'personal', label: t('personalInfo'), icon: User },
+          { key: 'security', label: t('security'), icon: Shield },
+          { key: 'ekyc', label: t('ekyc'), icon: FileText },
+          { key: 'settings', label: t('settings'), icon: Settings },
+          { key: 'compliance', label: t('compliance'), icon: CreditCard },
+          { key: 'help', label: t('help'), icon: HelpCircle }
         ].map(({ key, label, icon: Icon }) => (
           <Button
             key={key}
@@ -524,7 +523,7 @@ export const UserProfile = ({ onBack, onLanguageChange }: UserProfileProps) => {
         <CardContent className="p-3">
           <Button className="w-full bg-red-500 hover:bg-red-600 text-white text-sm">
             <LogOut className="w-3 h-3 mr-2" />
-            {translateText('logout', currentLanguage)}
+            {t('logout')}
           </Button>
         </CardContent>
       </Card>
@@ -584,7 +583,7 @@ export const UserProfile = ({ onBack, onLanguageChange }: UserProfileProps) => {
       <Dialog open={showBiometric} onOpenChange={setShowBiometric}>
         <DialogContent className="bg-gray-800 border-gray-700 text-white max-w-sm">
           <DialogHeader>
-            <DialogTitle className="text-sm">{translateText('addBiometric', currentLanguage)}</DialogTitle>
+            <DialogTitle className="text-sm">{t('addBiometric')}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div className="text-center">
@@ -614,7 +613,7 @@ export const UserProfile = ({ onBack, onLanguageChange }: UserProfileProps) => {
       <Dialog open={showTerms} onOpenChange={setShowTerms}>
         <DialogContent className="bg-gray-800 border-gray-700 text-white max-w-md max-h-[80vh]">
           <DialogHeader>
-            <DialogTitle className="text-sm">{translateText('termsAndConditions', currentLanguage)}</DialogTitle>
+            <DialogTitle className="text-sm">{t('termsAndConditions')}</DialogTitle>
           </DialogHeader>
           <div className="space-y-3 max-h-96 overflow-y-auto">
             <div className="text-xs space-y-2 text-gray-300">
@@ -641,7 +640,7 @@ export const UserProfile = ({ onBack, onLanguageChange }: UserProfileProps) => {
       <Dialog open={showPrivacy} onOpenChange={setShowPrivacy}>
         <DialogContent className="bg-gray-800 border-gray-700 text-white max-w-md max-h-[80vh]">
           <DialogHeader>
-            <DialogTitle className="text-sm">{translateText('privacyPolicy', currentLanguage)}</DialogTitle>
+            <DialogTitle className="text-sm">{t('privacyPolicy')}</DialogTitle>
           </DialogHeader>
           <div className="space-y-3 max-h-96 overflow-y-auto">
             <div className="text-xs space-y-2 text-gray-300">
