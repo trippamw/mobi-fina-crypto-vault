@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Home, Wallet, ArrowUpDown, PiggyBank, User, Plus, Send, ArrowDownLeft, CreditCard, Zap } from 'lucide-react';
@@ -98,17 +99,4 @@ export const MobileNavigation = ({ activeTab, onTabChange, notificationCount = 0
       </div>
     </div>
   );
-
-  function getActiveMainTab() {
-    const subTabMappings: { [key: string]: string } = {
-      'deposit': 'home',
-      'send': 'home',
-      'receive': 'home',
-      'bills': 'home',
-      'cards': 'wallet',
-      'invest': 'save',
-      'village': 'save'
-    };
-    return subTabMappings[activeTab] || activeTab;
-  }
 };
