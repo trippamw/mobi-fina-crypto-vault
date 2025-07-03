@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -21,7 +22,7 @@ export const VirtualCardsSection = ({ onCardPurchase, purchasedCards = [], walle
   const [selectedCard, setSelectedCard] = useState<any>(null);
   const [showPurchaseModal, setShowPurchaseModal] = useState(false);
   const [showPhysicalCardModal, setShowPhysicalCardModal] = useState(false);
-  const [showCustomerDetails, setShowCustomerDetails] = useState(false);
+  const [showVirtualCardModal, setShowVirtualCardModal] = useState(false);
   const [showCardSettings, setShowCardSettings] = useState(false);
   const [showAddMoneyModal, setShowAddMoneyModal] = useState(false);
   const [selectedCardType, setSelectedCardType] = useState<any>(null);
@@ -77,36 +78,24 @@ export const VirtualCardsSection = ({ onCardPurchase, purchasedCards = [], walle
     }
   ];
 
-  const myCards = [
+  const [myCards, setMyCards] = useState([
     {
       id: 'standard',
       type: 'Standard',
-      number: '**** **** **** 1234',
+      number: '4532 1234 5678 9012',
       balance: 0,
       status: 'Active',
       gradient: 'bg-gradient-to-br from-slate-800 to-slate-900',
       textColor: 'text-white',
       cvv: '123',
       expiry: '12/26',
-      holderName: customerDetails.fullName || 'JOHN DOE',
+      holderName: (customerDetails.fullName || 'JOHN DOE').toUpperCase(),
       brand: 'NEOVAULT',
       isBlocked: false,
       spendingLimit: 500000,
       currency: 'MWK'
-    },
-    ...purchasedCards.slice(0, 3).map(card => ({
-      ...card,
-      gradient: availableCards.find(ac => ac.type === card.type)?.gradient || 'bg-gradient-to-br from-slate-800 to-slate-900',
-      textColor: availableCards.find(ac => ac.type === card.type)?.textColor || 'text-white',
-      brand: 'NEOVAULT',
-      cvv: '123',
-      expiry: '12/26',
-      holderName: (customerDetails.fullName || 'JOHN DOE').toUpperCase(),
-      isBlocked: false,
-      spendingLimit: card.type === 'Gold' ? 1000000 : card.type === 'Platinum' ? 2000000 : 3000000,
-      currency: card.currency || 'MWK'
-    }))
-  ];
+    }
+  ]);
 
   const handlePurchaseStep1 = (cardType: any) => {
     if (myCards.length >= 4) {
@@ -124,17 +113,17 @@ export const VirtualCardsSection = ({ onCardPurchase, purchasedCards = [], walle
     if (cardType.isPhysical) {
       setShowPhysicalCardModal(true);
     } else {
-      setShowCustomerDetails(true);
+      setShowVirtualCardModal(true);
     }
   };
 
-  const handleCustomerDetailsSubmit = () => {
-    if (!customerDetails.fullName || !customerDetails.email || !customerDetails.phone) {
-      alert('Please fill in all required fields');
+  const handleVirtualCardSubmit = () => {
+    if (!customerDetails.fullName) {
+      alert('Please enter your full name');
       return;
     }
 
-    setShowCustomerDetails(false);
+    setShowVirtualCardModal(false);
     setShowPurchaseModal(true);
   };
 
@@ -150,6 +139,25 @@ export const VirtualCardsSection = ({ onCardPurchase, purchasedCards = [], walle
 
   const handleCardPurchase = () => {
     if (selectedCardType && onCardPurchase) {
+      const newCard = {
+        id: `card-${Date.now()}`,
+        type: selectedCardType.type,
+        number: `4532 ${Math.floor(1000 + Math.random() * 9000)} ${Math.floor(1000 + Math.random() * 9000)} ${Math.floor(1000 + Math.random() * 9000)}`,
+        balance: 0,
+        status: 'Active',
+        gradient: selectedCardType.gradient,
+        textColor: selectedCardType.textColor,
+        cvv: Math.floor(100 + Math.random() * 900).toString(),
+        expiry: '12/26',
+        holderName: (customerDetails.fullName || 'JOHN DOE').toUpperCase(),
+        brand: 'NEOVAULT',
+        isBlocked: false,
+        spendingLimit: selectedCardType.type === 'Gold' ? 1000000 : selectedCardType.type === 'Platinum' ? 2000000 : 3000000,
+        currency: selectedCurrency
+      };
+
+      setMyCards(prev => [...prev, newCard]);
+      
       const cardData = {
         ...selectedCardType,
         currency: selectedCurrency,
@@ -178,8 +186,14 @@ export const VirtualCardsSection = ({ onCardPurchase, purchasedCards = [], walle
       return;
     }
 
-    // Simulate adding money to card
-    alert(`MWK ${amount.toLocaleString()} added to card successfully!`);
+    // Update card balance
+    setMyCards(prev => prev.map(card => 
+      card.id === selectedCard.id 
+        ? { ...card, balance: card.balance + amount }
+        : card
+    ));
+
+    alert(`${currency} ${amount.toLocaleString()} added to card successfully!`);
     setShowAddMoneyModal(false);
     setAddMoneyAmount('');
   };
@@ -188,10 +202,13 @@ export const VirtualCardsSection = ({ onCardPurchase, purchasedCards = [], walle
     const cardIndex = myCards.findIndex(card => card.id === cardId);
     if (cardIndex === -1) return;
 
+    const updatedCards = [...myCards];
+
     switch (action) {
       case 'freeze':
-        myCards[cardIndex].isBlocked = !myCards[cardIndex].isBlocked;
-        alert(`Card ${myCards[cardIndex].isBlocked ? 'frozen' : 'unfrozen'} successfully`);
+        updatedCards[cardIndex].isBlocked = !updatedCards[cardIndex].isBlocked;
+        setMyCards(updatedCards);
+        alert(`Card ${updatedCards[cardIndex].isBlocked ? 'frozen' : 'unfrozen'} successfully`);
         break;
       case 'delete':
         if (cardId === 'standard') {
@@ -199,13 +216,15 @@ export const VirtualCardsSection = ({ onCardPurchase, purchasedCards = [], walle
           return;
         }
         if (confirm('Are you sure you want to delete this card?')) {
+          setMyCards(prev => prev.filter(card => card.id !== cardId));
           alert('Card deleted successfully');
         }
         break;
       case 'limit':
-        const newLimit = prompt('Enter new spending limit (MWK):', myCards[cardIndex].spendingLimit.toString());
+        const newLimit = prompt('Enter new spending limit (MWK):', updatedCards[cardIndex].spendingLimit.toString());
         if (newLimit && !isNaN(Number(newLimit))) {
-          myCards[cardIndex].spendingLimit = Number(newLimit);
+          updatedCards[cardIndex].spendingLimit = Number(newLimit);
+          setMyCards(updatedCards);
           alert('Spending limit updated successfully');
         }
         break;
@@ -220,75 +239,74 @@ export const VirtualCardsSection = ({ onCardPurchase, purchasedCards = [], walle
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6 px-2 sm:px-4">
       {/* My Virtual Cards */}
       <Card className="bg-gray-900/80 backdrop-blur-xl border-gray-700/50 shadow-2xl">
-        <CardHeader>
-          <CardTitle className="text-white">My Cards ({myCards.length}/4)</CardTitle>
+        <CardHeader className="pb-3 sm:pb-4">
+          <CardTitle className="text-white text-lg sm:text-xl">My Cards ({myCards.length}/4)</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             {myCards.map((card) => (
               <div
                 key={card.id}
-                className={`relative p-6 rounded-xl ${card.gradient} cursor-pointer transform transition-all duration-300 hover:scale-105 hover:shadow-2xl`}
+                className={`relative p-4 sm:p-6 rounded-xl ${card.gradient} cursor-pointer transform transition-all duration-300 hover:scale-105 hover:shadow-2xl`}
                 onClick={() => {
                   setSelectedCard(card);
                   setShowCardDetails(true);
                 }}
               >
-                {/* NEOVAULT Logo */}
-                <div className="absolute top-4 right-4">
-                  <div className="bg-white/20 px-3 py-1 rounded text-xs font-bold text-white">
-                    {card.brand}
+                {/* Top Row: NEOVAULT and VISA */}
+                <div className="flex justify-between items-start mb-6 sm:mb-8">
+                  <div className="text-xs sm:text-sm font-bold text-white/90">
+                    NEOVAULT
+                  </div>
+                  <div className="text-xs sm:text-sm font-bold text-white bg-white/20 px-2 py-1 rounded">
+                    VISA
                   </div>
                 </div>
 
-                <div className="flex justify-between items-start mb-8">
-                  <div>
-                    <Badge className="bg-white/20 text-white border-white/30 text-xs">
-                      {card.type}
-                    </Badge>
-                    <Badge className="ml-2 bg-blue-500/20 text-blue-300 border-blue-400/30 text-xs">
-                      {card.currency}
-                    </Badge>
-                    <Badge className={`ml-2 text-xs ${
-                      card.isBlocked 
-                        ? 'bg-red-500/20 text-red-300 border-red-400/30'
-                        : card.status === 'Active' 
-                        ? 'bg-green-500/20 text-green-300 border-green-400/30'
-                        : 'bg-gray-500/20 text-gray-300 border-gray-400/30'
-                    }`}>
-                      {card.isBlocked ? 'Frozen' : card.status}
-                    </Badge>
-                  </div>
-                  <CreditCard className={`w-8 h-8 ${card.textColor}`} />
+                {/* Status Badges */}
+                <div className="flex flex-wrap gap-1 sm:gap-2 mb-4 sm:mb-6">
+                  <Badge className="bg-white/20 text-white border-white/30 text-xs">
+                    {card.type}
+                  </Badge>
+                  <Badge className="bg-blue-500/20 text-blue-300 border-blue-400/30 text-xs">
+                    {card.currency}
+                  </Badge>
+                  <Badge className={`text-xs ${
+                    card.isBlocked 
+                      ? 'bg-red-500/20 text-red-300 border-red-400/30'
+                      : card.status === 'Active' 
+                      ? 'bg-green-500/20 text-green-300 border-green-400/30'
+                      : 'bg-gray-500/20 text-gray-300 border-gray-400/30'
+                  }`}>
+                    {card.isBlocked ? 'Frozen' : card.status}
+                  </Badge>
                 </div>
                 
-                <div className="space-y-4">
+                {/* Card Number - Center */}
+                <div className="text-center mb-4 sm:mb-6">
+                  <p className="text-base sm:text-lg font-mono text-white tracking-wider">
+                    {card.number}
+                  </p>
+                </div>
+                
+                {/* Bottom Row */}
+                <div className="flex justify-between items-end">
                   <div>
-                    <p className={`text-lg font-mono ${card.textColor}`}>
-                      {card.number}
-                    </p>
-                  </div>
-                  
-                  <div className="flex justify-between items-end">
-                    <div>
-                      <p className={`text-xs ${card.textColor} opacity-70`}>Balance</p>
-                      <p className={`text-lg font-semibold ${card.textColor}`}>
-                        {card.currency} {card.balance.toLocaleString()}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className={`text-xs ${card.textColor} opacity-70`}>Valid Thru</p>
-                      <p className={`text-sm ${card.textColor}`}>{card.expiry}</p>
-                    </div>
-                  </div>
-
-                  <div className="pt-2">
-                    <p className={`text-sm ${card.textColor} opacity-90 font-medium`}>
+                    <p className="text-xs text-white/70">Card Holder</p>
+                    <p className="text-xs sm:text-sm text-white font-medium">
                       {card.holderName}
                     </p>
+                    <p className="text-xs text-white/70 mt-1">Balance</p>
+                    <p className="text-sm sm:text-base font-semibold text-white">
+                      {card.currency} {card.balance.toLocaleString()}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-xs text-white/70">Valid Thru</p>
+                    <p className="text-sm text-white">{card.expiry}</p>
                   </div>
                 </div>
               </div>
@@ -299,39 +317,42 @@ export const VirtualCardsSection = ({ onCardPurchase, purchasedCards = [], walle
 
       {/* Available Cards */}
       <Card className="bg-gray-900/80 backdrop-blur-xl border-gray-700/50 shadow-2xl">
-        <CardHeader>
-          <CardTitle className="text-white">Available Cards</CardTitle>
+        <CardHeader className="pb-3 sm:pb-4">
+          <CardTitle className="text-white text-lg sm:text-xl">Available Cards</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
             {availableCards.map((card) => {
               const alreadyOwned = myCards.some(owned => owned.type === card.type);
               const canPurchase = myCards.length < 4 && !alreadyOwned;
               
               return (
-                <div key={card.type} className="p-6 rounded-lg bg-gray-800/50 hover:bg-gray-700/50 transition-colors border border-gray-600/30">
+                <div key={card.type} className="p-4 sm:p-6 rounded-lg bg-gray-800/50 hover:bg-gray-700/50 transition-colors border border-gray-600/30">
                   <div className="text-center mb-4">
-                    <div className={`w-16 h-10 ${card.gradient} rounded-lg mx-auto mb-3 flex items-center justify-center relative`}>
-                      <CreditCard className="w-6 h-6 text-white" />
-                      <div className="absolute top-1 right-1 bg-white/20 px-1 rounded text-xs font-bold text-white">
-                        {card.brand}
+                    <div className={`w-12 h-8 sm:w-16 sm:h-10 ${card.gradient} rounded-lg mx-auto mb-3 flex items-center justify-center relative overflow-hidden`}>
+                      <div className="absolute top-1 left-1 text-xs font-bold text-white/90">
+                        NEO
+                      </div>
+                      <CreditCard className="w-4 h-4 sm:w-6 sm:h-6 text-white" />
+                      <div className="absolute bottom-1 right-1 text-xs font-bold text-white bg-white/20 px-1 rounded">
+                        VISA
                       </div>
                     </div>
-                    <h3 className="text-lg font-semibold text-white">{card.type}</h3>
-                    <p className="text-2xl font-bold text-white">
+                    <h3 className="text-base sm:text-lg font-semibold text-white">{card.type}</h3>
+                    <p className="text-xl sm:text-2xl font-bold text-white">
                       {card.price === 0 ? 'FREE' : `MWK ${card.price.toLocaleString()}`}
                     </p>
                     {card.isPhysical && (
-                      <Badge className="mt-2 bg-purple-500/20 text-purple-300 border-purple-400/30">
+                      <Badge className="mt-2 bg-purple-500/20 text-purple-300 border-purple-400/30 text-xs">
                         Physical Card
                       </Badge>
                     )}
                   </div>
                   
-                  <ul className="space-y-2 mb-6">
+                  <ul className="space-y-2 mb-4 sm:mb-6">
                     {card.features.map((feature, index) => (
-                      <li key={index} className="text-sm text-gray-300 flex items-center">
-                        <Check className="w-4 h-4 text-green-400 mr-2" />
+                      <li key={index} className="text-xs sm:text-sm text-gray-300 flex items-center">
+                        <Check className="w-3 h-3 sm:w-4 sm:h-4 text-green-400 mr-2 flex-shrink-0" />
                         {feature}
                       </li>
                     ))}
@@ -346,7 +367,7 @@ export const VirtualCardsSection = ({ onCardPurchase, purchasedCards = [], walle
                       handlePurchaseStep1(card);
                     }}
                     disabled={!canPurchase}
-                    className={`w-full ${
+                    className={`w-full text-sm ${
                       !canPurchase 
                         ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
                         : 'bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white'
@@ -361,11 +382,11 @@ export const VirtualCardsSection = ({ onCardPurchase, purchasedCards = [], walle
         </CardContent>
       </Card>
 
-      {/* Customer Details Modal */}
-      <Dialog open={showCustomerDetails} onOpenChange={setShowCustomerDetails}>
-        <DialogContent className="bg-gray-800 border-gray-700 text-white max-w-md">
+      {/* Virtual Card Purchase Modal */}
+      <Dialog open={showVirtualCardModal} onOpenChange={setShowVirtualCardModal}>
+        <DialogContent className="bg-gray-800 border-gray-700 text-white max-w-md mx-4">
           <DialogHeader>
-            <DialogTitle>Customer Details</DialogTitle>
+            <DialogTitle>Virtual Card Details</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div>
@@ -394,67 +415,16 @@ export const VirtualCardsSection = ({ onCardPurchase, purchasedCards = [], walle
               />
             </div>
             
-            <div>
-              <Label className="text-gray-300">Email Address *</Label>
-              <Input
-                type="email"
-                value={customerDetails.email}
-                onChange={(e) => setCustomerDetails({ ...customerDetails, email: e.target.value })}
-                className="bg-gray-700/50 border-gray-600/50 text-white"
-                placeholder="john@example.com"
-              />
-            </div>
-            
-            <div>
-              <Label className="text-gray-300">Phone Number *</Label>
-              <Input
-                value={customerDetails.phone}
-                onChange={(e) => setCustomerDetails({ ...customerDetails, phone: e.target.value })}
-                className="bg-gray-700/50 border-gray-600/50 text-white"
-                placeholder="+265 123 456 789"
-              />
-            </div>
-            
-            <div>
-              <Label className="text-gray-300">Delivery Address *</Label>
-              <Input
-                value={customerDetails.address}
-                onChange={(e) => setCustomerDetails({ ...customerDetails, address: e.target.value })}
-                className="bg-gray-700/50 border-gray-600/50 text-white"
-                placeholder="123 Main Street"
-              />
-            </div>
-            
-            <div>
-              <Label className="text-gray-300">City *</Label>
-              <Input
-                value={customerDetails.city}
-                onChange={(e) => setCustomerDetails({ ...customerDetails, city: e.target.value })}
-                className="bg-gray-700/50 border-gray-600/50 text-white"
-                placeholder="Lilongwe"
-              />
-            </div>
-            
-            <div>
-              <Label className="text-gray-300">Postal Code</Label>
-              <Input
-                value={customerDetails.postalCode}
-                onChange={(e) => setCustomerDetails({ ...customerDetails, postalCode: e.target.value })}
-                className="bg-gray-700/50 border-gray-600/50 text-white"
-                placeholder="Area 10"
-              />
-            </div>
-            
             <div className="flex space-x-3 pt-4">
               <Button
                 variant="outline"
-                onClick={() => setShowCustomerDetails(false)}
+                onClick={() => setShowVirtualCardModal(false)}
                 className="flex-1 border-gray-600 text-gray-300 hover:text-white"
               >
                 Cancel
               </Button>
               <Button
-                onClick={handleCustomerDetailsSubmit}
+                onClick={handleVirtualCardSubmit}
                 className="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white"
               >
                 Continue
@@ -466,7 +436,7 @@ export const VirtualCardsSection = ({ onCardPurchase, purchasedCards = [], walle
 
       {/* Physical Card Purchase Modal */}
       <Dialog open={showPhysicalCardModal} onOpenChange={setShowPhysicalCardModal}>
-        <DialogContent className="bg-gray-800 border-gray-700 text-white max-w-md">
+        <DialogContent className="bg-gray-800 border-gray-700 text-white max-w-md mx-4">
           <DialogHeader>
             <DialogTitle>Physical Card Details</DialogTitle>
           </DialogHeader>
@@ -569,7 +539,7 @@ export const VirtualCardsSection = ({ onCardPurchase, purchasedCards = [], walle
 
       {/* Add Money Modal */}
       <Dialog open={showAddMoneyModal} onOpenChange={setShowAddMoneyModal}>
-        <DialogContent className="bg-gray-800 border-gray-700 text-white max-w-md">
+        <DialogContent className="bg-gray-800 border-gray-700 text-white max-w-md mx-4">
           <DialogHeader>
             <DialogTitle>{t('addMoney')} to Card</DialogTitle>
           </DialogHeader>
@@ -612,44 +582,54 @@ export const VirtualCardsSection = ({ onCardPurchase, purchasedCards = [], walle
 
       {/* Card Details Modal */}
       <Dialog open={showCardDetails} onOpenChange={setShowCardDetails}>
-        <DialogContent className="bg-gray-800 border-gray-700 text-white max-w-md">
+        <DialogContent className="bg-gray-800 border-gray-700 text-white max-w-md mx-4">
           <DialogHeader>
             <DialogTitle>Card Details</DialogTitle>
           </DialogHeader>
           {selectedCard && (
             <div className="space-y-4">
-              <div className={`p-6 rounded-xl ${selectedCard.gradient} relative`}>
-                <div className="absolute top-4 right-4 bg-white/20 px-2 py-1 rounded text-xs font-bold text-white">
-                  {selectedCard.brand}
+              <div className={`p-4 sm:p-6 rounded-xl ${selectedCard.gradient} relative`}>
+                {/* Top Row: NEOVAULT and VISA */}
+                <div className="flex justify-between items-start mb-6">
+                  <div className="text-sm font-bold text-white/90">
+                    NEOVAULT
+                  </div>
+                  <div className="text-sm font-bold text-white bg-white/20 px-2 py-1 rounded">
+                    VISA
+                  </div>
                 </div>
-                <div className="flex justify-between items-start mb-8">
+
+                <div className="flex justify-between items-start mb-6">
                   <div className="space-x-2">
-                    <Badge className="bg-white/20 text-white border-white/30">
+                    <Badge className="bg-white/20 text-white border-white/30 text-xs">
                       {selectedCard.type}
                     </Badge>
-                    <Badge className="bg-blue-500/20 text-blue-300 border-blue-400/30">
+                    <Badge className="bg-blue-500/20 text-blue-300 border-blue-400/30 text-xs">
                       {selectedCard.currency}
                     </Badge>
                   </div>
-                  <CreditCard className="w-8 h-8 text-white" />
                 </div>
                 
-                <div className="space-y-4">
+                {/* Card Number - Center */}
+                <div className="text-center mb-6">
+                  <p className="text-lg font-mono text-white tracking-wider">
+                    {selectedCard.number}
+                  </p>
+                </div>
+                
+                {/* Bottom Row */}
+                <div className="flex justify-between">
                   <div>
-                    <p className="text-lg font-mono text-white">
-                      {selectedCard.number}
+                    <p className="text-xs text-white/70">Card Holder</p>
+                    <p className="text-sm text-white font-medium">{selectedCard.holderName}</p>
+                    <p className="text-xs text-white/70 mt-2">Balance</p>
+                    <p className="text-base font-semibold text-white">
+                      {selectedCard.currency} {selectedCard.balance.toLocaleString()}
                     </p>
                   </div>
-                  
-                  <div className="flex justify-between">
-                    <div>
-                      <p className="text-xs text-white opacity-70">Card Holder</p>
-                      <p className="text-sm text-white font-medium">{selectedCard.holderName}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-white opacity-70">Valid Thru</p>
-                      <p className="text-sm text-white">{selectedCard.expiry}</p>
-                    </div>
+                  <div className="text-right">
+                    <p className="text-xs text-white/70">Valid Thru</p>
+                    <p className="text-sm text-white">{selectedCard.expiry}</p>
                   </div>
                 </div>
               </div>
@@ -733,7 +713,7 @@ export const VirtualCardsSection = ({ onCardPurchase, purchasedCards = [], walle
 
       {/* Card Settings Modal */}
       <Dialog open={showCardSettings} onOpenChange={setShowCardSettings}>
-        <DialogContent className="bg-gray-800 border-gray-700 text-white max-w-md">
+        <DialogContent className="bg-gray-800 border-gray-700 text-white max-w-md mx-4">
           <DialogHeader>
             <DialogTitle>{t('cardSettings')}</DialogTitle>
           </DialogHeader>
@@ -764,16 +744,14 @@ export const VirtualCardsSection = ({ onCardPurchase, purchasedCards = [], walle
                   Set Spending Limit
                 </Button>
 
-                {selectedCard.id !== 'standard' && (
-                  <Button
-                    onClick={() => handleCardAction(selectedCard.id, 'delete')}
-                    variant="outline"
-                    className="w-full border-red-600 text-red-400 hover:text-red-300 hover:bg-red-500/10"
-                  >
-                    <Trash2 className="w-4 h-4 mr-2" />
-                    {t('deleteCard')}
-                  </Button>
-                )}
+                <Button
+                  onClick={() => handleCardAction(selectedCard.id, 'delete')}
+                  variant="outline"
+                  className="w-full border-red-600 text-red-400 hover:text-red-300 hover:bg-red-500/10"
+                >
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  {t('deleteCard')}
+                </Button>
               </div>
             </div>
           )}
@@ -782,7 +760,7 @@ export const VirtualCardsSection = ({ onCardPurchase, purchasedCards = [], walle
 
       {/* Purchase Confirmation Modal */}
       <Dialog open={showPurchaseModal} onOpenChange={setShowPurchaseModal}>
-        <DialogContent className="bg-gray-800 border-gray-700 text-white">
+        <DialogContent className="bg-gray-800 border-gray-700 text-white max-w-md mx-4">
           <DialogHeader>
             <DialogTitle>Confirm Card Purchase</DialogTitle>
           </DialogHeader>
@@ -790,9 +768,12 @@ export const VirtualCardsSection = ({ onCardPurchase, purchasedCards = [], walle
             <div className="space-y-4">
               <div className="text-center">
                 <div className={`w-20 h-12 ${selectedCardType.gradient} rounded-lg mx-auto mb-4 flex items-center justify-center relative`}>
+                  <div className="absolute top-1 left-1 text-xs font-bold text-white/90">
+                    NEO
+                  </div>
                   <CreditCard className="w-8 h-8 text-white" />
-                  <div className="absolute top-1 right-1 bg-white/20 px-1 rounded text-xs font-bold text-white">
-                    {selectedCardType.brand}
+                  <div className="absolute bottom-1 right-1 text-xs font-bold text-white bg-white/20 px-1 rounded">
+                    VISA
                   </div>
                 </div>
                 <h3 className="text-xl font-semibold text-white">{selectedCardType.type} Card</h3>
@@ -805,8 +786,9 @@ export const VirtualCardsSection = ({ onCardPurchase, purchasedCards = [], walle
                 <h4 className="font-medium text-white mb-2">Customer Details:</h4>
                 <div className="space-y-1 text-sm text-gray-300">
                   <p>Name: {customerDetails.fullName}</p>
-                  <p>Email: {customerDetails.email}</p>
-                  <p>Phone: {customerDetails.phone}</p>
+                  <p>Currency: {selectedCurrency}</p>
+                  {customerDetails.email && <p>Email: {customerDetails.email}</p>}
+                  {customerDetails.phone && <p>Phone: {customerDetails.phone}</p>}
                 </div>
               </div>
               
