@@ -359,19 +359,19 @@ const Index = () => {
                 <div className="mb-4">
                   {balanceVisible ? (
                     <div className="space-y-1 sm:space-y-2">
-                      <h2 className="text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-black tracking-tighter bg-gradient-to-r from-white via-blue-100 to-purple-200 bg-clip-text text-transparent">
+                      <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-black tracking-tighter bg-gradient-to-r from-white via-blue-100 to-purple-200 bg-clip-text text-transparent">
                         MWK {wallets.reduce((total, wallet) => total + (wallet.currency === 'MWK' ? wallet.balance : 0), 0).toLocaleString()}
                       </h2>
-                      <p className="text-sm sm:text-lg md:text-xl lg:text-2xl font-bold text-white/90 tracking-wide">
+                      <p className="text-sm sm:text-base md:text-lg lg:text-xl font-bold text-white/90 tracking-wide">
                         ≈ $1,625 USD
                       </p>
                     </div>
                   ) : (
                     <div className="space-y-1 sm:space-y-2">
-                      <h2 className="text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-white/20 tracking-tighter">
+                      <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-black text-white/20 tracking-tighter">
                         ••••••••••
                       </h2>
-                      <p className="text-sm sm:text-lg md:text-xl lg:text-2xl font-bold text-white/20">
+                      <p className="text-sm sm:text-base md:text-lg lg:text-xl font-bold text-white/20">
                         ••••••••
                       </p>
                     </div>
