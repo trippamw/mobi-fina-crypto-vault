@@ -9,6 +9,7 @@ import { DollarSign, ArrowRight, AlertCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
+import { TransactionConfirmation } from './TransactionConfirmation';
 
 interface AddMoneyToCardProps {
   card: {
@@ -37,6 +38,9 @@ export const AddMoneyToCard: React.FC<AddMoneyToCardProps> = ({
   const [selectedWallet, setSelectedWallet] = useState('');
   const [amount, setAmount] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [transactionData, setTransactionData] = useState(null);
 
   // Exchange rates (corrected - shows how much target currency you get for 1 unit of source currency)
   const getExchangeRate = (from: string, to: string): number => {
@@ -87,7 +91,7 @@ export const AddMoneyToCard: React.FC<AddMoneyToCardProps> = ({
 
   const conversion = calculateConversion();
 
-  const handleAddMoney = async () => {
+  const handleShowConfirmation = () => {
     if (!conversion || !conversion.hasSufficientFunds) {
       toast({
         title: "Error",
@@ -97,7 +101,26 @@ export const AddMoneyToCard: React.FC<AddMoneyToCardProps> = ({
       return;
     }
 
+    const transaction = {
+      type: "Add Money to Card",
+      amount: `${card.currency} ${conversion.convertedAmount.toFixed(2)}`,
+      recipient: `Card ending in ${card.number.slice(-4)}`,
+      reference: `From ${selectedWallet} wallet`,
+      fee: selectedWallet !== card.currency ? `${selectedWallet} ${conversion.conversionFee.toFixed(2)}` : "No charge",
+      total: `${selectedWallet} ${conversion.totalDeducted.toFixed(2)}`,
+      hasFee: selectedWallet !== card.currency,
+      returnTo: "Cards"
+    };
+    
+    setTransactionData(transaction);
+    setShowConfirmation(true);
+  };
+
+  const handleConfirmTransaction = async () => {
+    if (!conversion) return;
+
     setIsProcessing(true);
+    setShowConfirmation(false);
     
     try {
       // Simulate processing delay
@@ -111,15 +134,7 @@ export const AddMoneyToCard: React.FC<AddMoneyToCardProps> = ({
         conversion.conversionFee
       );
       
-      toast({
-        title: "Money Added Successfully!",
-        description: `${card.currency} ${conversion.convertedAmount.toFixed(2)} added to your card`
-      });
-      
-      // Reset form
-      setAmount('');
-      setSelectedWallet('');
-      onClose();
+      setShowSuccess(true);
     } catch (error) {
       toast({
         title: "Error",
@@ -131,127 +146,145 @@ export const AddMoneyToCard: React.FC<AddMoneyToCardProps> = ({
     }
   };
 
+  const handleSuccessClose = () => {
+    setShowSuccess(false);
+    setAmount('');
+    setSelectedWallet('');
+    onClose();
+  };
+
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="bg-gray-800 border-gray-700 text-white max-w-md">
-        <DialogHeader>
-          <DialogTitle className="flex items-center space-x-2">
-            <DollarSign className="w-5 h-5" />
-            <span>Add Money to Card</span>
-          </DialogTitle>
-        </DialogHeader>
-        
-        <div className="space-y-4">
-          {/* Card Info */}
-          <Card className="bg-gray-700/50 border-gray-600">
-            <CardContent className="p-3">
-              <div className="flex justify-between items-center">
-                <div>
-                  <p className="text-sm text-gray-300">Card</p>
-                  <p className="font-medium">**** {card.number.slice(-4)}</p>
-                </div>
-                <div className="text-right">
-                  <p className="text-sm text-gray-300">Current Balance</p>
-                  <p className="font-medium">{card.currency} {card.balance.toFixed(2)}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Select Wallet */}
-          <div>
-            <Label className="text-white mb-2 block">Select Wallet</Label>
-            <Select value={selectedWallet} onValueChange={setSelectedWallet}>
-              <SelectTrigger className="bg-gray-700 border-gray-600 text-white">
-                <SelectValue placeholder="Choose wallet to transfer from" />
-              </SelectTrigger>
-              <SelectContent className="bg-gray-700 border-gray-600">
-                {wallets.map((wallet) => (
-                  <SelectItem key={wallet.currency} value={wallet.currency} className="text-white">
-                    {wallet.currency} - Balance: {wallet.currency} {wallet.balance.toFixed(2)}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Amount Input */}
-          <div>
-            <Label className="text-white mb-2 block">Amount</Label>
-            <Input
-              type="number"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              placeholder="Enter amount"
-              className="bg-gray-700 border-gray-600 text-white placeholder-gray-400"
-            />
-          </div>
-
-          {/* Conversion Details */}
-          {conversion && (
-            <Card className="bg-gray-700/30 border-gray-600/50">
-              <CardContent className="p-3 space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-300">Amount to deduct:</span>
-                  <span className="text-white">{selectedWallet} {conversion.inputAmount.toFixed(2)}</span>
-                </div>
-                
-                {selectedWallet !== card.currency && (
-                  <>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-300">Exchange rate:</span>
-                      <span className="text-white">1 {selectedWallet} = {conversion.exchangeRate.toFixed(6)} {card.currency}</span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-300">Conversion fee (2.5%):</span>
-                      <span className="text-orange-400">{selectedWallet} {conversion.conversionFee.toFixed(2)}</span>
-                    </div>
-                    <div className="flex justify-between text-sm border-t border-gray-600 pt-2">
-                      <span className="text-gray-300">Total deducted:</span>
-                      <span className="text-white font-medium">{selectedWallet} {conversion.totalDeducted.toFixed(2)}</span>
-                    </div>
-                  </>
-                )}
-                
-                <div className="flex items-center justify-center py-2">
-                  <ArrowRight className="w-4 h-4 text-gray-400" />
-                </div>
-                
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-300">Amount to receive:</span>
-                  <span className="text-green-400 font-medium">{card.currency} {conversion.convertedAmount.toFixed(2)}</span>
-                </div>
-
-                {!conversion.hasSufficientFunds && (
-                  <div className="flex items-center space-x-2 text-red-400 text-sm mt-2">
-                    <AlertCircle className="w-4 h-4" />
-                    <span>Insufficient funds in selected wallet</span>
+    <>
+      <Dialog open={isOpen} onOpenChange={onClose}>
+        <DialogContent className="bg-gray-800 border-gray-700 text-white max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center space-x-2">
+              <DollarSign className="w-5 h-5" />
+              <span>Add Money to Card</span>
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            {/* Card Info */}
+            <Card className="bg-gray-700/50 border-gray-600">
+              <CardContent className="p-3">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <p className="text-sm text-gray-300">Card</p>
+                    <p className="font-medium">**** {card.number.slice(-4)}</p>
                   </div>
-                )}
+                  <div className="text-right">
+                    <p className="text-sm text-gray-300">Current Balance</p>
+                    <p className="font-medium">{card.currency} {card.balance.toFixed(2)}</p>
+                  </div>
+                </div>
               </CardContent>
             </Card>
-          )}
 
-          {/* Action Buttons */}
-          <div className="flex space-x-3 pt-2">
-            <Button
-              onClick={onClose}
-              variant="outline"
-              className="flex-1 border-gray-600 text-white hover:bg-gray-700"
-              disabled={isProcessing}
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleAddMoney}
-              className="flex-1 bg-green-600 hover:bg-green-700 text-white"
-              disabled={!conversion || !conversion.hasSufficientFunds || isProcessing}
-            >
-              {isProcessing ? 'Processing...' : 'Add Money'}
-            </Button>
+            {/* Select Wallet */}
+            <div>
+              <Label className="text-white mb-2 block">Select Wallet</Label>
+              <Select value={selectedWallet} onValueChange={setSelectedWallet}>
+                <SelectTrigger className="bg-gray-700 border-gray-600 text-white">
+                  <SelectValue placeholder="Choose wallet to transfer from" />
+                </SelectTrigger>
+                <SelectContent className="bg-gray-700 border-gray-600">
+                  {wallets.map((wallet) => (
+                    <SelectItem key={wallet.currency} value={wallet.currency} className="text-white">
+                      {wallet.currency} - Balance: {wallet.currency} {wallet.balance.toFixed(2)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Amount Input */}
+            <div>
+              <Label className="text-white mb-2 block">Amount</Label>
+              <Input
+                type="number"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                placeholder="Enter amount"
+                className="bg-gray-700 border-gray-600 text-white placeholder-gray-400"
+              />
+            </div>
+
+            {/* Conversion Details */}
+            {conversion && (
+              <Card className="bg-gray-700/30 border-gray-600/50">
+                <CardContent className="p-3 space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-300">Amount to deduct:</span>
+                    <span className="text-white">{selectedWallet} {conversion.inputAmount.toFixed(2)}</span>
+                  </div>
+                  
+                  {selectedWallet !== card.currency && (
+                    <>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-300">Exchange rate:</span>
+                        <span className="text-white">1 {selectedWallet} = {conversion.exchangeRate.toFixed(6)} {card.currency}</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-300">Conversion fee (2.5%):</span>
+                        <span className="text-orange-400">{selectedWallet} {conversion.conversionFee.toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between text-sm border-t border-gray-600 pt-2">
+                        <span className="text-gray-300">Total deducted:</span>
+                        <span className="text-white font-medium">{selectedWallet} {conversion.totalDeducted.toFixed(2)}</span>
+                      </div>
+                    </>
+                  )}
+                  
+                  <div className="flex items-center justify-center py-2">
+                    <ArrowRight className="w-4 h-4 text-gray-400" />
+                  </div>
+                  
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-300">Amount to receive:</span>
+                    <span className="text-green-400 font-medium">{card.currency} {conversion.convertedAmount.toFixed(2)}</span>
+                  </div>
+
+                  {!conversion.hasSufficientFunds && (
+                    <div className="flex items-center space-x-2 text-red-400 text-sm mt-2">
+                      <AlertCircle className="w-4 h-4" />
+                      <span>Insufficient funds in selected wallet</span>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Action Buttons */}
+            <div className="flex space-x-3 pt-2">
+              <Button
+                onClick={onClose}
+                variant="outline"
+                className="flex-1 bg-white text-gray-900 border-white hover:bg-gray-100"
+                disabled={isProcessing}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleShowConfirmation}
+                className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+                disabled={!conversion || !conversion.hasSufficientFunds || isProcessing}
+              >
+                {isProcessing ? 'Processing...' : 'Add Money'}
+              </Button>
+            </div>
           </div>
-        </div>
-      </DialogContent>
-    </Dialog>
+        </DialogContent>
+      </Dialog>
+
+      <TransactionConfirmation
+        isOpen={showConfirmation}
+        onClose={() => setShowConfirmation(false)}
+        onConfirm={handleConfirmTransaction}
+        onSuccess={handleSuccessClose}
+        transaction={transactionData}
+        showSuccess={showSuccess}
+      />
+    </>
   );
 };
