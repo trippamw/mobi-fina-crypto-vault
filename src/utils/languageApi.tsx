@@ -87,6 +87,155 @@ const baseTranslations: Translations = {
     chichewa: 'Chichewa',
     tumbuka: 'Tumbuka',
     swahili: 'Swahili',
+    
+    // Additional common terms
+    back: 'Back',
+    next: 'Next',
+    done: 'Done',
+    close: 'Close',
+    open: 'Open',
+    edit: 'Edit',
+    delete: 'Delete',
+    create: 'Create',
+    update: 'Update',
+    view: 'View',
+    search: 'Search',
+    filter: 'Filter',
+    sort: 'Sort',
+    today: 'Today',
+    yesterday: 'Yesterday',
+    thisWeek: 'This Week',
+    thisMonth: 'This Month',
+    all: 'All',
+    none: 'None',
+    select: 'Select',
+    clear: 'Clear',
+    reset: 'Reset',
+    apply: 'Apply',
+    
+    // Transaction types
+    sent: 'Sent',
+    received: 'Received',
+    deposit: 'Deposit',
+    withdrawal: 'Withdrawal',
+    exchange: 'Exchange',
+    investment: 'Investment',
+    purchase: 'Purchase',
+    payment: 'Payment',
+    transfer: 'Transfer',
+    fee: 'Fee',
+    bonus: 'Bonus',
+    reward: 'Reward',
+    
+    // Status
+    pending: 'Pending',
+    completed: 'Completed',
+    failed: 'Failed',
+    cancelled: 'Cancelled',
+    active: 'Active',
+    inactive: 'Inactive',
+    enabled: 'Enabled',
+    disabled: 'Disabled',
+    
+    // Time periods
+    minute: 'minute',
+    minutes: 'minutes',
+    hour: 'hour',
+    hours: 'hours',
+    day: 'day',
+    days: 'days',
+    week: 'week',
+    weeks: 'weeks',
+    month: 'month',
+    months: 'months',
+    year: 'year',
+    years: 'years',
+    ago: 'ago',
+    justNow: 'Just now',
+    
+    // Actions
+    copyCode: 'Copy Code',
+    shareLink: 'Share Link',
+    downloadApp: 'Download App',
+    contactSupport: 'Contact Support',
+    reportIssue: 'Report Issue',
+    giveFeedback: 'Give Feedback',
+    rateApp: 'Rate App',
+    invite: 'Invite',
+    refer: 'Refer',
+    earnReward: 'Earn Reward',
+    
+    // Notifications
+    notificationTitle: 'Notification',
+    newMessage: 'New Message',
+    transactionAlert: 'Transaction Alert',
+    securityAlert: 'Security Alert',
+    systemUpdate: 'System Update',
+    maintenance: 'Maintenance',
+    
+    // Cards and Payments
+    cardNumber: 'Card Number',
+    expiryDate: 'Expiry Date',
+    cvv: 'CVV',
+    cardholderName: 'Cardholder Name',
+    billingAddress: 'Billing Address',
+    virtualCard: 'Virtual Card',
+    physicalCard: 'Physical Card',
+    
+    // Investment and Savings
+    savingsGoal: 'Savings Goal',
+    targetAmount: 'Target Amount',
+    currentAmount: 'Current Amount',
+    progress: 'Progress',
+    interestRate: 'Interest Rate',
+    maturityDate: 'Maturity Date',
+    riskLevel: 'Risk Level',
+    expectedReturn: 'Expected Return',
+    
+    // Village Bank
+    groupName: 'Group Name',
+    members: 'Members',
+    totalSavings: 'Total Savings',
+    monthlyContribution: 'Monthly Contribution',
+    loanAmount: 'Loan Amount',
+    repaymentPeriod: 'Repayment Period',
+    joinGroup: 'Join Group',
+    createGroup: 'Create Group',
+    leaveGroup: 'Leave Group',
+    
+    // Recent Activity
+    recentActivity: 'Recent Activity',
+    transactionHistory: 'Transaction History',
+    viewAll: 'View All',
+    noTransactions: 'No Transactions',
+    noActivity: 'No Activity',
+    
+    // Quick Actions
+    quickActions: 'Quick Actions',
+    sendMoney: 'Send Money',
+    requestMoney: 'Request Money',
+    payBills: 'Pay Bills',
+    buyAirtime: 'Buy Airtime',
+    
+    // Errors and Messages
+    errorOccurred: 'An error occurred',
+    tryAgain: 'Try Again',
+    networkError: 'Network Error',
+    serverError: 'Server Error',
+    invalidInput: 'Invalid Input',
+    requiredField: 'This field is required',
+    insufficientFunds: 'Insufficient Funds',
+    transactionFailed: 'Transaction Failed',
+    transactionSuccessful: 'Transaction Successful',
+    operationSuccessful: 'Operation Successful',
+    
+    // Form labels
+    enterAmount: 'Enter Amount',
+    selectWallet: 'Select Wallet',
+    choosePaymentMethod: 'Choose Payment Method',
+    addNote: 'Add Note',
+    optional: 'Optional',
+    required: 'Required'
   }
 };
 

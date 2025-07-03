@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Home, Wallet, ArrowUpDown, PiggyBank, User, Plus, Send, ArrowDownLeft, CreditCard, Zap } from 'lucide-react';
+import { Home, Wallet, ArrowUpDown, PiggyBank, Plus, Send, ArrowDownLeft, CreditCard, Zap } from 'lucide-react';
 import { useLanguage } from '@/utils/languageApi';
 
 interface MobileNavigationProps {
@@ -46,11 +46,6 @@ export const MobileNavigation = ({ activeTab, onTabChange, notificationCount = 0
         { id: 'invest', label: t('invest'), icon: PiggyBank },
         { id: 'village', label: t('villageBank'), icon: PiggyBank }
       ]
-    },
-    {
-      id: 'profile',
-      label: t('profile'),
-      icon: User
     }
   ];
 
@@ -87,11 +82,6 @@ export const MobileNavigation = ({ activeTab, onTabChange, notificationCount = 0
               >
                 <item.icon className="w-5 h-5" />
                 <span className="text-xs font-medium">{item.label}</span>
-                {item.id === 'profile' && notificationCount > 0 && (
-                  <div className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                    {notificationCount > 99 ? '99+' : notificationCount}
-                  </div>
-                )}
               </Button>
             );
           })}
