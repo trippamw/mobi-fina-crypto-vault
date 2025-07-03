@@ -11,6 +11,7 @@ import { CardSettings } from '@/components/CardSettings';
 interface Card {
   id: string;
   type: 'visa' | 'mastercard';
+  cardType?: 'classic' | 'gold' | 'platinum';
   number: string;
   holderName: string;
   expiryDate: string;
@@ -31,7 +32,8 @@ interface CardType {
   id: string;
   name: string;
   type: 'visa' | 'mastercard';
-  annualFee: number;
+  setupFee: number;
+  monthlyFee: number;
   benefits: CardBenefit[];
   color: string;
   isPhysical?: boolean;
@@ -49,6 +51,7 @@ export const VirtualCardsSection = ({ onBack, onBalanceUpdate, onTransactionUpda
     {
       id: '1',
       type: 'visa',
+      cardType: 'classic',
       number: '4532 1234 5678 9012',
       holderName: 'JOHN BANDA',
       expiryDate: '12/27',
@@ -61,6 +64,7 @@ export const VirtualCardsSection = ({ onBack, onBalanceUpdate, onTransactionUpda
     {
       id: '2',
       type: 'visa',
+      cardType: 'gold',
       number: '4555 4444 3333 2222',
       holderName: 'JOHN BANDA',
       expiryDate: '03/26',
@@ -90,36 +94,43 @@ export const VirtualCardsSection = ({ onBack, onBalanceUpdate, onTransactionUpda
 
   const cardTypes: CardType[] = [
     {
-      id: 'visa-standard',
+      id: 'visa-classic',
       name: 'Visa Classic',
       type: 'visa',
-      annualFee: 25000,
+      setupFee: 0,
+      monthlyFee: 2500,
       color: 'from-blue-600 to-blue-800',
       benefits: [
         { feature: 'Global Acceptance', description: 'Use worldwide at millions of locations' },
         { feature: 'Online Shopping', description: 'Secure online transactions' },
         { feature: 'ATM Access', description: 'Withdraw cash from ATMs globally' },
-        { feature: '24/7 Support', description: 'Round the clock customer service' }
+        { feature: '24/7 Support', description: 'Round the clock customer service' },
+        { feature: 'Mobile Banking', description: 'Manage your card via mobile app' },
+        { feature: 'Transaction Alerts', description: 'Real-time SMS notifications' }
       ]
     },
     {
       id: 'visa-gold',
       name: 'Visa Gold',
       type: 'visa',
-      annualFee: 75000,
+      setupFee: 12000,
+      monthlyFee: 1000,
       color: 'from-yellow-500 to-yellow-700',
       benefits: [
         { feature: 'Premium Support', description: 'Priority customer service' },
         { feature: 'Travel Insurance', description: 'Comprehensive travel coverage' },
         { feature: 'Airport Lounge', description: 'Access to premium lounges' },
-        { feature: 'Concierge Service', description: '24/7 lifestyle assistance' }
+        { feature: 'Concierge Service', description: '24/7 lifestyle assistance' },
+        { feature: 'Purchase Protection', description: 'Extended warranty coverage' },
+        { feature: 'Emergency Services', description: 'Worldwide emergency assistance' }
       ]
     },
     {
       id: 'visa-platinum',
       name: 'Visa Platinum',
       type: 'visa',
-      annualFee: 150000,
+      setupFee: 25000,
+      monthlyFee: 0,
       color: 'from-gray-400 to-gray-600',
       benefits: [
         { feature: 'Premium Support', description: 'Priority customer service' },
@@ -127,10 +138,25 @@ export const VirtualCardsSection = ({ onBack, onBalanceUpdate, onTransactionUpda
         { feature: 'Airport Lounge', description: 'Access to premium lounges' },
         { feature: 'Concierge Service', description: '24/7 lifestyle assistance' },
         { feature: 'Cash Back', description: 'Up to 2% cash back on purchases' },
-        { feature: 'Extended Warranty', description: 'Extended warranty on purchases' }
+        { feature: 'Extended Warranty', description: 'Extended warranty on purchases' },
+        { feature: 'Free Monthly Fees', description: 'No monthly maintenance charges' },
+        { feature: 'VIP Treatment', description: 'Exclusive member benefits' }
       ]
     }
   ];
+
+  const getCardGradient = (cardType?: string) => {
+    switch (cardType) {
+      case 'classic':
+        return 'bg-gradient-to-br from-blue-600 to-blue-800';
+      case 'gold':
+        return 'bg-gradient-to-br from-yellow-500 to-yellow-700';
+      case 'platinum':
+        return 'bg-gradient-to-br from-gray-400 to-gray-600';
+      default:
+        return 'bg-gradient-to-br from-blue-600 to-blue-800';
+    }
+  };
 
   const toggleCardVisibility = (cardId: string) => {
     setShowCardNumbers(prev => ({
@@ -153,9 +179,12 @@ export const VirtualCardsSection = ({ onBack, onBalanceUpdate, onTransactionUpda
     const selectedType = cardTypes.find(t => t.id === selectedCardType);
     if (!selectedType) return;
 
+    const cardTypeKey = selectedType.id.split('-')[1] as 'classic' | 'gold' | 'platinum';
+
     const newCard: Card = {
       id: Date.now().toString(),
       type: 'visa',
+      cardType: cardTypeKey,
       number: generateCardNumber('visa'),
       holderName: cardForm.holderName || 'JOHN BANDA',
       expiryDate: generateExpiryDate(),
@@ -182,7 +211,10 @@ export const VirtualCardsSection = ({ onBack, onBalanceUpdate, onTransactionUpda
     setIsPhysicalCard(false);
     setShowCreateCard(false);
 
-    alert(`${isPhysicalCard ? 'Physical' : 'Virtual'} ${selectedType.name} created successfully! Annual fee: MWK ${selectedType.annualFee.toLocaleString()}`);
+    const setupFeeText = selectedType.setupFee === 0 ? 'Free' : `MWK ${selectedType.setupFee.toLocaleString()}`;
+    const monthlyFeeText = selectedType.monthlyFee === 0 ? 'Free' : `MWK ${selectedType.monthlyFee.toLocaleString()}`;
+    
+    alert(`${isPhysicalCard ? 'Physical' : 'Virtual'} ${selectedType.name} created successfully! Setup fee: ${setupFeeText}, Monthly fee: ${monthlyFeeText}`);
   };
 
   const generateCardNumber = (type: 'visa' | 'mastercard') => {
@@ -300,7 +332,7 @@ export const VirtualCardsSection = ({ onBack, onBalanceUpdate, onTransactionUpda
         {cards.map((card) => (
           <div key={card.id} className="space-y-3">
             {/* Card Visual */}
-            <div className="relative w-full h-48 rounded-2xl p-6 text-white shadow-2xl bg-gradient-to-br from-blue-600 to-blue-800">
+            <div className={`relative w-full h-48 rounded-2xl p-6 text-white shadow-2xl ${getCardGradient(card.cardType)}`}>
               {/* VISA Logo and Status at Top */}
               <div className="flex justify-between items-start mb-2">
                 <div className="text-lg font-bold italic text-white/90">
@@ -424,15 +456,21 @@ export const VirtualCardsSection = ({ onBack, onBalanceUpdate, onTransactionUpda
                         : 'border-gray-600 hover:border-gray-500'
                     }`}
                   >
-                    <div className="flex justify-between items-start mb-2">
+                    <div className="flex justify-between items-start mb-3">
                       <h3 className="font-semibold text-white">{cardType.name}</h3>
-                      <Badge className="bg-green-500/20 text-green-300">
-                        MWK {cardType.annualFee.toLocaleString()}/year
-                      </Badge>
+                      <div className="flex flex-col items-end space-y-1">
+                        <Badge className="bg-green-500/20 text-green-300 text-xs">
+                          Setup: {cardType.setupFee === 0 ? 'Free' : `MWK ${cardType.setupFee.toLocaleString()}`}
+                        </Badge>
+                        <Badge className="bg-blue-500/20 text-blue-300 text-xs">
+                          Monthly: {cardType.monthlyFee === 0 ? 'Free' : `MWK ${cardType.monthlyFee.toLocaleString()}`}
+                        </Badge>
+                      </div>
                     </div>
                     <div className="space-y-1">
-                      {cardType.benefits.slice(0, 2).map((benefit, index) => (
-                        <p key={index} className="text-xs text-gray-400">• {benefit.feature}</p>
+                      <h4 className="text-sm font-medium text-gray-300 mb-2">Benefits:</h4>
+                      {cardType.benefits.map((benefit, index) => (
+                        <p key={index} className="text-xs text-gray-400">• {benefit.feature}: {benefit.description}</p>
                       ))}
                     </div>
                   </div>
