@@ -21,6 +21,7 @@ import { CreateWalletModal } from '@/components/CreateWalletModal';
 import { TransactionConfirmation } from '@/components/TransactionConfirmation';
 import { WalletManagement } from '@/components/WalletManagement';
 import { VillageBankManagement } from '@/components/VillageBankManagement';
+import { VillageBankGroupCreation } from '@/components/VillageBankGroupCreation';
 
 const Index = () => {
   const [balanceVisible, setBalanceVisible] = useState(true);
@@ -300,7 +301,7 @@ const Index = () => {
           onTransactionUpdate={handleTransactionUpdate}
         />;
       case 'village-create':
-        return <VillageBankManagement 
+        return <VillageBankGroupCreation 
           onBack={() => setActiveTab('village')}
         />;
       case 'bills':
