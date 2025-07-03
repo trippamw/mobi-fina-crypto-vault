@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,27 +7,24 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { User, Settings, Bell, Shield, CreditCard, HelpCircle, LogOut, ArrowLeft, FileText, MessageCircle, Eye, Upload, Download, Globe, Fingerprint, Camera, Lock } from 'lucide-react';
-import { useLanguage } from './LanguageProvider';
-import { PasswordChangeModal } from './PasswordChangeModal';
+import { User, Settings, Bell, Shield, CreditCard, HelpCircle, LogOut, ArrowLeft, FileText, MessageCircle, Eye, Upload, Download, Globe, Fingerprint, Camera } from 'lucide-react';
 
 interface UserProfileProps {
   onBack?: () => void;
+  onLanguageChange?: (language: string) => void;
 }
 
-export const UserProfile = ({ onBack }: UserProfileProps) => {
-  const { language, setLanguage, t } = useLanguage();
+export const UserProfile = ({ onBack, onLanguageChange }: UserProfileProps) => {
   const [activeTab, setActiveTab] = useState('personal');
   const [showChatBot, setShowChatBot] = useState(false);
   const [showTerms, setShowTerms] = useState(false);
   const [showPrivacy, setShowPrivacy] = useState(false);
   const [showBiometric, setShowBiometric] = useState(false);
-  const [showPasswordChange, setShowPasswordChange] = useState(false);
-  const [isUploading, setIsUploading] = useState(false);
   const [chatMessages, setChatMessages] = useState([
     { sender: 'bot', message: 'Hello! How can I help you today?' }
   ]);
   const [newMessage, setNewMessage] = useState('');
+  const [language, setLanguage] = useState('English');
 
   const [profile, setProfile] = useState({
     firstName: 'John',
@@ -54,8 +52,6 @@ export const UserProfile = ({ onBack }: UserProfileProps) => {
     amlStatus: 'Compliant',
     lastReview: '2024-01-15',
     riskRating: 'Low',
-    dciCompliant: true,
-    pcssCompliant: true,
     documents: {
       idDocument: { uploaded: true, verified: true, type: 'National ID' },
       proofOfAddress: { uploaded: true, verified: true, type: 'Utility Bill' },
@@ -65,11 +61,114 @@ export const UserProfile = ({ onBack }: UserProfileProps) => {
   });
 
   const languages = [
-    { code: 'English', name: 'English' },
-    { code: 'Chichewa', name: 'Chichewa' },
-    { code: 'Tumbuka', name: 'Tumbuka' },
-    { code: 'Swahili', name: 'Swahili' }
+    { code: 'en', name: 'English' },
+    { code: 'ny', name: 'Chichewa' },
+    { code: 'sw', name: 'Swahili' }
   ];
+
+  const translations = {
+    en: {
+      profile: 'Profile',
+      personalInfo: 'Personal Information',
+      security: 'Security',
+      ekyc: 'e-KYC',
+      settings: 'Settings',
+      compliance: 'Compliance',
+      help: 'Help',
+      firstName: 'First Name',
+      lastName: 'Last Name',
+      email: 'Email',
+      phone: 'Phone',
+      address: 'Address',
+      dateOfBirth: 'Date of Birth',
+      nationality: 'Nationality',
+      occupation: 'Occupation',
+      idNumber: 'ID Number',
+      language: 'Language',
+      logout: 'Logout',
+      save: 'Save Changes',
+      uploadDocument: 'Upload Document',
+      downloadStatement: 'Download Statement',
+      liveChatAssistant: 'Live AI Chat Assistant',
+      frequentlyAskedQuestions: 'Frequently Asked Questions',
+      termsAndConditions: 'Terms and Conditions',
+      privacyPolicy: 'Privacy Policy',
+      changePassword: 'Change Password',
+      twoFactorAuth: 'Two-Factor Authentication',
+      biometricLogin: 'Biometric Login',
+      pushNotifications: 'Push Notifications',
+      loginAlerts: 'Login Alerts',
+      addBiometric: 'Add Biometric Data'
+    },
+    ny: {
+      profile: 'Mbiri',
+      personalInfo: 'Zambiri Za Munthu',
+      security: 'Chitetezo',
+      ekyc: 'e-KYC',
+      settings: 'Makonzedwe',
+      compliance: 'Kutsatira Malamulo',
+      help: 'Thandizo',
+      firstName: 'Dzina Loyamba',
+      lastName: 'Dzina Lomaliza',
+      email: 'Imelo',
+      phone: 'Nambala Ya Foni',
+      address: 'Adilesi',
+      dateOfBirth: 'Tsiku Lobadwa',
+      nationality: 'Dziko',
+      occupation: 'Ntchito',
+      idNumber: 'Nambala Ya ID',
+      language: 'Chilankhulo',
+      logout: 'Tuluka',
+      save: 'Sunga Zosintha',
+      uploadDocument: 'Kweza Chikalata',
+      downloadStatement: 'Tsitsa Statement',
+      liveChatAssistant: 'Wothandizira AI',
+      frequentlyAskedQuestions: 'Mafunso Ofunsidwa Kawirikawiri',
+      termsAndConditions: 'Malamulo ndi Zikondwerero',
+      privacyPolicy: 'Ndondomeko Ya Chinsinsi',
+      changePassword: 'Sintha Password',
+      twoFactorAuth: 'Chitetezo Cha Magawo Awiri',
+      biometricLogin: 'Kulowa Ndi Biometric',
+      pushNotifications: 'Zidziwitso',
+      loginAlerts: 'Zidziwitso Za Kulowa',
+      addBiometric: 'Onjezera Biometric Data'
+    },
+    sw: {
+      profile: 'Wasifu',
+      personalInfo: 'Maelezo ya Kibinafsi',
+      security: 'Usalama',
+      ekyc: 'e-KYC',
+      settings: 'Mipangilio',
+      compliance: 'Utii',
+      help: 'Msaada',
+      firstName: 'Jina la Kwanza',
+      lastName: 'Jina la Mwisho',
+      email: 'Barua Pepe',
+      phone: 'Nambari ya Simu',
+      address: 'Anwani',
+      dateOfBirth: 'Tarehe ya Kuzaliwa',
+      nationality: 'Uraia',
+      occupation: 'Kazi',
+      idNumber: 'Nambari ya Kitambulisho',
+      language: 'Lugha',
+      logout: 'Ondoka',
+      save: 'Hifadhi Mabadiliko',
+      uploadDocument: 'Pakia Hati',
+      downloadStatement: 'Pakua Taarifa',
+      liveChatAssistant: 'Msaidizi wa AI',
+      frequentlyAskedQuestions: 'Maswali Yanayoulizwa Mara Kwa Mara',
+      termsAndConditions: 'Sheria na Masharti',
+      privacyPolicy: 'Sera ya Faragha',
+      changePassword: 'Badilisha Password',
+      twoFactorAuth: 'Uthibitisho wa Hatua Mbili',
+      biometricLogin: 'Kuingia kwa Biometric',
+      pushNotifications: 'Arifa za Kusonga',
+      loginAlerts: 'Arifa za Kuingia',
+      addBiometric: 'Ongeza Data ya Biometric'
+    }
+  };
+
+  const t = translations[language.toLowerCase() === 'chichewa' ? 'ny' : language.toLowerCase() === 'swahili' ? 'sw' : 'en'];
 
   const handleInputChange = (field: string, value: string) => {
     setProfile(prev => ({ ...prev, [field]: value }));
@@ -81,76 +180,37 @@ export const UserProfile = ({ onBack }: UserProfileProps) => {
 
   const handleLanguageChange = (newLanguage: string) => {
     setLanguage(newLanguage);
-    alert(`Language changed to ${newLanguage}. App interface updated.`);
+    onLanguageChange?.(newLanguage);
+    alert(`${t.language} changed to ${newLanguage}. App interface updated.`);
   };
 
   const handleSaveProfile = () => {
     alert('Profile information saved successfully!');
   };
 
-  const handleDocumentUpload = async (documentType: string) => {
-    setIsUploading(true);
-    
-    // Simulate file upload with real APIs
-    try {
-      // This would integrate with real KYC APIs
-      setTimeout(() => {
-        setComplianceData(prev => ({
-          ...prev,
-          documents: {
-            ...prev.documents,
-            [documentType]: { uploaded: true, verified: false, type: prev.documents[documentType as keyof typeof prev.documents].type }
-          }
-        }));
-        setIsUploading(false);
-        alert(`${complianceData.documents[documentType as keyof typeof complianceData.documents].type} uploaded successfully! Verification in progress.`);
-      }, 2000);
-    } catch (error) {
-      setIsUploading(false);
-      alert('Upload failed. Please try again.');
-    }
+  const handleChangePassword = () => {
+    setSecuritySettings(prev => ({ ...prev, passwordChanged: true }));
+    alert('Password change initiated. Check your email for instructions.');
   };
 
-  const handleBiometricCapture = async (type: 'fingerprint' | 'face') => {
-    setIsUploading(true);
-    
-    try {
-      // This would integrate with real biometric APIs
-      if (type === 'fingerprint') {
-        // Simulate fingerprint capture API
-        setTimeout(() => {
-          setComplianceData(prev => ({
-            ...prev,
-            documents: {
-              ...prev.documents,
-              biometricData: { uploaded: true, verified: true, type: 'Fingerprint & Face' }
-            }
-          }));
-          setSecuritySettings(prev => ({ ...prev, biometricEnabled: true }));
-          setShowBiometric(false);
-          setIsUploading(false);
-          alert('Fingerprint captured and verified successfully!');
-        }, 3000);
-      } else {
-        // Simulate face capture API
-        setTimeout(() => {
-          setComplianceData(prev => ({
-            ...prev,
-            documents: {
-              ...prev.documents,
-              biometricData: { uploaded: true, verified: true, type: 'Fingerprint & Face' }
-            }
-          }));
-          setSecuritySettings(prev => ({ ...prev, biometricEnabled: true }));
-          setShowBiometric(false);
-          setIsUploading(false);
-          alert('Face biometric captured and verified successfully!');
-        }, 3000);
-      }
-    } catch (error) {
-      setIsUploading(false);
-      alert('Biometric capture failed. Please try again.');
-    }
+  const handleBiometricSetup = () => {
+    setShowBiometric(true);
+  };
+
+  const handleBiometricCapture = (type: 'fingerprint' | 'face') => {
+    // Simulate biometric capture
+    setTimeout(() => {
+      setComplianceData(prev => ({
+        ...prev,
+        documents: {
+          ...prev.documents,
+          biometricData: { uploaded: true, verified: true, type: 'Fingerprint & Face' }
+        }
+      }));
+      setSecuritySettings(prev => ({ ...prev, biometricEnabled: true }));
+      setShowBiometric(false);
+      alert(`${type === 'fingerprint' ? 'Fingerprint' : 'Face'} biometric data captured successfully!`);
+    }, 2000);
   };
 
   const sendMessage = () => {
@@ -199,7 +259,7 @@ export const UserProfile = ({ onBack }: UserProfileProps) => {
           <div className="space-y-3">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <Label className="text-gray-300 text-xs">{t('firstName')}</Label>
+                <Label className="text-gray-300 text-xs">{t.firstName}</Label>
                 <Input
                   value={profile.firstName}
                   onChange={(e) => handleInputChange('firstName', e.target.value)}
@@ -207,7 +267,7 @@ export const UserProfile = ({ onBack }: UserProfileProps) => {
                 />
               </div>
               <div>
-                <Label className="text-gray-300 text-xs">{t('lastName')}</Label>
+                <Label className="text-gray-300 text-xs">{t.lastName}</Label>
                 <Input
                   value={profile.lastName}
                   onChange={(e) => handleInputChange('lastName', e.target.value)}
@@ -215,9 +275,8 @@ export const UserProfile = ({ onBack }: UserProfileProps) => {
                 />
               </div>
             </div>
-            
             <div>
-              <Label className="text-gray-300 text-xs">{t('email')}</Label>
+              <Label className="text-gray-300 text-xs">{t.email}</Label>
               <Input
                 type="email"
                 value={profile.email}
@@ -225,28 +284,25 @@ export const UserProfile = ({ onBack }: UserProfileProps) => {
                 className="bg-gray-800/60 border-gray-600/50 text-white text-sm"
               />
             </div>
-            
             <div>
-              <Label className="text-gray-300 text-xs">{t('phone')}</Label>
+              <Label className="text-gray-300 text-xs">{t.phone}</Label>
               <Input
                 value={profile.phone}
                 onChange={(e) => handleInputChange('phone', e.target.value)}
                 className="bg-gray-800/60 border-gray-600/50 text-white text-sm"
               />
             </div>
-            
             <div>
-              <Label className="text-gray-300 text-xs">{t('address')}</Label>
+              <Label className="text-gray-300 text-xs">{t.address}</Label>
               <Input
                 value={profile.address}
                 onChange={(e) => handleInputChange('address', e.target.value)}
                 className="bg-gray-800/60 border-gray-600/50 text-white text-sm"
               />
             </div>
-            
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <Label className="text-gray-300 text-xs">Date of Birth</Label>
+                <Label className="text-gray-300 text-xs">{t.dateOfBirth}</Label>
                 <Input
                   type="date"
                   value={profile.dateOfBirth}
@@ -255,7 +311,7 @@ export const UserProfile = ({ onBack }: UserProfileProps) => {
                 />
               </div>
               <div>
-                <Label className="text-gray-300 text-xs">Nationality</Label>
+                <Label className="text-gray-300 text-xs">{t.nationality}</Label>
                 <Input
                   value={profile.nationality}
                   onChange={(e) => handleInputChange('nationality', e.target.value)}
@@ -263,10 +319,9 @@ export const UserProfile = ({ onBack }: UserProfileProps) => {
                 />
               </div>
             </div>
-            
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <Label className="text-gray-300 text-xs">Occupation</Label>
+                <Label className="text-gray-300 text-xs">{t.occupation}</Label>
                 <Input
                   value={profile.occupation}
                   onChange={(e) => handleInputChange('occupation', e.target.value)}
@@ -274,7 +329,7 @@ export const UserProfile = ({ onBack }: UserProfileProps) => {
                 />
               </div>
               <div>
-                <Label className="text-gray-300 text-xs">ID Number</Label>
+                <Label className="text-gray-300 text-xs">{t.idNumber}</Label>
                 <Input
                   value={profile.idNumber}
                   onChange={(e) => handleInputChange('idNumber', e.target.value)}
@@ -282,9 +337,8 @@ export const UserProfile = ({ onBack }: UserProfileProps) => {
                 />
               </div>
             </div>
-            
             <Button onClick={handleSaveProfile} className="w-full bg-green-600 hover:bg-green-700 text-white text-sm">
-              {t('save')}
+              {t.save}
             </Button>
           </div>
         );
@@ -293,45 +347,35 @@ export const UserProfile = ({ onBack }: UserProfileProps) => {
         return (
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <Label className="text-white text-sm">Two-Factor Authentication</Label>
+              <Label className="text-white text-sm">{t.twoFactorAuth}</Label>
               <Switch 
                 checked={securitySettings.twoFactorEnabled} 
                 onCheckedChange={(value) => handleSecurityChange('twoFactorEnabled', value)}
               />
             </div>
             <div className="flex items-center justify-between">
-              <Label className="text-white text-sm">Push Notifications</Label>
+              <Label className="text-white text-sm">{t.pushNotifications}</Label>
               <Switch 
                 checked={securitySettings.notificationsEnabled} 
                 onCheckedChange={(value) => handleSecurityChange('notificationsEnabled', value)}
               />
             </div>
             <div className="flex items-center justify-between">
-              <Label className="text-white text-sm">Biometric Login</Label>
+              <Label className="text-white text-sm">{t.biometricLogin}</Label>
               <Switch 
                 checked={securitySettings.biometricEnabled} 
-                onCheckedChange={(value) => {
-                  if (value && !complianceData.documents.biometricData.uploaded) {
-                    setShowBiometric(true);
-                  } else {
-                    handleSecurityChange('biometricEnabled', value);
-                  }
-                }}
+                onCheckedChange={(value) => handleSecurityChange('biometricEnabled', value)}
               />
             </div>
             <div className="flex items-center justify-between">
-              <Label className="text-white text-sm">Login Alerts</Label>
+              <Label className="text-white text-sm">{t.loginAlerts}</Label>
               <Switch 
                 checked={securitySettings.loginAlerts} 
                 onCheckedChange={(value) => handleSecurityChange('loginAlerts', value)}
               />
             </div>
-            <Button 
-              onClick={() => setShowPasswordChange(true)}
-              className="w-full bg-orange-600 hover:bg-orange-700 text-white text-sm"
-            >
-              <Lock className="w-4 h-4 mr-2" />
-              {t('changePassword')}
+            <Button onClick={handleChangePassword} className="w-full bg-orange-600 hover:bg-orange-700 text-white text-sm">
+              {t.changePassword}
             </Button>
           </div>
         );
@@ -350,7 +394,7 @@ export const UserProfile = ({ onBack }: UserProfileProps) => {
                   <div>
                     <p className="text-white font-medium text-sm">{doc.type}</p>
                     <p className="text-gray-400 text-xs">
-                      {doc.verified ? 'Verified ✓' : doc.uploaded ? 'Pending verification...' : 'Not uploaded'}
+                      {doc.verified ? 'Verified' : doc.uploaded ? 'Pending verification' : 'Not uploaded'}
                     </p>
                   </div>
                   <div className="flex space-x-2">
@@ -362,18 +406,11 @@ export const UserProfile = ({ onBack }: UserProfileProps) => {
                     ) : (
                       <Button 
                         size="sm" 
-                        onClick={() => {
-                          if (key === 'biometricData') {
-                            setShowBiometric(true);
-                          } else {
-                            handleDocumentUpload(key);
-                          }
-                        }}
-                        disabled={isUploading}
+                        onClick={() => key === 'biometricData' ? handleBiometricSetup() : alert('Document upload initiated')}
                         className="bg-blue-600 hover:bg-blue-700 text-white text-xs"
                       >
                         <Upload className="w-3 h-3 mr-1" />
-                        {isUploading ? 'Uploading...' : 'Upload'}
+                        Upload
                       </Button>
                     )}
                   </div>
@@ -387,17 +424,17 @@ export const UserProfile = ({ onBack }: UserProfileProps) => {
         return (
           <div className="space-y-4">
             <div>
-              <Label className="text-white text-sm">{t('language')}</Label>
+              <Label className="text-white text-sm">{t.language}</Label>
               <Select value={language} onValueChange={handleLanguageChange}>
                 <SelectTrigger className="bg-gray-800/60 border-gray-600/50 text-white text-sm">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="bg-gray-900 border-gray-700">
                   {languages.map((lang) => (
-                    <SelectItem key={lang.code} value={lang.code} className="text-white text-sm">
+                    <SelectItem key={lang.code} value={lang.name} className="text-white text-sm">
                       <div className="flex items-center space-x-2">
                         <Globe className="w-3 h-3" />
-                        <span>{t(lang.name.toLowerCase())}</span>
+                        <span>{lang.name}</span>
                       </div>
                     </SelectItem>
                   ))}
@@ -407,7 +444,7 @@ export const UserProfile = ({ onBack }: UserProfileProps) => {
             
             <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white text-sm">
               <Download className="w-3 h-3 mr-2" />
-              Download Statement
+              {t.downloadStatement}
             </Button>
           </div>
         );
@@ -427,27 +464,15 @@ export const UserProfile = ({ onBack }: UserProfileProps) => {
             </div>
             
             <div className="p-3 bg-gray-800/50 rounded-lg">
-              <h4 className="text-white font-medium mb-2 text-sm">Compliance Status</h4>
-              <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-300 text-sm">DCI Compliance:</span>
-                  <span className={`text-sm font-bold ${complianceData.dciCompliant ? 'text-green-400' : 'text-red-400'}`}>
-                    {complianceData.dciCompliant ? 'Compliant ✓' : 'Non-Compliant ✗'}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-300 text-sm">PCSS Compliance:</span>
-                  <span className={`text-sm font-bold ${complianceData.pcssCompliant ? 'text-green-400' : 'text-red-400'}`}>
-                    {complianceData.pcssCompliant ? 'Compliant ✓' : 'Non-Compliant ✗'}
-                  </span>
+              <h4 className="text-white font-medium mb-2 text-sm">Risk Assessment</h4>
+              <div className="space-y-1 text-xs">
+                <div className="flex justify-between">
+                  <span className="text-gray-300">Risk Rating:</span>
+                  <span className="text-green-400 font-bold">{complianceData.riskRating}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-300 text-sm">Risk Rating:</span>
-                  <span className="text-green-400 font-bold text-sm">{complianceData.riskRating}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-300 text-sm">Last Review:</span>
-                  <span className="text-white text-sm">{complianceData.lastReview}</span>
+                  <span className="text-gray-300">Last Review:</span>
+                  <span className="text-white">{complianceData.lastReview}</span>
                 </div>
               </div>
             </div>
@@ -462,12 +487,12 @@ export const UserProfile = ({ onBack }: UserProfileProps) => {
               className="w-full bg-blue-600 hover:bg-blue-700 text-white text-sm"
             >
               <MessageCircle className="w-3 h-3 mr-2" />
-              Live AI Chat Assistant
+              {t.liveChatAssistant}
             </Button>
             
             <Card className="bg-gray-800/50 border-gray-700/50">
               <CardHeader className="pb-2">
-                <CardTitle className="text-white text-xs">Frequently Asked Questions</CardTitle>
+                <CardTitle className="text-white text-xs">{t.frequentlyAskedQuestions}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-2">
                 {faqData.map((faq, index) => (
@@ -486,7 +511,7 @@ export const UserProfile = ({ onBack }: UserProfileProps) => {
                 className="w-full border-gray-600 text-gray-300 hover:text-white text-sm"
               >
                 <FileText className="w-3 h-3 mr-2" />
-                Terms and Conditions
+                {t.termsAndConditions}
               </Button>
               <Button 
                 onClick={() => setShowPrivacy(true)}
@@ -494,7 +519,7 @@ export const UserProfile = ({ onBack }: UserProfileProps) => {
                 className="w-full border-gray-600 text-gray-300 hover:text-white text-sm"
               >
                 <Shield className="w-3 h-3 mr-2" />
-                Privacy Policy
+                {t.privacyPolicy}
               </Button>
             </div>
           </div>
@@ -518,19 +543,19 @@ export const UserProfile = ({ onBack }: UserProfileProps) => {
           >
             <ArrowLeft className="w-4 h-4" />
           </Button>
-          <h2 className="text-lg sm:text-2xl font-bold text-white">{t('profile')}</h2>
+          <h2 className="text-lg sm:text-2xl font-bold text-white">{t.profile}</h2>
         </div>
       )}
 
       {/* Tab Navigation */}
       <div className="grid grid-cols-3 gap-1 bg-gray-800/50 p-1 rounded-lg">
         {[
-          { key: 'personal', label: t('personalInfo'), icon: User },
-          { key: 'security', label: t('security'), icon: Shield },
-          { key: 'ekyc', label: t('ekyc'), icon: FileText },
-          { key: 'settings', label: t('settings'), icon: Settings },
-          { key: 'compliance', label: t('compliance'), icon: CreditCard },
-          { key: 'help', label: t('help'), icon: HelpCircle }
+          { key: 'personal', label: t.personalInfo, icon: User },
+          { key: 'security', label: t.security, icon: Shield },
+          { key: 'ekyc', label: t.ekyc, icon: FileText },
+          { key: 'settings', label: t.settings, icon: Settings },
+          { key: 'compliance', label: t.compliance, icon: CreditCard },
+          { key: 'help', label: t.help, icon: HelpCircle }
         ].map(({ key, label, icon: Icon }) => (
           <Button
             key={key}
@@ -559,48 +584,10 @@ export const UserProfile = ({ onBack }: UserProfileProps) => {
         <CardContent className="p-3">
           <Button className="w-full bg-red-500 hover:bg-red-600 text-white text-sm">
             <LogOut className="w-3 h-3 mr-2" />
-            Logout
+            {t.logout}
           </Button>
         </CardContent>
       </Card>
-
-      {/* Password Change Modal */}
-      <PasswordChangeModal 
-        isOpen={showPasswordChange}
-        onClose={() => setShowPasswordChange(false)}
-      />
-
-      {/* Biometric Setup Modal */}
-      <Dialog open={showBiometric} onOpenChange={setShowBiometric}>
-        <DialogContent className="bg-gray-800 border-gray-700 text-white max-w-sm">
-          <DialogHeader>
-            <DialogTitle className="text-sm">Add Biometric Data</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="text-center">
-              <p className="text-gray-300 text-sm mb-4">Choose biometric authentication method:</p>
-              <div className="space-y-3">
-                <Button
-                  onClick={() => handleBiometricCapture('fingerprint')}
-                  disabled={isUploading}
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white text-sm"
-                >
-                  <Fingerprint className="w-4 h-4 mr-2" />
-                  {isUploading ? 'Capturing...' : 'Capture Fingerprint'}
-                </Button>
-                <Button
-                  onClick={() => handleBiometricCapture('face')}
-                  disabled={isUploading}
-                  className="w-full bg-green-600 hover:bg-green-700 text-white text-sm"
-                >
-                  <Camera className="w-4 h-4 mr-2" />
-                  {isUploading ? 'Capturing...' : 'Capture Face'}
-                </Button>
-              </div>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
 
       {/* Modals */}
       {/* Chat Bot Modal */}
@@ -609,7 +596,7 @@ export const UserProfile = ({ onBack }: UserProfileProps) => {
           <DialogHeader>
             <DialogTitle className="flex items-center text-sm">
               <MessageCircle className="w-4 h-4 mr-2" />
-              Live AI Chat Assistant
+              {t.liveChatAssistant}
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
@@ -647,11 +634,41 @@ export const UserProfile = ({ onBack }: UserProfileProps) => {
         </DialogContent>
       </Dialog>
 
+      {/* Biometric Setup Modal */}
+      <Dialog open={showBiometric} onOpenChange={setShowBiometric}>
+        <DialogContent className="bg-gray-800 border-gray-700 text-white max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="text-sm">{t.addBiometric}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="text-center">
+              <p className="text-gray-300 text-sm mb-4">Choose biometric authentication method:</p>
+              <div className="space-y-3">
+                <Button
+                  onClick={() => handleBiometricCapture('fingerprint')}
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white text-sm"
+                >
+                  <Fingerprint className="w-4 h-4 mr-2" />
+                  Capture Fingerprint
+                </Button>
+                <Button
+                  onClick={() => handleBiometricCapture('face')}
+                  className="w-full bg-green-600 hover:bg-green-700 text-white text-sm"
+                >
+                  <Camera className="w-4 h-4 mr-2" />
+                  Capture Face
+                </Button>
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* Terms Modal */}
       <Dialog open={showTerms} onOpenChange={setShowTerms}>
         <DialogContent className="bg-gray-800 border-gray-700 text-white max-w-md max-h-[80vh]">
           <DialogHeader>
-            <DialogTitle className="text-sm">Terms and Conditions</DialogTitle>
+            <DialogTitle className="text-sm">{t.termsAndConditions}</DialogTitle>
           </DialogHeader>
           <div className="space-y-3 max-h-96 overflow-y-auto">
             <div className="text-xs space-y-2 text-gray-300">
@@ -678,7 +695,7 @@ export const UserProfile = ({ onBack }: UserProfileProps) => {
       <Dialog open={showPrivacy} onOpenChange={setShowPrivacy}>
         <DialogContent className="bg-gray-800 border-gray-700 text-white max-w-md max-h-[80vh]">
           <DialogHeader>
-            <DialogTitle className="text-sm">Privacy Policy</DialogTitle>
+            <DialogTitle className="text-sm">{t.privacyPolicy}</DialogTitle>
           </DialogHeader>
           <div className="space-y-3 max-h-96 overflow-y-auto">
             <div className="text-xs space-y-2 text-gray-300">

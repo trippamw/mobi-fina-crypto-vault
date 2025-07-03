@@ -10,14 +10,13 @@ import { ArrowLeft, Plus, Send, ArrowDownLeft, Settings, Trash2, AlertTriangle, 
 import { TransactionConfirmation } from '@/components/TransactionConfirmation';
 
 interface WalletManagementProps {
-  wallets: any[];
-  selectedWallet: string;
-  onWalletSelect: (wallet: string) => void;
+  wallet: any;
+  onBack: () => void;
   onBalanceUpdate: (currency: string, amount: number) => void;
   onTransactionUpdate: (transaction: any) => void;
 }
 
-export const WalletManagement = ({ wallets, selectedWallet, onWalletSelect, onBalanceUpdate, onTransactionUpdate }: WalletManagementProps) => {
+export const WalletManagement = ({ wallet, onBack, onBalanceUpdate, onTransactionUpdate }: WalletManagementProps) => {
   const [activeTab, setActiveTab] = useState('overview');
   const [depositAmount, setDepositAmount] = useState('');
   const [sendAmount, setSendAmount] = useState('');
@@ -33,8 +32,6 @@ export const WalletManagement = ({ wallets, selectedWallet, onWalletSelect, onBa
     transaction: null as any
   });
 
-  const currentWallet = wallets.find(w => w.currency === selectedWallet) || wallets[0];
-
   const handleDeposit = () => {
     const amount = parseFloat(depositAmount);
     if (amount > 0) {
@@ -43,10 +40,10 @@ export const WalletManagement = ({ wallets, selectedWallet, onWalletSelect, onBa
         showSuccess: false,
         transaction: {
           type: 'Deposit',
-          amount: `+${currentWallet.currency} ${amount.toLocaleString()}`,
-          recipient: `${currentWallet.currency} Wallet`,
+          amount: `+${wallet.currency} ${amount.toLocaleString()}`,
+          recipient: `${wallet.currency} Wallet`,
           fee: 'FREE',
-          total: `${currentWallet.currency} ${amount.toLocaleString()}`
+          total: `${wallet.currency} ${amount.toLocaleString()}`
         }
       });
     }
@@ -60,10 +57,10 @@ export const WalletManagement = ({ wallets, selectedWallet, onWalletSelect, onBa
         showSuccess: false,
         transaction: {
           type: 'Send',
-          amount: `-${currentWallet.currency} ${amount.toLocaleString()}`,
+          amount: `-${wallet.currency} ${amount.toLocaleString()}`,
           recipient: recipientAddress,
-          fee: currentWallet.currency === 'BTC' || currentWallet.currency === 'ETH' ? '0.001 ETH' : 'FREE',
-          total: `-${currentWallet.currency} ${amount.toLocaleString()}`
+          fee: wallet.currency === 'BTC' || wallet.currency === 'ETH' ? '0.001 ETH' : 'FREE',
+          total: `-${wallet.currency} ${amount.toLocaleString()}`
         }
       });
     }
@@ -73,10 +70,10 @@ export const WalletManagement = ({ wallets, selectedWallet, onWalletSelect, onBa
     setTimeout(() => {
       const transaction = transactionModal.transaction;
       if (transaction.type === 'Deposit') {
-        onBalanceUpdate(currentWallet.currency, parseFloat(depositAmount));
+        onBalanceUpdate(wallet.currency, parseFloat(depositAmount));
         setDepositAmount('');
       } else if (transaction.type === 'Send') {
-        onBalanceUpdate(currentWallet.currency, -parseFloat(sendAmount));
+        onBalanceUpdate(wallet.currency, -parseFloat(sendAmount));
         setSendAmount('');
         setRecipientAddress('');
       }
@@ -84,7 +81,7 @@ export const WalletManagement = ({ wallets, selectedWallet, onWalletSelect, onBa
       onTransactionUpdate({
         type: transaction.type,
         amount: transaction.amount,
-        description: `${transaction.type} - ${currentWallet.currency} Wallet`,
+        description: `${transaction.type} - ${wallet.currency} Wallet`,
         time: 'Just now',
         status: 'completed'
       });
@@ -117,38 +114,27 @@ export const WalletManagement = ({ wallets, selectedWallet, onWalletSelect, onBa
 
   return (
     <div className="space-y-6 pb-24">
-      {/* Wallet Selection */}
-      <div className="grid grid-cols-2 gap-4">
-        {wallets.map((wallet) => (
-          <Card
-            key={wallet.currency}
-            className={`cursor-pointer transition-all duration-300 ${
-              selectedWallet === wallet.currency
-                ? 'ring-2 ring-blue-500 bg-blue-500/10'
-                : 'hover:bg-gray-800/50'
-            } bg-gray-900/80 backdrop-blur-xl border-gray-700/50`}
-            onClick={() => onWalletSelect(wallet.currency)}
-          >
-            <CardContent className="p-4">
-              <div className="text-center">
-                <h3 className="text-lg font-bold text-white">{wallet.currency}</h3>
-                <p className="text-sm text-gray-300">
-                  {balanceVisible ? formatBalance(wallet.balance, wallet.currency) : '••••••'}
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+      {/* Header */}
+      <div className="flex items-center space-x-3">
+        <Button
+          onClick={onBack}
+          variant="ghost"
+          size="sm"
+          className="text-white/70 hover:text-white hover:bg-white/10"
+        >
+          <ArrowLeft className="w-4 h-4" />
+        </Button>
+        <h2 className="text-2xl font-bold text-white">{wallet.currency} Wallet</h2>
       </div>
 
       {/* Wallet Overview */}
-      <Card className="bg-gradient-to-br from-blue-600 via-purple-600 to-blue-800 border-none shadow-2xl">
+      <Card className={`${wallet.gradient} border-border/50 shadow-2xl`}>
         <CardContent className="pt-6">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center space-x-3">
               <div className="text-2xl">💰</div>
               <div>
-                <h3 className="text-xl font-bold text-white">{currentWallet.currency}</h3>
+                <h3 className="text-xl font-bold text-white">{wallet.currency}</h3>
                 <p className="text-sm text-white/70">Current Balance</p>
               </div>
             </div>
@@ -164,11 +150,16 @@ export const WalletManagement = ({ wallets, selectedWallet, onWalletSelect, onBa
 
           <div className="mb-6">
             <div className="text-3xl font-bold text-white mb-2">
-              {balanceVisible ? formatBalance(currentWallet.balance, currentWallet.currency) : '••••••'}
+              {balanceVisible ? formatBalance(wallet.balance, wallet.currency) : '••••••'}
             </div>
-            <div className="text-sm text-white/70">
-              ≈ ${(currentWallet.balance * 0.00059).toFixed(2)} USD
-            </div>
+            {wallet.usdValue && (
+              <div className="text-sm text-white/70">
+                ≈ ${wallet.usdValue.toLocaleString()} USD
+              </div>
+            )}
+            <Badge className={`${wallet.change.startsWith('+') ? 'bg-green-500/20 text-green-300' : 'bg-red-500/20 text-red-300'} border-0 mt-2`}>
+              {wallet.change}
+            </Badge>
           </div>
 
           {/* Quick Actions */}
@@ -238,29 +229,28 @@ export const WalletManagement = ({ wallets, selectedWallet, onWalletSelect, onBa
       {activeTab === 'overview' && (
         <Card className="bg-gray-900/80 backdrop-blur-xl border-gray-700/50 shadow-2xl">
           <CardHeader>
-            <CardTitle className="text-white">Recent Transactions</CardTitle>
+            <CardTitle className="text-white">Wallet Information</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="space-y-3">
-              {currentWallet.transactions.slice(0, 5).map((transaction: any, index: number) => (
-                <div key={index} className="flex justify-between items-center p-3 bg-gray-800/40 rounded-lg">
-                  <div>
-                    <p className="text-white text-sm font-medium">{transaction.type}</p>
-                    <p className="text-gray-400 text-xs">{transaction.description}</p>
-                  </div>
-                  <div className="text-right">
-                    <p className={`text-sm font-semibold ${
-                      transaction.amount.startsWith('+') ? 'text-green-400' : 'text-red-400'
-                    }`}>
-                      {transaction.amount}
-                    </p>
-                    <p className="text-gray-500 text-xs">{transaction.time}</p>
-                  </div>
-                </div>
-              ))}
-              {currentWallet.transactions.length === 0 && (
-                <p className="text-gray-400 text-center py-4">No transactions yet</p>
-              )}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label className="text-gray-300">Currency</Label>
+                <p className="text-white font-semibold">{wallet.currency}</p>
+              </div>
+              <div>
+                <Label className="text-gray-300">Status</Label>
+                <p className="text-green-400 font-semibold">Active</p>
+              </div>
+              <div>
+                <Label className="text-gray-300">Balance</Label>
+                <p className="text-white font-semibold">{formatBalance(wallet.balance, wallet.currency)}</p>
+              </div>
+              <div>
+                <Label className="text-gray-300">24h Change</Label>
+                <p className={`font-semibold ${wallet.change.startsWith('+') ? 'text-green-400' : 'text-red-400'}`}>
+                  {wallet.change}
+                </p>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -269,7 +259,7 @@ export const WalletManagement = ({ wallets, selectedWallet, onWalletSelect, onBa
       {activeTab === 'deposit' && (
         <Card className="bg-gray-900/80 backdrop-blur-xl border-gray-700/50 shadow-2xl">
           <CardHeader>
-            <CardTitle className="text-white">Deposit {currentWallet.currency}</CardTitle>
+            <CardTitle className="text-white">Deposit {wallet.currency}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
@@ -277,7 +267,7 @@ export const WalletManagement = ({ wallets, selectedWallet, onWalletSelect, onBa
               <Input
                 id="depositAmount"
                 type="number"
-                placeholder={`Enter ${currentWallet.currency} amount`}
+                placeholder={`Enter ${wallet.currency} amount`}
                 value={depositAmount}
                 onChange={(e) => setDepositAmount(e.target.value)}
                 className="bg-gray-800/60 border-gray-600/50 text-white placeholder-gray-400"
@@ -289,7 +279,7 @@ export const WalletManagement = ({ wallets, selectedWallet, onWalletSelect, onBa
               className="w-full bg-green-600 hover:bg-green-700"
             >
               <Plus className="w-4 h-4 mr-2" />
-              Deposit {currentWallet.currency}
+              Deposit {wallet.currency}
             </Button>
           </CardContent>
         </Card>
@@ -298,7 +288,7 @@ export const WalletManagement = ({ wallets, selectedWallet, onWalletSelect, onBa
       {activeTab === 'send' && (
         <Card className="bg-gray-900/80 backdrop-blur-xl border-gray-700/50 shadow-2xl">
           <CardHeader>
-            <CardTitle className="text-white">Send {currentWallet.currency}</CardTitle>
+            <CardTitle className="text-white">Send {wallet.currency}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
@@ -306,7 +296,7 @@ export const WalletManagement = ({ wallets, selectedWallet, onWalletSelect, onBa
               <Input
                 id="sendAmount"
                 type="number"
-                placeholder={`Enter ${currentWallet.currency} amount`}
+                placeholder={`Enter ${wallet.currency} amount`}
                 value={sendAmount}
                 onChange={(e) => setSendAmount(e.target.value)}
                 className="bg-gray-800/60 border-gray-600/50 text-white placeholder-gray-400"
@@ -324,13 +314,13 @@ export const WalletManagement = ({ wallets, selectedWallet, onWalletSelect, onBa
             </div>
             <Button 
               onClick={handleSend}
-              disabled={!sendAmount || !recipientAddress || parseFloat(sendAmount) <= 0 || parseFloat(sendAmount) > currentWallet.balance}
+              disabled={!sendAmount || !recipientAddress || parseFloat(sendAmount) <= 0 || parseFloat(sendAmount) > wallet.balance}
               className="w-full bg-blue-600 hover:bg-blue-700"
             >
               <Send className="w-4 h-4 mr-2" />
-              Send {currentWallet.currency}
+              Send {wallet.currency}
             </Button>
-            {parseFloat(sendAmount) > currentWallet.balance && (
+            {parseFloat(sendAmount) > wallet.balance && (
               <p className="text-red-400 text-sm">Insufficient balance</p>
             )}
           </CardContent>
@@ -360,7 +350,7 @@ export const WalletManagement = ({ wallets, selectedWallet, onWalletSelect, onBa
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <Label className="text-white">Daily Limit ({currentWallet.currency})</Label>
+                <Label className="text-white">Daily Limit ({wallet.currency})</Label>
                 <Input
                   type="number"
                   value={dailyLimit}
@@ -369,7 +359,7 @@ export const WalletManagement = ({ wallets, selectedWallet, onWalletSelect, onBa
                 />
               </div>
               <div>
-                <Label className="text-white">Monthly Limit ({currentWallet.currency})</Label>
+                <Label className="text-white">Monthly Limit ({wallet.currency})</Label>
                 <Input
                   type="number"
                   value={monthlyLimit}
