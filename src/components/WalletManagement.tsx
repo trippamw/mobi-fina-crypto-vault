@@ -30,6 +30,7 @@ export const WalletManagement = ({ wallet, onBack, onBalanceUpdate, onTransactio
   const [selectedSendMethod, setSelectedSendMethod] = useState('');
   const [mobileNumber, setMobileNumber] = useState('');
   const [selectedBank, setSelectedBank] = useState('');
+  const [accountNumber, setAccountNumber] = useState('');
   const [selectedProvider, setSelectedProvider] = useState('');
   const [isWalletFrozen, setIsWalletFrozen] = useState(false);
   const [dailyLimit, setDailyLimit] = useState('100000');
@@ -77,10 +78,10 @@ export const WalletManagement = ({ wallet, onBack, onBalanceUpdate, onTransactio
           return;
         }
         
-        if (selectedDepositMethod === 'bank' && !selectedBank) {
+        if (selectedDepositMethod === 'bank' && (!selectedBank || !accountNumber)) {
           toast({
             title: t('error'),
-            description: 'Please select a bank',
+            description: 'Please select a bank and enter account number',
             variant: 'destructive'
           });
           return;
@@ -126,6 +127,15 @@ export const WalletManagement = ({ wallet, onBack, onBalanceUpdate, onTransactio
           });
           return;
         }
+        
+        if (selectedSendMethod === 'bank' && !accountNumber) {
+          toast({
+            title: t('error'),
+            description: 'Please enter account number',
+            variant: 'destructive'
+          });
+          return;
+        }
       }
 
       const fee = isCrypto ? '0.001 ETH' : 'FREE';
@@ -149,17 +159,34 @@ export const WalletManagement = ({ wallet, onBack, onBalanceUpdate, onTransactio
     setTimeout(() => {
       const transaction = transactionModal.transaction;
       if (transaction.type === t('deposit')) {
-        onBalanceUpdate(wallet.currency, parseFloat(depositAmount));
+        // Convert amount to wallet currency if different
+        let convertedAmount = parseFloat(depositAmount);
+        if (wallet.currency !== 'MWK') {
+          // Simple conversion rates for demo
+          const rates: { [key: string]: number } = {
+            'USD': 0.0008,
+            'GBP': 0.0006,
+            'EUR': 0.0007,
+            'ZAR': 0.012,
+            'BTC': 0.000000015,
+            'ETH': 0.0000003
+          };
+          convertedAmount = convertedAmount * (rates[wallet.currency] || 1);
+        }
+        
+        onBalanceUpdate(wallet.currency, convertedAmount);
         setDepositAmount('');
         setSelectedDepositMethod('');
         setMobileNumber('');
         setSelectedBank('');
+        setAccountNumber('');
         setSelectedProvider('');
       } else if (transaction.type === t('send')) {
         onBalanceUpdate(wallet.currency, -parseFloat(sendAmount));
         setSendAmount('');
         setRecipientAddress('');
         setSelectedSendMethod('');
+        setAccountNumber('');
       }
       
       onTransactionUpdate({
@@ -175,7 +202,6 @@ export const WalletManagement = ({ wallet, onBack, onBalanceUpdate, onTransactio
   };
 
   const handleSettingsUpdate = () => {
-    // Apply the settings changes
     toast({
       title: t('success'),
       description: 'Wallet settings updated successfully',
@@ -205,386 +231,414 @@ export const WalletManagement = ({ wallet, onBack, onBalanceUpdate, onTransactio
   };
 
   return (
-    <div className="space-y-6 pb-24">
-      {/* Header */}
-      <div className="flex items-center space-x-3">
-        <Button
-          onClick={onBack}
-          variant="ghost"
-          size="sm"
-          className="text-white/70 hover:text-white hover:bg-white/10"
-        >
-          <ArrowLeft className="w-4 h-4" />
-        </Button>
-        <h2 className="text-2xl font-bold text-white">{wallet.currency} {t('wallet')}</h2>
-      </div>
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-4 pb-24">
+      <div className="container mx-auto max-w-4xl space-y-4">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <Button
+            onClick={onBack}
+            variant="ghost"
+            size="sm"
+            className="text-white/70 hover:text-white hover:bg-white/10"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back
+          </Button>
+          <h1 className="text-xl md:text-2xl font-bold text-white text-center flex-1">
+            {wallet.currency} {t('wallet')}
+          </h1>
+          <div className="w-16"></div>
+        </div>
 
-      {/* Wallet Overview */}
-      <Card className={`${wallet.gradient} border-border/50 shadow-2xl`}>
-        <CardContent className="pt-6">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center space-x-3">
-              <div className="text-2xl">💰</div>
-              <div>
-                <h3 className="text-xl font-bold text-white">{wallet.currency}</h3>
-                <p className="text-sm text-white/70">{t('balance')}</p>
+        {/* Wallet Overview Card */}
+        <Card className={`${wallet.gradient} border-gray-600/50 shadow-xl`}>
+          <CardContent className="p-4 md:p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center space-x-3">
+                <div className="text-2xl">💰</div>
+                <div>
+                  <h3 className="text-lg md:text-xl font-bold text-white">{wallet.currency}</h3>
+                  <p className="text-sm text-white/70">{t('balance')}</p>
+                </div>
               </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setBalanceVisible(!balanceVisible)}
+                className="text-white/70 hover:text-white p-2"
+              >
+                {balanceVisible ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+              </Button>
             </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setBalanceVisible(!balanceVisible)}
-              className="text-white/70 hover:text-white"
-            >
-              {balanceVisible ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
-            </Button>
-          </div>
 
-          <div className="mb-6">
-            <div className="text-3xl font-bold text-white mb-2">
-              {balanceVisible ? formatBalance(wallet.balance, wallet.currency) : '••••••'}
+            <div className="mb-6">
+              <div className="text-2xl md:text-3xl font-bold text-white mb-2">
+                {balanceVisible ? formatBalance(wallet.balance, wallet.currency) : '••••••'}
+              </div>
+              {wallet.usdValue && (
+                <div className="text-sm text-white/70">
+                  ≈ ${wallet.usdValue.toLocaleString()} USD
+                </div>
+              )}
+              <Badge className={`${wallet.change.startsWith('+') ? 'bg-green-500/20 text-green-300' : 'bg-red-500/20 text-red-300'} border-0 mt-2`}>
+                {wallet.change}
+              </Badge>
             </div>
-            {wallet.usdValue && (
-              <div className="text-sm text-white/70">
-                ≈ ${wallet.usdValue.toLocaleString()} USD
-              </div>
-            )}
-            <Badge className={`${wallet.change.startsWith('+') ? 'bg-green-500/20 text-green-300' : 'bg-red-500/20 text-red-300'} border-0 mt-2`}>
-              {wallet.change}
-            </Badge>
-          </div>
 
-          {/* Quick Actions */}
-          <div className="grid grid-cols-3 gap-3">
-            <Button
-              onClick={() => setActiveTab('deposit')}
-              className="bg-green-600/20 hover:bg-green-600/30 text-green-300 border-green-400/30"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              {t('deposit')}
-            </Button>
-            <Button
-              onClick={() => setActiveTab('send')}
-              className="bg-blue-600/20 hover:bg-blue-600/30 text-blue-300 border-blue-400/30"
-            >
-              <Send className="w-4 h-4 mr-2" />
-              {t('send')}
-            </Button>
-            <Button
-              onClick={() => setActiveTab('settings')}
-              className="bg-purple-600/20 hover:bg-purple-600/30 text-purple-300 border-purple-400/30"
-            >
-              <Settings className="w-4 h-4 mr-2" />
-              {t('settings')}
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Tab Navigation */}
-      <div className="flex space-x-2">
-        <Button
-          variant={activeTab === 'overview' ? 'default' : 'ghost'}
-          size="sm"
-          onClick={() => setActiveTab('overview')}
-          className={activeTab === 'overview' ? 'bg-blue-600' : 'text-gray-300'}
-        >
-          Overview
-        </Button>
-        <Button
-          variant={activeTab === 'deposit' ? 'default' : 'ghost'}
-          size="sm"
-          onClick={() => setActiveTab('deposit')}
-          className={activeTab === 'deposit' ? 'bg-green-600' : 'text-gray-300'}
-        >
-          {t('deposit')}
-        </Button>
-        <Button
-          variant={activeTab === 'send' ? 'default' : 'ghost'}
-          size="sm"
-          onClick={() => setActiveTab('send')}
-          className={activeTab === 'send' ? 'bg-blue-600' : 'text-gray-300'}
-        >
-          {t('send')}
-        </Button>
-        <Button
-          variant={activeTab === 'settings' ? 'default' : 'ghost'}
-          size="sm"
-          onClick={() => setActiveTab('settings')}
-          className={activeTab === 'settings' ? 'bg-purple-600' : 'text-gray-300'}
-        >
-          {t('settings')}
-        </Button>
-      </div>
-
-      {/* Tab Content */}
-      {activeTab === 'overview' && (
-        <Card className="bg-gray-900/80 backdrop-blur-xl border-gray-700/50 shadow-2xl">
-          <CardHeader>
-            <CardTitle className="text-white">Wallet Information</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label className="text-gray-300">{t('currency')}</Label>
-                <p className="text-white font-semibold">{wallet.currency}</p>
-              </div>
-              <div>
-                <Label className="text-gray-300">Status</Label>
-                <p className="text-green-400 font-semibold">Active</p>
-              </div>
-              <div>
-                <Label className="text-gray-300">{t('balance')}</Label>
-                <p className="text-white font-semibold">{formatBalance(wallet.balance, wallet.currency)}</p>
-              </div>
-              <div>
-                <Label className="text-gray-300">24h Change</Label>
-                <p className={`font-semibold ${wallet.change.startsWith('+') ? 'text-green-400' : 'text-red-400'}`}>
-                  {wallet.change}
-                </p>
-              </div>
+            {/* Quick Actions */}
+            <div className="grid grid-cols-3 gap-2 md:gap-3">
+              <Button
+                onClick={() => setActiveTab('deposit')}
+                size="sm"
+                className="bg-green-600/20 hover:bg-green-600/30 text-green-300 border-green-400/30 text-xs md:text-sm p-2 md:p-3"
+              >
+                <Plus className="w-3 h-3 md:w-4 md:h-4 mr-1 md:mr-2" />
+                {t('deposit')}
+              </Button>
+              <Button
+                onClick={() => setActiveTab('send')}
+                size="sm"
+                className="bg-blue-600/20 hover:bg-blue-600/30 text-blue-300 border-blue-400/30 text-xs md:text-sm p-2 md:p-3"
+              >
+                <Send className="w-3 h-3 md:w-4 md:h-4 mr-1 md:mr-2" />
+                {t('send')}
+              </Button>
+              <Button
+                onClick={() => setActiveTab('settings')}
+                size="sm"
+                className="bg-purple-600/20 hover:bg-purple-600/30 text-purple-300 border-purple-400/30 text-xs md:text-sm p-2 md:p-3"
+              >
+                <Settings className="w-3 h-3 md:w-4 md:h-4 mr-1 md:mr-2" />
+                {t('settings')}
+              </Button>
             </div>
           </CardContent>
         </Card>
-      )}
 
-      {activeTab === 'deposit' && (
-        <Card className="bg-gray-900/80 backdrop-blur-xl border-gray-700/50 shadow-2xl">
-          <CardHeader>
-            <CardTitle className="text-white">{t('deposit')} {wallet.currency}</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <Label htmlFor="depositAmount" className="text-white">{t('amount')}</Label>
-              <Input
-                id="depositAmount"
-                type="number"
-                placeholder={`Enter ${wallet.currency} amount`}
-                value={depositAmount}
-                onChange={(e) => setDepositAmount(e.target.value)}
-                className="bg-gray-800/60 border-gray-600/50 text-white placeholder-gray-400"
-              />
-            </div>
-            
-            {!isCrypto && (
-              <>
+        {/* Tab Navigation */}
+        <div className="flex space-x-1 overflow-x-auto">
+          {['overview', 'deposit', 'send', 'settings'].map((tab) => (
+            <Button
+              key={tab}
+              variant={activeTab === tab ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setActiveTab(tab)}
+              className={`${
+                activeTab === tab 
+                  ? 'bg-blue-600 text-white' 
+                  : 'text-gray-300 hover:text-white hover:bg-white/10'
+              } text-xs md:text-sm px-3 py-2 whitespace-nowrap`}
+            >
+              {tab.charAt(0).toUpperCase() + tab.slice(1)}
+            </Button>
+          ))}
+        </div>
+
+        {/* Tab Content */}
+        {activeTab === 'overview' && (
+          <Card className="bg-gray-900/80 backdrop-blur-xl border-gray-700/50 shadow-xl">
+            <CardHeader className="p-4 md:p-6">
+              <CardTitle className="text-white text-lg">Wallet Information</CardTitle>
+            </CardHeader>
+            <CardContent className="p-4 md:p-6 pt-0 space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <Label className="text-white">Deposit Method</Label>
-                  <Select value={selectedDepositMethod} onValueChange={setSelectedDepositMethod}>
-                    <SelectTrigger className="bg-gray-800/60 border-gray-600/50 text-white">
-                      <SelectValue placeholder="Select deposit method" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-gray-900 border-gray-700">
-                      <SelectItem value="mobile" className="text-white">Mobile Money</SelectItem>
-                      <SelectItem value="bank" className="text-white">Bank Transfer</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <Label className="text-gray-300 text-sm">{t('currency')}</Label>
+                  <p className="text-white font-semibold">{wallet.currency}</p>
                 </div>
+                <div>
+                  <Label className="text-gray-300 text-sm">Status</Label>
+                  <p className="text-green-400 font-semibold">Active</p>
+                </div>
+                <div>
+                  <Label className="text-gray-300 text-sm">{t('balance')}</Label>
+                  <p className="text-white font-semibold">{formatBalance(wallet.balance, wallet.currency)}</p>
+                </div>
+                <div>
+                  <Label className="text-gray-300 text-sm">24h Change</Label>
+                  <p className={`font-semibold ${wallet.change.startsWith('+') ? 'text-green-400' : 'text-red-400'}`}>
+                    {wallet.change}
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
-                {selectedDepositMethod === 'mobile' && (
-                  <>
-                    <div>
-                      <Label className="text-white">Mobile Number</Label>
-                      <Input
-                        placeholder="Enter your mobile number"
-                        value={mobileNumber}
-                        onChange={(e) => setMobileNumber(e.target.value)}
-                        className="bg-gray-800/60 border-gray-600/50 text-white placeholder-gray-400"
-                      />
-                    </div>
-                    <div>
-                      <Label className="text-white">Select Provider</Label>
-                      <Select value={selectedProvider} onValueChange={setSelectedProvider}>
-                        <SelectTrigger className="bg-gray-800/60 border-gray-600/50 text-white">
-                          <SelectValue placeholder="Choose mobile money provider" />
-                        </SelectTrigger>
-                        <SelectContent className="bg-gray-900 border-gray-700">
-                          {mobileMoneyProviders.map((provider) => (
-                            <SelectItem key={provider.code} value={provider.code} className="text-white">
-                              {provider.name} (Fee: {provider.fee})
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </>
-                )}
-
-                {selectedDepositMethod === 'bank' && (
+        {activeTab === 'deposit' && (
+          <Card className="bg-gray-900/80 backdrop-blur-xl border-gray-700/50 shadow-xl">
+            <CardHeader className="p-4 md:p-6">
+              <CardTitle className="text-white text-lg">{t('deposit')} {wallet.currency}</CardTitle>
+            </CardHeader>
+            <CardContent className="p-4 md:p-6 pt-0 space-y-4">
+              <div>
+                <Label htmlFor="depositAmount" className="text-white text-sm">{t('amount')}</Label>
+                <Input
+                  id="depositAmount"
+                  type="number"
+                  placeholder={`Enter ${wallet.currency} amount`}
+                  value={depositAmount}
+                  onChange={(e) => setDepositAmount(e.target.value)}
+                  className="bg-gray-800/60 border-gray-600/50 text-white placeholder-gray-400 mt-1"
+                />
+              </div>
+              
+              {!isCrypto && (
+                <>
                   <div>
-                    <Label className="text-white">Select Bank</Label>
-                    <Select value={selectedBank} onValueChange={setSelectedBank}>
-                      <SelectTrigger className="bg-gray-800/60 border-gray-600/50 text-white">
-                        <SelectValue placeholder="Choose your bank" />
+                    <Label className="text-white text-sm">Deposit Method</Label>
+                    <Select value={selectedDepositMethod} onValueChange={setSelectedDepositMethod}>
+                      <SelectTrigger className="bg-gray-800/60 border-gray-600/50 text-white mt-1">
+                        <SelectValue placeholder="Select deposit method" />
                       </SelectTrigger>
-                      <SelectContent className="bg-gray-900 border-gray-700">
-                        {banks.map((bank) => (
-                          <SelectItem key={bank} value={bank} className="text-white">{bank}</SelectItem>
-                        ))}
+                      <SelectContent className="bg-gray-900 border-gray-700 z-50">
+                        <SelectItem value="mobile" className="text-white">Mobile Money</SelectItem>
+                        <SelectItem value="bank" className="text-white">Bank Transfer</SelectItem>
+                        <SelectItem value="card" className="text-white">Card Payment</SelectItem>
+                        <SelectItem value="agent" className="text-white">Agent Deposit</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
-                )}
-              </>
-            )}
 
-            {isCrypto && (
-              <div className="p-4 bg-blue-500/10 border border-blue-400/30 rounded-lg">
-                <p className="text-blue-300 text-sm">
-                  For crypto deposits, send {wallet.currency} to your wallet address. 
-                  Network fees may apply and vary based on network congestion.
+                  {selectedDepositMethod === 'mobile' && (
+                    <>
+                      <div>
+                        <Label className="text-white text-sm">Mobile Number</Label>
+                        <Input
+                          placeholder="Enter your mobile number"
+                          value={mobileNumber}
+                          onChange={(e) => setMobileNumber(e.target.value)}
+                          className="bg-gray-800/60 border-gray-600/50 text-white placeholder-gray-400 mt-1"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-white text-sm">Select Provider</Label>
+                        <Select value={selectedProvider} onValueChange={setSelectedProvider}>
+                          <SelectTrigger className="bg-gray-800/60 border-gray-600/50 text-white mt-1">
+                            <SelectValue placeholder="Choose mobile money provider" />
+                          </SelectTrigger>
+                          <SelectContent className="bg-gray-900 border-gray-700 z-50">
+                            {mobileMoneyProviders.map((provider) => (
+                              <SelectItem key={provider.code} value={provider.code} className="text-white">
+                                {provider.name} (Fee: {provider.fee})
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </>
+                  )}
+
+                  {selectedDepositMethod === 'bank' && (
+                    <>
+                      <div>
+                        <Label className="text-white text-sm">Select Bank</Label>
+                        <Select value={selectedBank} onValueChange={setSelectedBank}>
+                          <SelectTrigger className="bg-gray-800/60 border-gray-600/50 text-white mt-1">
+                            <SelectValue placeholder="Choose your bank" />
+                          </SelectTrigger>
+                          <SelectContent className="bg-gray-900 border-gray-700 z-50">
+                            {banks.map((bank) => (
+                              <SelectItem key={bank} value={bank} className="text-white">{bank}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label className="text-white text-sm">Account Number</Label>
+                        <Input
+                          placeholder="Enter your account number"
+                          value={accountNumber}
+                          onChange={(e) => setAccountNumber(e.target.value)}
+                          className="bg-gray-800/60 border-gray-600/50 text-white placeholder-gray-400 mt-1"
+                        />
+                      </div>
+                    </>
+                  )}
+                </>
+              )}
+
+              {isCrypto && (
+                <div className="p-4 bg-blue-500/10 border border-blue-400/30 rounded-lg">
+                  <p className="text-blue-300 text-sm">
+                    For crypto deposits, send {wallet.currency} to your wallet address. 
+                    Network fees may apply and vary based on network congestion.
+                  </p>
+                  <div className="mt-2">
+                    <Label className="text-white text-sm">Wallet Address</Label>
+                    <Input
+                      placeholder="Enter sender wallet address"
+                      value={recipientAddress}
+                      onChange={(e) => setRecipientAddress(e.target.value)}
+                      className="bg-gray-800/60 border-gray-600/50 text-white placeholder-gray-400 mt-1"
+                    />
+                  </div>
+                </div>
+              )}
+
+              <Button 
+                onClick={handleDeposit}
+                disabled={!depositAmount || parseFloat(depositAmount) <= 0}
+                className="w-full bg-green-600 hover:bg-green-700 mt-4"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                {t('deposit')} {wallet.currency}
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
+        {activeTab === 'send' && (
+          <Card className="bg-gray-900/80 backdrop-blur-xl border-gray-700/50 shadow-xl">
+            <CardHeader className="p-4 md:p-6">
+              <CardTitle className="text-white text-lg">{t('send')} {wallet.currency}</CardTitle>
+            </CardHeader>
+            <CardContent className="p-4 md:p-6 pt-0 space-y-4">
+              <div>
+                <Label htmlFor="sendAmount" className="text-white text-sm">{t('amount')}</Label>
+                <Input
+                  id="sendAmount"
+                  type="number"
+                  placeholder={`Enter ${wallet.currency} amount`}
+                  value={sendAmount}
+                  onChange={(e) => setSendAmount(e.target.value)}
+                  className="bg-gray-800/60 border-gray-600/50 text-white placeholder-gray-400 mt-1"
+                />
+              </div>
+              <div>
+                <Label htmlFor="recipientAddress" className="text-white text-sm">
+                  {isCrypto ? 'Recipient Wallet Address' : 'Recipient'}
+                </Label>
+                <Input
+                  id="recipientAddress"
+                  placeholder={isCrypto ? 'Enter wallet address' : 'Enter phone number or account'}
+                  value={recipientAddress}
+                  onChange={(e) => setRecipientAddress(e.target.value)}
+                  className="bg-gray-800/60 border-gray-600/50 text-white placeholder-gray-400 mt-1"
+                />
+              </div>
+
+              {!isCrypto && (
+                <>
+                  <div>
+                    <Label className="text-white text-sm">Send Method</Label>
+                    <Select value={selectedSendMethod} onValueChange={setSelectedSendMethod}>
+                      <SelectTrigger className="bg-gray-800/60 border-gray-600/50 text-white mt-1">
+                        <SelectValue placeholder="Select send method" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-gray-900 border-gray-700 z-50">
+                        <SelectItem value="mobile" className="text-white">Mobile Money</SelectItem>
+                        <SelectItem value="bank" className="text-white">Bank Transfer</SelectItem>
+                        <SelectItem value="neovault" className="text-white">NeoVault User</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {selectedSendMethod === 'bank' && (
+                    <div>
+                      <Label className="text-white text-sm">Account Number</Label>
+                      <Input
+                        placeholder="Enter recipient account number"
+                        value={accountNumber}
+                        onChange={(e) => setAccountNumber(e.target.value)}
+                        className="bg-gray-800/60 border-gray-600/50 text-white placeholder-gray-400 mt-1"
+                      />
+                    </div>
+                  )}
+                </>
+              )}
+
+              <Button 
+                onClick={handleSend}
+                disabled={!sendAmount || !recipientAddress || parseFloat(sendAmount) <= 0 || parseFloat(sendAmount) > wallet.balance}
+                className="w-full bg-blue-600 hover:bg-blue-700 mt-4"
+              >
+                <Send className="w-4 h-4 mr-2" />
+                {t('send')} {wallet.currency}
+              </Button>
+              {parseFloat(sendAmount) > wallet.balance && (
+                <p className="text-red-400 text-sm mt-2">Insufficient balance</p>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {activeTab === 'settings' && (
+          <div className="space-y-4">
+            <Card className="bg-gray-900/80 backdrop-blur-xl border-gray-700/50 shadow-xl">
+              <CardHeader className="p-4 md:p-6">
+                <CardTitle className="text-white text-lg">Wallet Security</CardTitle>
+              </CardHeader>
+              <CardContent className="p-4 md:p-6 pt-0 space-y-4">
+                <div className="flex items-center justify-between">
+                  <Label className="text-white text-sm">Freeze Wallet</Label>
+                  <Switch checked={isWalletFrozen} onCheckedChange={setIsWalletFrozen} />
+                </div>
+                <p className="text-sm text-gray-400">
+                  Freezing your wallet will prevent all transactions until unfrozen.
                 </p>
-              </div>
-            )}
+              </CardContent>
+            </Card>
 
-            <Button 
-              onClick={handleDeposit}
-              disabled={!depositAmount || parseFloat(depositAmount) <= 0}
-              className="w-full bg-green-600 hover:bg-green-700"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              {t('deposit')} {wallet.currency}
-            </Button>
-          </CardContent>
-        </Card>
-      )}
+            <Card className="bg-gray-900/80 backdrop-blur-xl border-gray-700/50 shadow-xl">
+              <CardHeader className="p-4 md:p-6">
+                <CardTitle className="text-white text-lg">Transaction Limits</CardTitle>
+              </CardHeader>
+              <CardContent className="p-4 md:p-6 pt-0 space-y-4">
+                <div>
+                  <Label className="text-white text-sm">Daily Limit ({wallet.currency})</Label>
+                  <Input
+                    type="number"
+                    value={dailyLimit}
+                    onChange={(e) => setDailyLimit(e.target.value)}
+                    className="bg-gray-800/60 border-gray-600/50 text-white mt-1"
+                  />
+                </div>
+                <div>
+                  <Label className="text-white text-sm">Monthly Limit ({wallet.currency})</Label>
+                  <Input
+                    type="number"
+                    value={monthlyLimit}
+                    onChange={(e) => setMonthlyLimit(e.target.value)}
+                    className="bg-gray-800/60 border-gray-600/50 text-white mt-1"
+                  />
+                </div>
+                <Button onClick={handleSettingsUpdate} className="w-full bg-green-600 hover:bg-green-700">
+                  Update Limits
+                </Button>
+              </CardContent>
+            </Card>
 
-      {activeTab === 'send' && (
-        <Card className="bg-gray-900/80 backdrop-blur-xl border-gray-700/50 shadow-2xl">
-          <CardHeader>
-            <CardTitle className="text-white">{t('send')} {wallet.currency}</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <Label htmlFor="sendAmount" className="text-white">{t('amount')}</Label>
-              <Input
-                id="sendAmount"
-                type="number"
-                placeholder={`Enter ${wallet.currency} amount`}
-                value={sendAmount}
-                onChange={(e) => setSendAmount(e.target.value)}
-                className="bg-gray-800/60 border-gray-600/50 text-white placeholder-gray-400"
-              />
-            </div>
-            <div>
-              <Label htmlFor="recipientAddress" className="text-white">
-                {isCrypto ? 'Recipient Wallet Address' : 'Recipient'}
-              </Label>
-              <Input
-                id="recipientAddress"
-                placeholder={isCrypto ? 'Enter wallet address' : 'Enter phone number or account'}
-                value={recipientAddress}
-                onChange={(e) => setRecipientAddress(e.target.value)}
-                className="bg-gray-800/60 border-gray-600/50 text-white placeholder-gray-400"
-              />
-            </div>
+            <Card className="bg-red-900/20 border-red-500/20 shadow-xl">
+              <CardHeader className="p-4 md:p-6">
+                <CardTitle className="text-red-400 flex items-center text-lg">
+                  <AlertTriangle className="w-5 h-5 mr-2" />
+                  Danger Zone
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-4 md:p-6 pt-0 space-y-4">
+                <p className="text-gray-300 text-sm">
+                  Deleting this wallet is permanent and cannot be undone. Make sure to transfer all funds first.
+                </p>
+                <Button variant="destructive" className="w-full bg-red-600 hover:bg-red-700">
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Delete Wallet
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        )}
 
-            {!isCrypto && (
-              <div>
-                <Label className="text-white">Send Method</Label>
-                <Select value={selectedSendMethod} onValueChange={setSelectedSendMethod}>
-                  <SelectTrigger className="bg-gray-800/60 border-gray-600/50 text-white">
-                    <SelectValue placeholder="Select send method" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-gray-900 border-gray-700">
-                    <SelectItem value="mobile" className="text-white">Mobile Money</SelectItem>
-                    <SelectItem value="bank" className="text-white">Bank Transfer</SelectItem>
-                    <SelectItem value="neovault" className="text-white">NeoVault User</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-
-            <Button 
-              onClick={handleSend}
-              disabled={!sendAmount || !recipientAddress || parseFloat(sendAmount) <= 0 || parseFloat(sendAmount) > wallet.balance}
-              className="w-full bg-blue-600 hover:bg-blue-700"
-            >
-              <Send className="w-4 h-4 mr-2" />
-              {t('send')} {wallet.currency}
-            </Button>
-            {parseFloat(sendAmount) > wallet.balance && (
-              <p className="text-red-400 text-sm">Insufficient balance</p>
-            )}
-          </CardContent>
-        </Card>
-      )}
-
-      {activeTab === 'settings' && (
-        <div className="space-y-6">
-          <Card className="bg-gray-900/80 backdrop-blur-xl border-gray-700/50 shadow-2xl">
-            <CardHeader>
-              <CardTitle className="text-white">Wallet Security</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
-                <Label className="text-white">Freeze Wallet</Label>
-                <Switch checked={isWalletFrozen} onCheckedChange={setIsWalletFrozen} />
-              </div>
-              <p className="text-sm text-gray-400">
-                Freezing your wallet will prevent all transactions until unfrozen.
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-gray-900/80 backdrop-blur-xl border-gray-700/50 shadow-2xl">
-            <CardHeader>
-              <CardTitle className="text-white">Transaction Limits</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <Label className="text-white">Daily Limit ({wallet.currency})</Label>
-                <Input
-                  type="number"
-                  value={dailyLimit}
-                  onChange={(e) => setDailyLimit(e.target.value)}
-                  className="bg-gray-800/60 border-gray-600/50 text-white"
-                />
-              </div>
-              <div>
-                <Label className="text-white">Monthly Limit ({wallet.currency})</Label>
-                <Input
-                  type="number"
-                  value={monthlyLimit}
-                  onChange={(e) => setMonthlyLimit(e.target.value)}
-                  className="bg-gray-800/60 border-gray-600/50 text-white"
-                />
-              </div>
-              <Button onClick={handleSettingsUpdate} className="w-full bg-green-600 hover:bg-green-700">
-                Update Limits
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-red-900/20 border-red-500/20 shadow-2xl">
-            <CardHeader>
-              <CardTitle className="text-red-400 flex items-center">
-                <AlertTriangle className="w-5 h-5 mr-2" />
-                Danger Zone
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <p className="text-gray-300 text-sm">
-                Deleting this wallet is permanent and cannot be undone. Make sure to transfer all funds first.
-              </p>
-              <Button variant="destructive" className="w-full bg-red-600 hover:bg-red-700">
-                <Trash2 className="w-4 h-4 mr-2" />
-                Delete Wallet
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
-      )}
-
-      {/* Transaction Confirmation Modal */}
-      <TransactionConfirmation
-        isOpen={transactionModal.isOpen}
-        onClose={() => setTransactionModal({ isOpen: false, showSuccess: false, transaction: null })}
-        onConfirm={confirmTransaction}
-        onSuccess={() => setTransactionModal({ isOpen: false, showSuccess: false, transaction: null })}
-        transaction={transactionModal.transaction}
-        showSuccess={transactionModal.showSuccess}
-      />
+        {/* Transaction Confirmation Modal */}
+        <TransactionConfirmation
+          isOpen={transactionModal.isOpen}
+          onClose={() => setTransactionModal({ isOpen: false, showSuccess: false, transaction: null })}
+          onConfirm={confirmTransaction}
+          onSuccess={() => setTransactionModal({ isOpen: false, showSuccess: false, transaction: null })}
+          transaction={transactionModal.transaction}
+          showSuccess={transactionModal.showSuccess}
+        />
+      </div>
     </div>
   );
 };
