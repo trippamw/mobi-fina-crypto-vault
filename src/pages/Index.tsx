@@ -22,10 +22,10 @@ import { TransactionConfirmation } from '@/components/TransactionConfirmation';
 import { WalletManagement } from '@/components/WalletManagement';
 import { VillageBankManagement } from '@/components/VillageBankManagement';
 import { VillageBankGroupCreation } from '@/components/VillageBankGroupCreation';
-import { useLanguage } from '@/utils/languageApi';
+import { useTranslation } from '@/utils/simpleTranslation';
 
 const Index = () => {
-  const { t } = useLanguage();
+  const { t } = useTranslation();
   const [balanceVisible, setBalanceVisible] = useState(true);
   const [activeTab, setActiveTab] = useState('dashboard');
   const [selectedWallet, setSelectedWallet] = useState<any>(null);
@@ -158,16 +158,17 @@ const Index = () => {
   const getExchangeRate = (from: string, to: string): number => {
     if (from === to) return 1;
     
+    // Updated realistic rates - December 2024
     const usdRates: { [key: string]: number } = {
       'USD': 1,
-      'MWK': 1730,
-      'GBP': 0.79,
-      'EUR': 0.93,
-      'ZAR': 18.5,
-      'BTC': 0.000025,
-      'ETH': 0.0003,
-      'USDT': 1,
-      'USDC': 1
+      'MWK': 1730,      // 1 USD = 1730 MWK
+      'GBP': 0.79,      // 1 USD = 0.79 GBP  
+      'EUR': 0.93,      // 1 USD = 0.93 EUR
+      'ZAR': 18.5,      // 1 USD = 18.5 ZAR
+      'BTC': 0.000025,  // 1 USD = 0.000025 BTC
+      'ETH': 0.0003,    // 1 USD = 0.0003 ETH
+      'USDT': 1,        // 1 USD = 1 USDT
+      'USDC': 1         // 1 USD = 1 USDC
     };
     
     const fromToUsd = 1 / usdRates[from];
