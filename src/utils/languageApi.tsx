@@ -1,6 +1,6 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { translateText, translateMultipleTexts, getLanguageCode } from './translationService';
+import { translateText, translateMultipleTexts, getLanguageCode } from './translationAPI';
 
 interface Translations {
   [key: string]: {
@@ -110,202 +110,7 @@ const baseTranslations: Translations = {
     select: 'Select',
     clear: 'Clear',
     reset: 'Reset',
-    apply: 'Apply',
-    
-    // Transaction types
-    sent: 'Sent',
-    received: 'Received',
-    depositTx: 'Deposit',
-    withdrawal: 'Withdrawal',
-    exchangeTx: 'Exchange',
-    investment: 'Investment',
-    purchase: 'Purchase',
-    payment: 'Payment',
-    transfer: 'Transfer',
-    fee: 'Fee',
-    bonus: 'Bonus',
-    reward: 'Reward',
-    
-    // Status
-    pending: 'Pending',
-    completed: 'Completed',
-    failed: 'Failed',
-    cancelled: 'Cancelled',
-    active: 'Active',
-    inactive: 'Inactive',
-    enabled: 'Enabled',
-    disabled: 'Disabled',
-    
-    // Time periods
-    minute: 'minute',
-    minutes: 'minutes',
-    hour: 'hour',
-    hours: 'hours',
-    day: 'day',
-    days: 'days',
-    week: 'week',
-    weeks: 'weeks',
-    month: 'month',
-    months: 'months',
-    year: 'year',
-    years: 'years',
-    ago: 'ago',
-    justNow: 'Just now',
-    
-    // Actions
-    copyCode: 'Copy Code',
-    shareLink: 'Share Link',
-    downloadApp: 'Download App',
-    contactSupport: 'Contact Support',
-    reportIssue: 'Report Issue',
-    giveFeedback: 'Give Feedback',
-    rateApp: 'Rate App',
-    invite: 'Invite',
-    refer: 'Refer',
-    earnReward: 'Earn Reward',
-    
-    // Notifications
-    notificationTitle: 'Notification',
-    newMessage: 'New Message',
-    transactionAlert: 'Transaction Alert',
-    securityAlert: 'Security Alert',
-    systemUpdate: 'System Update',
-    maintenance: 'Maintenance',
-    
-    // Cards and Payments
-    cardNumber: 'Card Number',
-    expiryDate: 'Expiry Date',
-    cvv: 'CVV',
-    cardholderName: 'Cardholder Name',
-    billingAddress: 'Billing Address',
-    virtualCard: 'Virtual Card',
-    physicalCard: 'Physical Card',
-    
-    // Investment and Savings
-    savingsGoal: 'Savings Goal',
-    targetAmount: 'Target Amount',
-    currentAmount: 'Current Amount',
-    progress: 'Progress',
-    interestRate: 'Interest Rate',
-    maturityDate: 'Maturity Date',
-    riskLevel: 'Risk Level',
-    expectedReturn: 'Expected Return',
-    
-    // Village Bank
-    groupName: 'Group Name',
-    members: 'Members',
-    totalSavings: 'Total Savings',
-    monthlyContribution: 'Monthly Contribution',
-    loanAmount: 'Loan Amount',
-    repaymentPeriod: 'Repayment Period',
-    joinGroup: 'Join Group',
-    createGroup: 'Create Group',
-    leaveGroup: 'Leave Group',
-    
-    // Recent Activity
-    recentActivity: 'Recent Activity',
-    transactionHistory: 'Transaction History',
-    viewAll: 'View All',
-    noTransactions: 'No Transactions',
-    noActivity: 'No Activity',
-    
-    // Quick Actions
-    quickActions: 'Quick Actions',
-    requestMoney: 'Request Money',
-    payBills: 'Pay Bills',
-    buyAirtime: 'Buy Airtime',
-    
-    // Errors and Messages
-    errorOccurred: 'An error occurred',
-    tryAgain: 'Try Again',
-    networkError: 'Network Error',
-    serverError: 'Server Error',
-    invalidInput: 'Invalid Input',
-    requiredField: 'This field is required',
-    insufficientFunds: 'Insufficient Funds',
-    transactionFailed: 'Transaction Failed',
-    operationSuccessful: 'Operation Successful',
-    
-    // Form labels
-    enterAmount: 'Enter Amount',
-    selectWallet: 'Select Wallet',
-    choosePaymentMethod: 'Choose Payment Method',
-    addNote: 'Add Note',
-    optional: 'Optional',
-    required: 'Required',
-    
-    // New translations
-    mobileWallet: 'Mobile Wallet',
-    bankTransfer: 'Bank Transfer',
-    creditCard: 'Credit Card',
-    debitCard: 'Debit Card',
-    cashPickup: 'Cash Pickup',
-    welcomeBack: 'Welcome Back',
-    goodMorning: 'Good Morning',
-    goodAfternoon: 'Good Afternoon',
-    goodEvening: 'Good Evening',
-    totalBalance: 'Total Balance',
-    availableBalance: 'Available Balance',
-    quickSend: 'Quick Send',
-    recentTransactions: 'Recent Transactions',
-    viewAllTransactions: 'View All Transactions',
-    noRecentTransactions: 'No Recent Transactions',
-    sendTo: 'Send To',
-    receiveFrom: 'Receive From',
-    exchangeRate: 'Exchange Rate',
-    serviceFee: 'Service Fee',
-    conversionRate: 'Conversion Rate',
-    fromCurrency: 'From Currency',
-    toCurrency: 'To Currency',
-    convertedAmount: 'Converted Amount',
-    saveGoal: 'Save Goal',
-    investmentPortfolio: 'Investment Portfolio',
-    currentValue: 'Current Value',
-    totalReturns: 'Total Returns',
-    portfolioGrowth: 'Portfolio Growth',
-    riskProfile: 'Risk Profile',
-    conservative: 'Conservative',
-    moderate: 'Moderate',
-    aggressive: 'Aggressive',
-    myCards: 'My Cards',
-    addNewCard: 'Add New Card',
-    cardBalance: 'Card Balance',
-    cardLimit: 'Card Limit',
-    availableCredit: 'Available Credit',
-    lastTransaction: 'Last Transaction',
-    freezeCard: 'Freeze Card',
-    unfreezeCard: 'Unfreeze Card',
-    reportLost: 'Report Lost',
-    requestReplacement: 'Request Replacement',
-    inviteFriends: 'Invite Friends',
-    referralCode: 'Referral Code',
-    referralBonus: 'Referral Bonus',
-    shareApp: 'Share App',
-    earnRewards: 'Earn Rewards',
-    currentPassword: 'Current Password',
-    newPassword: 'New Password',
-    confirmPassword: 'Confirm Password',
-    passwordChanged: 'Password Changed',
-    weakPassword: 'Weak Password',
-    strongPassword: 'Strong Password',
-    mediumPassword: 'Medium Password',
-    passwordMismatch: 'Passwords do not match',
-    profilePicture: 'Profile Picture',
-    uploadPhoto: 'Upload Photo',
-    takePhoto: 'Take Photo',
-    removePhoto: 'Remove Photo',
-    accountVerification: 'Account Verification',
-    verificationStatus: 'Verification Status',
-    verified: 'Verified',
-    unverified: 'Unverified',
-    uploadDocuments: 'Upload Documents',
-    identityDocument: 'Identity Document',
-    proofOfAddress: 'Proof of Address',
-    documentUploaded: 'Document Uploaded',
-    pendingReview: 'Pending Review',
-    approved: 'Approved',
-    rejected: 'Rejected',
-    resubmit: 'Resubmit'
+    apply: 'Apply'
   }
 };
 
@@ -314,9 +119,10 @@ let dynamicTranslations: Translations = { ...baseTranslations };
 
 interface LanguageContextType {
   currentLanguage: string;
-  setLanguage: (lang: string) => void;
+  setLanguage: (lang: string) => Promise<void>;
   t: (key: string) => string;
   translateDynamically: (text: string, targetLang: string) => Promise<string>;
+  isTranslating: boolean;
 }
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
@@ -385,7 +191,7 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   };
 
   return (
-    <LanguageContext.Provider value={{ currentLanguage, setLanguage, t, translateDynamically }}>
+    <LanguageContext.Provider value={{ currentLanguage, setLanguage, t, translateDynamically, isTranslating }}>
       {children}
     </LanguageContext.Provider>
   );

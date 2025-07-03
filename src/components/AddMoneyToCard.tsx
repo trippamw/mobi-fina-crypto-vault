@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { TransactionConfirmation } from './TransactionConfirmation';
+import { getExchangeRate } from '@/utils/currencyService';
 
 interface AddMoneyToCardProps {
   card: {
@@ -41,31 +42,10 @@ export const AddMoneyToCard: React.FC<AddMoneyToCardProps> = ({
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [transactionData, setTransactionData] = useState(null);
+  const [exchangeRate, setExchangeRate] = useState<number>(1);
+  const [isLoadingRate, setIsLoadingRate] = useState(false);
 
-  // Exchange rates (corrected - shows how much target currency you get for 1 unit of source currency)
-  const getExchangeRate = (from: string, to: string): number => {
-    if (from === to) return 1;
-    
-    // Base rates against USD (1 USD = X units of currency)
-    const rates: { [key: string]: number } = {
-      'USD': 1,
-      'MWK': 1751,      // 1 USD = 1751 MWK
-      'GBP': 0.79,      // 1 USD = 0.79 GBP
-      'EUR': 0.92,      // 1 USD = 0.92 EUR
-      'ZAR': 18.2,      // 1 USD = 18.2 ZAR
-      'BTC': 0.000015,  // 1 USD = 0.000015 BTC
-      'ETH': 0.00026,   // 1 USD = 0.00026 ETH
-      'USDT': 1,        // 1 USD = 1 USDT
-      'USDC': 1         // 1 USD = 1 USDC
-    };
-    
-    const fromToUsd = 1 / rates[from];  // Convert from currency to USD
-    const usdToTarget = rates[to];      // Convert from USD to target currency
-    
-    return fromToUsd * usdToTarget;     // Direct conversion rate
-  };
-
-  const calculateConversion = () => {
+  const calculateConversion = async () => {
     if (!selectedWallet || !amount) return null;
     
     const wallet = wallets.find(w => w.currency === selectedWallet);
@@ -74,22 +54,43 @@ export const AddMoneyToCard: React.FC<AddMoneyToCardProps> = ({
     const inputAmount = parseFloat(amount);
     if (isNaN(inputAmount) || inputAmount <= 0) return null;
     
-    const exchangeRate = getExchangeRate(selectedWallet, card.currency);
-    const convertedAmount = inputAmount * exchangeRate;
-    const conversionFee = selectedWallet !== card.currency ? inputAmount * 0.025 : 0; // 2.5% conversion fee
-    const totalDeducted = inputAmount + conversionFee;
+    setIsLoadingRate(true);
     
-    return {
-      inputAmount,
-      convertedAmount,
-      conversionFee,
-      totalDeducted,
-      exchangeRate,
-      hasSufficientFunds: wallet.balance >= totalDeducted
-    };
+    try {
+      const liveExchangeRate = await getExchangeRate(selectedWallet, card.currency);
+      setExchangeRate(liveExchangeRate);
+      
+      const convertedAmount = inputAmount * liveExchangeRate;
+      // Increased conversion fee from 2.5% to 4.75% (90% increase)
+      const conversionFee = selectedWallet !== card.currency ? inputAmount * 0.0475 : 0;
+      const totalDeducted = inputAmount + conversionFee;
+      
+      setIsLoadingRate(false);
+      
+      return {
+        inputAmount,
+        convertedAmount,
+        conversionFee,
+        totalDeducted,
+        exchangeRate: liveExchangeRate,
+        hasSufficientFunds: wallet.balance >= totalDeducted
+      };
+    } catch (error) {
+      console.error('Error calculating conversion:', error);
+      setIsLoadingRate(false);
+      return null;
+    }
   };
 
-  const conversion = calculateConversion();
+  const [conversion, setConversion] = useState<any>(null);
+
+  React.useEffect(() => {
+    if (selectedWallet && amount) {
+      calculateConversion().then(setConversion);
+    } else {
+      setConversion(null);
+    }
+  }, [selectedWallet, amount, card.currency]);
 
   const handleShowConfirmation = () => {
     if (!conversion || !conversion.hasSufficientFunds) {
@@ -150,6 +151,7 @@ export const AddMoneyToCard: React.FC<AddMoneyToCardProps> = ({
     setShowSuccess(false);
     setAmount('');
     setSelectedWallet('');
+    setConversion(null);
     onClose();
   };
 
@@ -211,45 +213,53 @@ export const AddMoneyToCard: React.FC<AddMoneyToCardProps> = ({
             </div>
 
             {/* Conversion Details */}
-            {conversion && (
+            {(conversion || isLoadingRate) && (
               <Card className="bg-gray-700/30 border-gray-600/50">
                 <CardContent className="p-3 space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-300">Amount to deduct:</span>
-                    <span className="text-white">{selectedWallet} {conversion.inputAmount.toFixed(2)}</span>
-                  </div>
-                  
-                  {selectedWallet !== card.currency && (
+                  {isLoadingRate ? (
+                    <div className="flex justify-center items-center py-4">
+                      <div className="text-white">Loading live exchange rates...</div>
+                    </div>
+                  ) : conversion && (
                     <>
                       <div className="flex justify-between text-sm">
-                        <span className="text-gray-300">Exchange rate:</span>
-                        <span className="text-white">1 {selectedWallet} = {conversion.exchangeRate.toFixed(6)} {card.currency}</span>
+                        <span className="text-gray-300">Amount to deduct:</span>
+                        <span className="text-white">{selectedWallet} {conversion.inputAmount.toFixed(2)}</span>
                       </div>
+                      
+                      {selectedWallet !== card.currency && (
+                        <>
+                          <div className="flex justify-between text-sm">
+                            <span className="text-gray-300">Live exchange rate:</span>
+                            <span className="text-white">1 {selectedWallet} = {conversion.exchangeRate.toFixed(6)} {card.currency}</span>
+                          </div>
+                          <div className="flex justify-between text-sm">
+                            <span className="text-gray-300">Conversion fee (4.75%):</span>
+                            <span className="text-orange-400">{selectedWallet} {conversion.conversionFee.toFixed(2)}</span>
+                          </div>
+                          <div className="flex justify-between text-sm border-t border-gray-600 pt-2">
+                            <span className="text-gray-300">Total deducted:</span>
+                            <span className="text-white font-medium">{selectedWallet} {conversion.totalDeducted.toFixed(2)}</span>
+                          </div>
+                        </>
+                      )}
+                      
+                      <div className="flex items-center justify-center py-2">
+                        <ArrowRight className="w-4 h-4 text-gray-400" />
+                      </div>
+                      
                       <div className="flex justify-between text-sm">
-                        <span className="text-gray-300">Conversion fee (2.5%):</span>
-                        <span className="text-orange-400">{selectedWallet} {conversion.conversionFee.toFixed(2)}</span>
+                        <span className="text-gray-300">Amount to receive:</span>
+                        <span className="text-green-400 font-medium">{card.currency} {conversion.convertedAmount.toFixed(2)}</span>
                       </div>
-                      <div className="flex justify-between text-sm border-t border-gray-600 pt-2">
-                        <span className="text-gray-300">Total deducted:</span>
-                        <span className="text-white font-medium">{selectedWallet} {conversion.totalDeducted.toFixed(2)}</span>
-                      </div>
-                    </>
-                  )}
-                  
-                  <div className="flex items-center justify-center py-2">
-                    <ArrowRight className="w-4 h-4 text-gray-400" />
-                  </div>
-                  
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-300">Amount to receive:</span>
-                    <span className="text-green-400 font-medium">{card.currency} {conversion.convertedAmount.toFixed(2)}</span>
-                  </div>
 
-                  {!conversion.hasSufficientFunds && (
-                    <div className="flex items-center space-x-2 text-red-400 text-sm mt-2">
-                      <AlertCircle className="w-4 h-4" />
-                      <span>Insufficient funds in selected wallet</span>
-                    </div>
+                      {!conversion.hasSufficientFunds && (
+                        <div className="flex items-center space-x-2 text-red-400 text-sm mt-2">
+                          <AlertCircle className="w-4 h-4" />
+                          <span>Insufficient funds in selected wallet</span>
+                        </div>
+                      )}
+                    </>
                   )}
                 </CardContent>
               </Card>
@@ -268,7 +278,7 @@ export const AddMoneyToCard: React.FC<AddMoneyToCardProps> = ({
               <Button
                 onClick={handleShowConfirmation}
                 className="flex-1 bg-green-600 hover:bg-green-700 text-white"
-                disabled={!conversion || !conversion.hasSufficientFunds || isProcessing}
+                disabled={!conversion || !conversion.hasSufficientFunds || isProcessing || isLoadingRate}
               >
                 {isProcessing ? 'Processing...' : 'Add Money'}
               </Button>
