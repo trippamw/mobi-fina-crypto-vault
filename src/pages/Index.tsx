@@ -20,6 +20,7 @@ import { MobileNavigation } from '@/components/MobileNavigation';
 import { CreateWalletModal } from '@/components/CreateWalletModal';
 import { TransactionConfirmation } from '@/components/TransactionConfirmation';
 import { WalletManagement } from '@/components/WalletManagement';
+import { VillageBankManagement } from '@/components/VillageBankManagement';
 
 const Index = () => {
   const [balanceVisible, setBalanceVisible] = useState(true);
@@ -222,7 +223,6 @@ const Index = () => {
 
   const handleLanguageChange = (language: string) => {
     setCurrentLanguage(language);
-    // Apply language changes globally
     document.documentElement.lang = language.toLowerCase();
   };
 
@@ -264,11 +264,29 @@ const Index = () => {
           onBack={() => setActiveTab('dashboard')}
         />;
       case 'cards':
-        return <VirtualCardsSection 
-          onBack={() => setActiveTab('dashboard')}
-          onBalanceUpdate={handleBalanceUpdate}
-          onTransactionUpdate={handleTransactionUpdate}
-        />;
+        return (
+          <div className="space-y-4 pb-24">
+            <div className="flex justify-between items-center">
+              <div className="flex items-center space-x-3">
+                <Button
+                  onClick={() => setActiveTab('dashboard')}
+                  variant="ghost"
+                  size="sm"
+                  className="text-white/70 hover:text-white hover:bg-white/10"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                </Button>
+                <h2 className="text-lg sm:text-2xl font-bold text-white">Wallet & Cards</h2>
+              </div>
+              <CreateWalletModal onCreateWallet={handleCreateWallet} />
+            </div>
+            <VirtualCardsSection 
+              wallets={wallets}
+              onBalanceUpdate={handleBalanceUpdate}
+              onTransactionUpdate={handleTransactionUpdate}
+            />
+          </div>
+        );
       case 'invest':
         return <InvestmentSection 
           onBalanceUpdate={handleBalanceUpdate}
@@ -280,6 +298,10 @@ const Index = () => {
           onBack={() => setActiveTab('invest')}
           onBalanceUpdate={handleBalanceUpdate}
           onTransactionUpdate={handleTransactionUpdate}
+        />;
+      case 'village-create':
+        return <VillageBankManagement 
+          onBack={() => setActiveTab('village')}
         />;
       case 'bills':
         return <BillsSection 

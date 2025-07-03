@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -106,6 +105,12 @@ export const VillageBankSection = ({ onBack, onBalanceUpdate, onTransactionUpdat
   const handleGroupClick = (group: any) => {
     setSelectedGroup(group);
     setShowDetails(true);
+  };
+
+  const handleCreateGroup = () => {
+    // Navigate to village bank management/creation page
+    window.location.hash = '#village-create';
+    // You can also use React Router navigation here if using React Router
   };
 
   const handleUpdateGroup = (updatedGroup: any) => {
@@ -279,7 +284,11 @@ export const VillageBankSection = ({ onBack, onBalanceUpdate, onTransactionUpdat
                   <Users className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
                   <span className="text-white">My Village Bank Groups</span>
                 </div>
-                <Button size="sm" className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white text-xs">
+                <Button 
+                  onClick={handleCreateGroup}
+                  size="sm" 
+                  className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white text-xs"
+                >
                   <Plus className="w-3 h-3 mr-1" />
                   Create
                 </Button>

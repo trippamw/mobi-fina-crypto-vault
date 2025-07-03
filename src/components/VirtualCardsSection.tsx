@@ -7,16 +7,17 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { CreditCard, Lock, Eye, EyeOff, Plus, Settings, Trash2, ArrowLeft, Wallet } from 'lucide-react';
+import { CreditCard, Lock, Eye, EyeOff, Plus, Settings, Trash2, Wallet, Shield, Snowflake } from 'lucide-react';
+import { CardSettings } from '@/components/CardSettings';
 import { useToast } from '@/hooks/use-toast';
 
 interface VirtualCardsSectionProps {
-  onBack: () => void;
+  wallets: any[];
   onBalanceUpdate?: (currency: string, amount: number) => void;
   onTransactionUpdate?: (transaction: any) => void;
 }
 
-export const VirtualCardsSection = ({ onBack, onBalanceUpdate, onTransactionUpdate }: VirtualCardsSectionProps) => {
+export const VirtualCardsSection = ({ wallets, onBalanceUpdate, onTransactionUpdate }: VirtualCardsSectionProps) => {
   const { toast } = useToast();
   const [showCreateCard, setShowCreateCard] = useState(false);
   const [showAddMoney, setShowAddMoney] = useState(false);
@@ -31,13 +32,6 @@ export const VirtualCardsSection = ({ onBack, onBalanceUpdate, onTransactionUpda
     sourceWallet: ''
   });
   const [balanceVisible, setBalanceVisible] = useState<{[key: string]: boolean}>({});
-
-  const mockWallets = [
-    { currency: 'MWK', balance: 150000 },
-    { currency: 'USD', balance: 2500 },
-    { currency: 'EUR', balance: 1800 },
-    { currency: 'GBP', balance: 900 }
-  ];
 
   const [cards, setCards] = useState([
     {
@@ -98,11 +92,11 @@ export const VirtualCardsSection = ({ onBack, onBalanceUpdate, onTransactionUpda
   const getCardGradient = (type: string) => {
     switch (type) {
       case 'gold':
-        return 'bg-gradient-to-br from-yellow-400 to-yellow-600';
+        return 'bg-gradient-to-br from-yellow-400 via-yellow-500 to-yellow-600';
       case 'platinum':
-        return 'bg-gradient-to-br from-gray-400 to-gray-600';
+        return 'bg-gradient-to-br from-gray-400 via-gray-500 to-gray-600';
       default:
-        return 'bg-gradient-to-br from-blue-600 to-blue-800';
+        return 'bg-gradient-to-br from-blue-600 via-blue-700 to-blue-800';
     }
   };
 
@@ -163,7 +157,7 @@ export const VirtualCardsSection = ({ onBack, onBalanceUpdate, onTransactionUpda
       return;
     }
 
-    const sourceWallet = mockWallets.find(w => w.currency === addMoneyForm.sourceWallet);
+    const sourceWallet = wallets.find(w => w.currency === addMoneyForm.sourceWallet);
     if (!sourceWallet || sourceWallet.balance < amount) {
       toast({
         title: 'Error',
@@ -212,6 +206,20 @@ export const VirtualCardsSection = ({ onBack, onBalanceUpdate, onTransactionUpda
     }));
   };
 
+  const handleBlockCard = (cardId: string) => {
+    setCards(cards.map(card => 
+      card.id === cardId 
+        ? { ...card, isBlocked: !card.isBlocked }
+        : card
+    ));
+    
+    const card = cards.find(c => c.id === cardId);
+    toast({
+      title: 'Success',
+      description: `Card ${card?.isBlocked ? 'unblocked' : 'blocked'} successfully!`,
+    });
+  };
+
   const formatBalance = (balance: number, currency: string) => {
     if (currency === 'MWK') {
       return `MWK ${balance.toLocaleString()}`;
@@ -226,248 +234,246 @@ export const VirtualCardsSection = ({ onBack, onBalanceUpdate, onTransactionUpda
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-3 pb-24">
-      <div className="container mx-auto max-w-lg space-y-4">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-4">
-          <Button
-            onClick={onBack}
-            variant="ghost"
-            size="sm"
-            className="text-white/70 hover:text-white hover:bg-white/10"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back
-          </Button>
-          <h1 className="text-lg font-bold text-white text-center flex-1">
-            Virtual Cards
-          </h1>
-          <Button
-            onClick={() => setShowCreateCard(true)}
-            size="sm"
-            className="bg-blue-600 hover:bg-blue-700 text-white text-xs"
-          >
-            <Plus className="w-3 h-3 mr-1" />
-            Create
-          </Button>
-        </div>
-
-        {/* Cards */}
-        <div className="space-y-4">
-          {cards.map((card) => (
-            <Card key={card.id} className={`${getCardGradient(card.type)} border-0 shadow-xl text-white overflow-hidden`}>
-              <CardContent className="p-4">
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex items-center space-x-2">
-                    <CreditCard className="w-5 h-5" />
-                    <div>
-                      <p className="font-semibold text-sm">
-                        {card.type.charAt(0).toUpperCase() + card.type.slice(1)} Card
-                      </p>
-                      <p className="text-xs opacity-90">{card.currency}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Badge className="bg-white/20 text-white border-0 text-xs">
-                      {card.isPhysical ? 'Physical' : 'Virtual'}
-                    </Badge>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => toggleCardVisibility(card.id)}
-                      className="text-white/80 hover:text-white p-1"
-                    >
-                      {balanceVisible[card.id] ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </Button>
-                  </div>
-                </div>
-
-                <div className="space-y-3">
-                  <div className="text-xl font-mono font-bold tracking-wider">
-                    {card.cardNumber}
-                  </div>
-                  
-                  <div className="flex justify-between items-end">
-                    <div>
-                      <p className="text-xs opacity-75 mb-1">Card Holder</p>
-                      <p className="font-semibold text-sm">{card.holderName}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-xs opacity-75 mb-1">Balance</p>
-                      <p className="text-lg font-bold">
-                        {balanceVisible[card.id] ? formatBalance(card.balance, card.currency) : '••••••'}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex justify-between items-center text-xs">
-                    <div>
-                      <span className="opacity-75">EXP </span>
-                      <span className="font-mono">{card.expiryDate}</span>
-                    </div>
-                    <div>
-                      <span className="opacity-75">CVV </span>
-                      <span className="font-mono">•••</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-3 gap-2 mt-4">
-                  <Button
-                    onClick={() => {
-                      setSelectedCard(card);
-                      setShowAddMoney(true);
-                    }}
-                    size="sm"
-                    className="bg-white/20 hover:bg-white/30 text-white border-0 text-xs"
-                  >
-                    <Wallet className="w-3 h-3 mr-1" />
-                    Add Money
-                  </Button>
-                  <Button
-                    size="sm"
-                    className="bg-white/20 hover:bg-white/30 text-white border-0 text-xs"
-                  >
-                    <Settings className="w-3 h-3 mr-1" />
-                    Settings
-                  </Button>
-                  <Button
-                    size="sm"
-                    className="bg-white/20 hover:bg-white/30 text-white border-0 text-xs"
-                  >
-                    <Lock className="w-3 h-3 mr-1" />
-                    {card.isBlocked ? 'Unblock' : 'Block'}
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-
-        {/* Create Card Modal */}
-        <Dialog open={showCreateCard} onOpenChange={setShowCreateCard}>
-          <DialogContent className="bg-gray-900 border-gray-700 text-white max-w-sm mx-auto">
-            <DialogHeader>
-              <DialogTitle className="text-base">Create New Card</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div>
-                <Label className="text-white text-sm">Card Holder Name</Label>
-                <Input
-                  value={cardForm.name}
-                  onChange={(e) => setCardForm({...cardForm, name: e.target.value})}
-                  className="bg-gray-800 border-gray-600 text-white mt-1"
-                  placeholder="Enter cardholder name"
-                />
-              </div>
-
-              <div>
-                <Label className="text-white text-sm">Card Type</Label>
-                <Select value={cardForm.type} onValueChange={(value) => setCardForm({...cardForm, type: value})}>
-                  <SelectTrigger className="bg-gray-800 border-gray-600 text-white mt-1">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="bg-gray-900 border-gray-700 z-50">
-                    {cardTypes.map((type) => (
-                      <SelectItem key={type.value} value={type.value} className="text-white">
-                        <div className="flex justify-between items-center w-full">
-                          <span>{type.label}</span>
-                          <span className="text-sm text-gray-400">{type.fee}</span>
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Label className="text-white text-sm">Currency</Label>
-                <Select value={cardForm.currency} onValueChange={(value) => setCardForm({...cardForm, currency: value})}>
-                  <SelectTrigger className="bg-gray-800 border-gray-600 text-white mt-1">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="bg-gray-900 border-gray-700 z-50">
-                    {currencies.map((currency) => (
-                      <SelectItem key={currency} value={currency} className="text-white">
-                        {currency}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="flex space-x-2 pt-4">
-                <Button
-                  variant="outline"
-                  onClick={() => setShowCreateCard(false)}
-                  className="flex-1 border-gray-600 text-white hover:bg-gray-700 hover:text-white text-sm"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  onClick={handleCreateCard}
-                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-sm"
-                >
-                  Create Card
-                </Button>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
-
-        {/* Add Money Modal */}
-        <Dialog open={showAddMoney} onOpenChange={setShowAddMoney}>
-          <DialogContent className="bg-gray-900 border-gray-700 text-white max-w-sm mx-auto">
-            <DialogHeader>
-              <DialogTitle className="text-base">Add Money to Card</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div>
-                <Label className="text-white text-sm">Amount ({selectedCard?.currency})</Label>
-                <Input
-                  type="number"
-                  value={addMoneyForm.amount}
-                  onChange={(e) => setAddMoneyForm({...addMoneyForm, amount: e.target.value})}
-                  className="bg-gray-800 border-gray-600 text-white mt-1"
-                  placeholder="Enter amount"
-                />
-              </div>
-
-              <div>
-                <Label className="text-white text-sm">Source Wallet</Label>
-                <Select value={addMoneyForm.sourceWallet} onValueChange={(value) => setAddMoneyForm({...addMoneyForm, sourceWallet: value})}>
-                  <SelectTrigger className="bg-gray-800 border-gray-600 text-white mt-1">
-                    <SelectValue placeholder="Select wallet" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-gray-900 border-gray-700 z-50">
-                    {mockWallets.filter(w => w.currency === selectedCard?.currency).map((wallet) => (
-                      <SelectItem key={wallet.currency} value={wallet.currency} className="text-white">
-                        {wallet.currency} (Balance: {formatBalance(wallet.balance, wallet.currency)})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="flex space-x-2 pt-4">
-                <Button
-                  variant="outline"
-                  onClick={() => setShowAddMoney(false)}
-                  className="flex-1 border-gray-600 text-white hover:bg-gray-700 hover:text-white text-sm"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  onClick={handleAddMoney}
-                  className="flex-1 bg-green-600 hover:bg-green-700 text-white text-sm"
-                >
-                  Add Money
-                </Button>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
+    <div className="space-y-4">
+      {/* Create Card Button */}
+      <div className="flex justify-end">
+        <Button
+          onClick={() => setShowCreateCard(true)}
+          className="bg-blue-600 hover:bg-blue-700 text-white"
+        >
+          <Plus className="w-4 h-4 mr-2" />
+          Create Card
+        </Button>
       </div>
+
+      {/* Cards Grid - Rectangular Design */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {cards.map((card) => (
+          <div key={card.id} className="group">
+            {/* Card Design - Rectangular Credit Card Style */}
+            <div className={`${getCardGradient(card.type)} rounded-2xl p-6 text-white shadow-2xl transform transition-all duration-300 group-hover:scale-[1.02] group-hover:shadow-3xl relative overflow-hidden`} style={{ aspectRatio: '1.586/1' }}>
+              {/* Card Type Badge */}
+              <div className="absolute top-4 right-4">
+                <Badge className="bg-white/20 text-white border-0 text-xs backdrop-blur-sm">
+                  {card.type.charAt(0).toUpperCase() + card.type.slice(1)}
+                </Badge>
+              </div>
+
+              {/* Card Brand Logo Area */}
+              <div className="flex justify-between items-start mb-8">
+                <div className="flex items-center space-x-2">
+                  <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center backdrop-blur-sm">
+                    <CreditCard className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <p className="text-xs opacity-75">NeoVault</p>
+                    <p className="text-xs font-semibold">{card.currency}</p>
+                  </div>
+                </div>
+                {card.isBlocked && (
+                  <Lock className="w-5 h-5 text-red-300" />
+                )}
+              </div>
+
+              {/* Card Number */}
+              <div className="mb-6">
+                <p className="text-xl font-mono font-bold tracking-wider">
+                  {card.cardNumber}
+                </p>
+              </div>
+
+              {/* Card Details Bottom Row */}
+              <div className="flex justify-between items-end">
+                <div>
+                  <p className="text-xs opacity-75 mb-1">Card Holder</p>
+                  <p className="font-semibold text-sm">{card.holderName}</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-xs opacity-75 mb-1">Balance</p>
+                  <p className="text-base font-bold">
+                    {balanceVisible[card.id] ? formatBalance(card.balance, card.currency) : '••••••'}
+                  </p>
+                </div>
+              </div>
+
+              {/* Expiry and CVV */}
+              <div className="flex justify-between items-center mt-4 text-xs">
+                <div>
+                  <span className="opacity-75">EXP </span>
+                  <span className="font-mono">{card.expiryDate}</span>
+                </div>
+                <div>
+                  <span className="opacity-75">CVV </span>
+                  <span className="font-mono">•••</span>
+                </div>
+              </div>
+
+              {/* Decorative Elements */}
+              <div className="absolute -bottom-4 -right-4 w-24 h-24 bg-white/5 rounded-full"></div>
+              <div className="absolute -top-8 -left-8 w-32 h-32 bg-white/5 rounded-full"></div>
+            </div>
+
+            {/* Card Action Buttons */}
+            <div className="mt-4 grid grid-cols-4 gap-2">
+              <Button
+                onClick={() => {
+                  setSelectedCard(card);
+                  setShowAddMoney(true);
+                }}
+                size="sm"
+                className="bg-gray-800 hover:bg-gray-700 text-white text-xs"
+              >
+                <Wallet className="w-3 h-3 mr-1" />
+                Add
+              </Button>
+              <Button
+                onClick={() => toggleCardVisibility(card.id)}
+                size="sm"
+                variant="outline"
+                className="border-gray-600 text-gray-300 hover:bg-gray-700/50 hover:text-white text-xs"
+              >
+                {balanceVisible[card.id] ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
+              </Button>
+              <Button
+                onClick={() => handleBlockCard(card.id)}
+                size="sm"
+                className={`text-xs ${card.isBlocked ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'} text-white`}
+              >
+                {card.isBlocked ? <Shield className="w-3 h-3" /> : <Lock className="w-3 h-3" />}
+              </Button>
+              <CardSettings
+                cardId={card.id}
+                cardType={card.type}
+                onSettingsChange={() => {}}
+              />
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Create Card Modal */}
+      <Dialog open={showCreateCard} onOpenChange={setShowCreateCard}>
+        <DialogContent className="bg-gray-900 border-gray-700 text-white max-w-sm mx-auto">
+          <DialogHeader>
+            <DialogTitle className="text-base">Create New Card</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label className="text-white text-sm">Card Holder Name</Label>
+              <Input
+                value={cardForm.name}
+                onChange={(e) => setCardForm({...cardForm, name: e.target.value})}
+                className="bg-gray-800 border-gray-600 text-white mt-1"
+                placeholder="Enter cardholder name"
+              />
+            </div>
+
+            <div>
+              <Label className="text-white text-sm">Card Type</Label>
+              <Select value={cardForm.type} onValueChange={(value) => setCardForm({...cardForm, type: value})}>
+                <SelectTrigger className="bg-gray-800 border-gray-600 text-white mt-1">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-gray-900 border-gray-700 z-50">
+                  {cardTypes.map((type) => (
+                    <SelectItem key={type.value} value={type.value} className="text-white">
+                      <div className="flex justify-between items-center w-full">
+                        <span>{type.label}</span>
+                        <span className="text-sm text-gray-400">{type.fee}</span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label className="text-white text-sm">Currency</Label>
+              <Select value={cardForm.currency} onValueChange={(value) => setCardForm({...cardForm, currency: value})}>
+                <SelectTrigger className="bg-gray-800 border-gray-600 text-white mt-1">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-gray-900 border-gray-700 z-50">
+                  {currencies.map((currency) => (
+                    <SelectItem key={currency} value={currency} className="text-white">
+                      {currency}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="flex space-x-2 pt-4">
+              <Button
+                variant="outline"
+                onClick={() => setShowCreateCard(false)}
+                className="flex-1 border-gray-600 text-white hover:bg-gray-700 hover:text-white text-sm"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleCreateCard}
+                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-sm"
+              >
+                Create Card
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add Money Modal */}
+      <Dialog open={showAddMoney} onOpenChange={setShowAddMoney}>
+        <DialogContent className="bg-gray-900 border-gray-700 text-white max-w-sm mx-auto">
+          <DialogHeader>
+            <DialogTitle className="text-base">Add Money to Card</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label className="text-white text-sm">Amount ({selectedCard?.currency})</Label>
+              <Input
+                type="number"
+                value={addMoneyForm.amount}
+                onChange={(e) => setAddMoneyForm({...addMoneyForm, amount: e.target.value})}
+                className="bg-gray-800 border-gray-600 text-white mt-1"
+                placeholder="Enter amount"
+              />
+            </div>
+
+            <div>
+              <Label className="text-white text-sm">Source Wallet</Label>
+              <Select value={addMoneyForm.sourceWallet} onValueChange={(value) => setAddMoneyForm({...addMoneyForm, sourceWallet: value})}>
+                <SelectTrigger className="bg-gray-800 border-gray-600 text-white mt-1">
+                  <SelectValue placeholder="Select wallet" />
+                </SelectTrigger>
+                <SelectContent className="bg-gray-900 border-gray-700 z-50">
+                  {wallets.filter(w => w.currency === selectedCard?.currency).map((wallet) => (
+                    <SelectItem key={wallet.currency} value={wallet.currency} className="text-white">
+                      {wallet.currency} (Balance: {formatBalance(wallet.balance, wallet.currency)})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="flex space-x-2 pt-4">
+              <Button
+                variant="outline"
+                onClick={() => setShowAddMoney(false)}
+                className="flex-1 border-gray-600 text-white hover:bg-gray-700 hover:text-white text-sm"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleAddMoney}
+                className="flex-1 bg-green-600 hover:bg-green-700 text-white text-sm"
+              >
+                Add Money
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Settings, Snowflake, Banknote, Trash2, AlertTriangle } from 'lucide-react';
 import { TransactionConfirmation } from '@/components/TransactionConfirmation';
+import { useToast } from '@/hooks/use-toast';
 
 interface CardSettingsProps {
   cardId: string;
@@ -15,6 +16,7 @@ interface CardSettingsProps {
 }
 
 export const CardSettings = ({ cardId, cardType, onSettingsChange }: CardSettingsProps) => {
+  const { toast } = useToast();
   const [isOpen, setIsOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('freeze');
   const [isFrozen, setIsFrozen] = useState(false);
@@ -28,54 +30,87 @@ export const CardSettings = ({ cardId, cardType, onSettingsChange }: CardSetting
   });
 
   const handleFreezeCard = () => {
-    setIsFrozen(!isFrozen);
+    const newFrozeState = !isFrozen;
+    setIsFrozen(newFrozeState);
+    
+    toast({
+      title: 'Success',
+      description: `Card ${newFrozeState ? 'frozen' : 'unfrozen'} successfully!`,
+    });
+
     setTransactionModal({
       isOpen: true,
       showSuccess: false,
       transaction: {
-        type: isFrozen ? 'Card Unfreeze' : 'Card Freeze',
+        type: newFrozeState ? 'Card Frozen' : 'Card Unfrozen',
         amount: 'No charge',
         recipient: `${cardType} Card`,
         fee: 'FREE',
-        total: 'No charge'
+        total: 'Security action completed'
       }
     });
   };
 
   const handleUpdateLimits = () => {
+    toast({
+      title: 'Success',
+      description: 'Card limits updated successfully!',
+    });
+
     setTransactionModal({
       isOpen: true,
       showSuccess: false,
       transaction: {
-        type: 'Update Card Limits',
+        type: 'Card Limits Updated',
         amount: `Daily: MWK ${parseInt(dailyLimit).toLocaleString()}`,
         recipient: `Monthly: MWK ${parseInt(monthlyLimit).toLocaleString()}`,
         fee: 'FREE',
-        total: 'No charge'
+        total: 'Limits updated successfully'
       }
     });
   };
 
   const handleDeleteCard = () => {
+    toast({
+      title: 'Card Deleted',
+      description: 'Your card has been permanently deleted.',
+      variant: 'destructive'
+    });
+
     setTransactionModal({
       isOpen: true,
       showSuccess: false,
       transaction: {
-        type: 'Delete Card',
+        type: 'Card Deleted',
         amount: 'Permanent deletion',
         recipient: `${cardType} Card`,
         fee: 'FREE',
-        total: 'No charge'
+        total: 'Card permanently removed'
       }
     });
+  };
+
+  const confirmTransaction = () => {
+    setTimeout(() => {
+      setTransactionModal(prev => ({ ...prev, showSuccess: true }));
+    }, 1000);
+  };
+
+  const closeTransactionModal = () => {
+    setTransactionModal({
+      isOpen: false,
+      showSuccess: false,
+      transaction: null
+    });
+    setIsOpen(false);
   };
 
   return (
     <>
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogTrigger asChild>
-          <Button variant="outline" size="sm" className="bg-gray-700 border-gray-600 text-white hover:bg-gray-600">
-            <Settings className="w-4 h-4" />
+          <Button size="sm" className="bg-gray-800 hover:bg-gray-700 text-white text-xs px-2">
+            <Settings className="w-3 h-3" />
           </Button>
         </DialogTrigger>
         <DialogContent className="bg-gray-800 border-gray-700 text-white max-w-md">
@@ -89,7 +124,7 @@ export const CardSettings = ({ cardId, cardType, onSettingsChange }: CardSetting
               variant={activeTab === 'freeze' ? 'default' : 'ghost'}
               size="sm"
               onClick={() => setActiveTab('freeze')}
-              className={activeTab === 'freeze' ? 'bg-green-600' : 'text-gray-300'}
+              className={activeTab === 'freeze' ? 'bg-green-600 text-white' : 'text-gray-300 hover:text-white hover:bg-gray-700'}
             >
               <Snowflake className="w-4 h-4 mr-1" />
               Freeze
@@ -98,7 +133,7 @@ export const CardSettings = ({ cardId, cardType, onSettingsChange }: CardSetting
               variant={activeTab === 'limits' ? 'default' : 'ghost'}
               size="sm"
               onClick={() => setActiveTab('limits')}
-              className={activeTab === 'limits' ? 'bg-green-600' : 'text-gray-300'}
+              className={activeTab === 'limits' ? 'bg-green-600 text-white' : 'text-gray-300 hover:text-white hover:bg-gray-700'}
             >
               <Banknote className="w-4 h-4 mr-1" />
               Limits
@@ -107,7 +142,7 @@ export const CardSettings = ({ cardId, cardType, onSettingsChange }: CardSetting
               variant={activeTab === 'delete' ? 'default' : 'ghost'}
               size="sm"
               onClick={() => setActiveTab('delete')}
-              className={activeTab === 'delete' ? 'bg-red-600' : 'text-gray-300'}
+              className={activeTab === 'delete' ? 'bg-red-600 text-white' : 'text-gray-300 hover:text-white hover:bg-gray-700'}
             >
               <Trash2 className="w-4 h-4 mr-1" />
               Delete
@@ -134,7 +169,7 @@ export const CardSettings = ({ cardId, cardType, onSettingsChange }: CardSetting
               </p>
               <Button 
                 onClick={handleFreezeCard}
-                className={`w-full ${isFrozen ? 'bg-green-600 hover:bg-green-700' : 'bg-blue-600 hover:bg-blue-700'}`}
+                className={`w-full ${isFrozen ? 'bg-green-600 hover:bg-green-700' : 'bg-orange-600 hover:bg-orange-700'} text-white`}
               >
                 <Snowflake className="w-4 h-4 mr-2" />
                 {isFrozen ? 'Unfreeze Card' : 'Freeze Card'}
@@ -166,7 +201,7 @@ export const CardSettings = ({ cardId, cardType, onSettingsChange }: CardSetting
               <p className="text-sm text-gray-400">
                 Set spending limits to help manage your expenses. You can update these anytime.
               </p>
-              <Button onClick={handleUpdateLimits} className="w-full bg-green-600 hover:bg-green-700">
+              <Button onClick={handleUpdateLimits} className="w-full bg-green-600 hover:bg-green-700 text-white">
                 <Banknote className="w-4 h-4 mr-2" />
                 Update Limits
               </Button>
@@ -197,8 +232,7 @@ export const CardSettings = ({ cardId, cardType, onSettingsChange }: CardSetting
 
               <Button 
                 onClick={handleDeleteCard}
-                variant="destructive" 
-                className="w-full bg-red-600 hover:bg-red-700"
+                className="w-full bg-red-600 hover:bg-red-700 text-white"
               >
                 <Trash2 className="w-4 h-4 mr-2" />
                 Delete Card Permanently
@@ -211,13 +245,9 @@ export const CardSettings = ({ cardId, cardType, onSettingsChange }: CardSetting
       {/* Transaction Confirmation Modal */}
       <TransactionConfirmation
         isOpen={transactionModal.isOpen}
-        onClose={() => setTransactionModal({ isOpen: false, showSuccess: false, transaction: null })}
-        onConfirm={() => {
-          setTimeout(() => {
-            setTransactionModal(prev => ({ ...prev, showSuccess: true }));
-          }, 1000);
-        }}
-        onSuccess={() => setTransactionModal({ isOpen: false, showSuccess: false, transaction: null })}
+        onClose={closeTransactionModal}
+        onConfirm={confirmTransaction}
+        onSuccess={closeTransactionModal}
         transaction={transactionModal.transaction}
         showSuccess={transactionModal.showSuccess}
       />
