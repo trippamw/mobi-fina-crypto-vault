@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle, Download, Share2, X } from 'lucide-react';
+import { useLanguage } from '@/utils/languageApi';
 
 interface TransactionDetails {
   type: string;
@@ -34,7 +35,9 @@ export const TransactionConfirmation = ({
   transaction, 
   showSuccess 
 }: TransactionConfirmationProps) => {
-  const downloadReceipt = () => {
+  const { t } = useLanguage();
+
+  const generatePDFContent = () => {
     const receiptData = `
 NeoVault Digital Banking
 ========================
@@ -65,8 +68,23 @@ Customer Support: AI Chat Available 24/7
 This receipt serves as proof of your transaction.
 Keep it for your records.
     `;
-    
-    const blob = new Blob([receiptData], { type: 'text/plain' });
+    return receiptData;
+  };
+
+  const downloadPDFReceipt = () => {
+    const content = generatePDFContent();
+    const blob = new Blob([content], { type: 'application/pdf' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `neovault-receipt-${Date.now()}.pdf`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const downloadTextReceipt = () => {
+    const content = generatePDFContent();
+    const blob = new Blob([content], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -78,7 +96,7 @@ Keep it for your records.
   const shareReceipt = () => {
     const shareData = {
       title: 'NeoVault Transaction Receipt',
-      text: `Transaction completed on NeoVault: ${transaction?.type} - ${transaction?.amount}`,
+      text: `${t('transactionSuccessful')}: ${transaction?.type} - ${transaction?.amount}`,
     };
 
     if (navigator.share) {
@@ -87,12 +105,13 @@ Keep it for your records.
       // Fallback sharing options
       const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(shareData.text)}`;
       const emailUrl = `mailto:?subject=${encodeURIComponent(shareData.title)}&body=${encodeURIComponent(shareData.text)}`;
+      const smsUrl = `sms:?body=${encodeURIComponent(shareData.text)}`;
       
       // Create share menu
       const shareOptions = [
         { name: 'WhatsApp', url: whatsappUrl },
         { name: 'Email', url: emailUrl },
-        { name: 'SMS', url: `sms:?body=${encodeURIComponent(shareData.text)}` }
+        { name: 'SMS', url: smsUrl }
       ];
 
       // Simple share selection
@@ -107,13 +126,12 @@ Keep it for your records.
     onClose();
     // Navigate back to appropriate section based on transaction type
     if (transaction?.returnTo) {
-      // This would be handled by the parent component to change tabs
       console.log(`Navigate to: ${transaction.returnTo}`);
     }
   };
 
-  // Check if transaction has fees (should show receipt options)
-  const shouldShowReceiptOptions = transaction?.fee && transaction.fee !== 'FREE' && transaction.fee !== 'No charge';
+  // All transactions should show receipt options
+  const shouldShowReceiptOptions = true;
 
   if (showSuccess) {
     return (
@@ -124,8 +142,8 @@ Keep it for your records.
               <CheckCircle className="w-8 h-8 text-white" />
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-green-400">Transaction Successful!</h3>
-              <p className="text-gray-300">Your transaction has been completed successfully.</p>
+              <h3 className="text-lg font-semibold text-green-400">{t('transactionSuccessful')}!</h3>
+              <p className="text-gray-300">{t('success')}</p>
             </div>
             
             <Card className="bg-gray-700/50 border-gray-600">
@@ -136,7 +154,7 @@ Keep it for your records.
                     <span className="font-medium text-white">{transaction?.type}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-300">Amount:</span>
+                    <span className="text-gray-300">{t('amount')}:</span>
                     <span className="font-medium text-white">{transaction?.amount}</span>
                   </div>
                   {transaction?.recipient && (
@@ -162,20 +180,26 @@ Keep it for your records.
             </Card>
 
             {shouldShowReceiptOptions && (
-              <div className="flex space-x-2">
-                <Button onClick={downloadReceipt} className="flex-1 bg-green-600 hover:bg-green-700">
-                  <Download className="w-4 h-4 mr-2" />
-                  Download Receipt
-                </Button>
-                <Button onClick={shareReceipt} variant="outline" className="flex-1 border-gray-600 text-gray-300 hover:bg-gray-700">
+              <div className="space-y-2">
+                <div className="flex space-x-2">
+                  <Button onClick={downloadPDFReceipt} className="flex-1 bg-green-600 hover:bg-green-700">
+                    <Download className="w-4 h-4 mr-2" />
+                    Download PDF
+                  </Button>
+                  <Button onClick={downloadTextReceipt} variant="outline" className="flex-1 border-gray-600 text-gray-300 hover:bg-gray-700">
+                    <Download className="w-4 h-4 mr-2" />
+                    Download Text
+                  </Button>
+                </div>
+                <Button onClick={shareReceipt} variant="outline" className="w-full border-gray-600 text-gray-300 hover:bg-gray-700">
                   <Share2 className="w-4 h-4 mr-2" />
-                  Share
+                  Share Receipt
                 </Button>
               </div>
             )}
             
             <Button onClick={handleClose} variant="outline" className="w-full border-gray-600 text-gray-300 hover:bg-gray-700">
-              {transaction?.returnTo ? `Back to ${transaction.returnTo}` : 'Close'}
+              {transaction?.returnTo ? `Back to ${transaction.returnTo}` : t('home')}
             </Button>
           </div>
         </DialogContent>
@@ -188,7 +212,7 @@ Keep it for your records.
       <DialogContent className="bg-gray-800 border-gray-700 text-white sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center justify-between text-white">
-            Confirm Transaction
+            {t('confirm')} Transaction
             <Button variant="ghost" size="sm" onClick={onClose} className="text-gray-400 hover:text-white">
               <X className="w-4 h-4" />
             </Button>
@@ -227,7 +251,7 @@ Keep it for your records.
                     {transaction.total && (
                       <div className="border-t border-gray-600 pt-2 mt-2">
                         <div className="flex justify-between font-semibold">
-                          <span className="text-gray-300">Total:</span>
+                          <span className="text-gray-300">{t('total')}:</span>
                           <span className="text-white">{transaction.total}</span>
                         </div>
                       </div>
@@ -243,10 +267,10 @@ Keep it for your records.
 
             <div className="flex space-x-2">
               <Button onClick={onClose} variant="outline" className="flex-1 border-gray-600 text-gray-300 hover:bg-gray-700">
-                Cancel
+                {t('cancel')}
               </Button>
               <Button onClick={onConfirm} className="flex-1 bg-green-600 hover:bg-green-700">
-                Confirm Transaction
+                {t('confirm')} Transaction
               </Button>
             </div>
           </div>

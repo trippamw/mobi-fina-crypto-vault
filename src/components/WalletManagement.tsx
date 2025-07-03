@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,6 +9,8 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ArrowLeft, Plus, Send, Settings, Trash2, AlertTriangle, Eye, EyeOff } from 'lucide-react';
 import { TransactionConfirmation } from '@/components/TransactionConfirmation';
+import { useLanguage } from '@/utils/languageApi';
+import { useToast } from '@/hooks/use-toast';
 
 interface WalletManagementProps {
   wallet: any;
@@ -17,6 +20,8 @@ interface WalletManagementProps {
 }
 
 export const WalletManagement = ({ wallet, onBack, onBalanceUpdate, onTransactionUpdate }: WalletManagementProps) => {
+  const { t } = useLanguage();
+  const { toast } = useToast();
   const [activeTab, setActiveTab] = useState('overview');
   const [depositAmount, setDepositAmount] = useState('');
   const [sendAmount, setSendAmount] = useState('');
@@ -25,6 +30,7 @@ export const WalletManagement = ({ wallet, onBack, onBalanceUpdate, onTransactio
   const [selectedSendMethod, setSelectedSendMethod] = useState('');
   const [mobileNumber, setMobileNumber] = useState('');
   const [selectedBank, setSelectedBank] = useState('');
+  const [selectedProvider, setSelectedProvider] = useState('');
   const [isWalletFrozen, setIsWalletFrozen] = useState(false);
   const [dailyLimit, setDailyLimit] = useState('100000');
   const [monthlyLimit, setMonthlyLimit] = useState('1000000');
@@ -37,9 +43,9 @@ export const WalletManagement = ({ wallet, onBack, onBalanceUpdate, onTransactio
   });
 
   const mobileMoneyProviders = [
-    { name: 'TNM Mpamba', fee: '1%' },
-    { name: 'Airtel Money', fee: '1.2%' },
-    { name: 'MO626', fee: '0.8%' }
+    { name: 'TNM Mpamba', fee: '1%', code: 'tnm' },
+    { name: 'Airtel Money', fee: '1.2%', code: 'airtel' },
+    { name: 'MO626', fee: '0.8%', code: 'mo626' }
   ];
 
   const banks = [
@@ -52,33 +58,48 @@ export const WalletManagement = ({ wallet, onBack, onBalanceUpdate, onTransactio
   const handleDeposit = () => {
     const amount = parseFloat(depositAmount);
     if (amount > 0) {
-      if (!isCrypto && !selectedDepositMethod) {
-        alert('Please select a deposit method');
-        return;
-      }
-      
-      if (selectedDepositMethod === 'mobile' && !mobileNumber) {
-        alert('Please enter your mobile number');
-        return;
-      }
-      
-      if (selectedDepositMethod === 'bank' && !selectedBank) {
-        alert('Please select a bank');
-        return;
+      if (!isCrypto) {
+        if (!selectedDepositMethod) {
+          toast({
+            title: t('error'),
+            description: 'Please select a deposit method',
+            variant: 'destructive'
+          });
+          return;
+        }
+        
+        if (selectedDepositMethod === 'mobile' && (!mobileNumber || !selectedProvider)) {
+          toast({
+            title: t('error'),
+            description: 'Please enter your mobile number and select a provider',
+            variant: 'destructive'
+          });
+          return;
+        }
+        
+        if (selectedDepositMethod === 'bank' && !selectedBank) {
+          toast({
+            title: t('error'),
+            description: 'Please select a bank',
+            variant: 'destructive'
+          });
+          return;
+        }
       }
 
-      const method = isCrypto ? 'Crypto Wallet Address' : selectedDepositMethod;
+      const fee = isCrypto ? '0.001 ETH' : selectedDepositMethod === 'mobile' ? 
+        mobileMoneyProviders.find(p => p.code === selectedProvider)?.fee || 'FREE' : 'FREE';
       
       setTransactionModal({
         isOpen: true,
         showSuccess: false,
         transaction: {
-          type: 'Deposit',
+          type: t('deposit'),
           amount: `+${wallet.currency} ${amount.toLocaleString()}`,
-          recipient: `${wallet.currency} Wallet`,
-          method: method,
-          fee: isCrypto ? '0.001 ETH' : 'FREE',
-          total: `${wallet.currency} ${amount.toLocaleString()}`
+          recipient: `${wallet.currency} ${t('wallet')}`,
+          fee: fee,
+          total: `${wallet.currency} ${amount.toLocaleString()}`,
+          returnTo: 'Wallet'
         }
       });
     }
@@ -87,28 +108,38 @@ export const WalletManagement = ({ wallet, onBack, onBalanceUpdate, onTransactio
   const handleSend = () => {
     const amount = parseFloat(sendAmount);
     if (amount > 0 && recipientAddress) {
-      if (!isCrypto && !selectedSendMethod) {
-        alert('Please select a send method');
-        return;
-      }
-      
       if (amount > wallet.balance) {
-        alert('Insufficient balance');
+        toast({
+          title: t('error'),
+          description: 'Insufficient balance',
+          variant: 'destructive'
+        });
         return;
       }
 
-      const method = isCrypto ? 'Crypto Address' : selectedSendMethod;
+      if (!isCrypto) {
+        if (!selectedSendMethod) {
+          toast({
+            title: t('error'),
+            description: 'Please select a send method',
+            variant: 'destructive'
+          });
+          return;
+        }
+      }
+
+      const fee = isCrypto ? '0.001 ETH' : 'FREE';
       
       setTransactionModal({
         isOpen: true,
         showSuccess: false,
         transaction: {
-          type: 'Send',
+          type: t('send'),
           amount: `-${wallet.currency} ${amount.toLocaleString()}`,
           recipient: recipientAddress,
-          method: method,
-          fee: isCrypto ? '0.001 ETH' : 'FREE',
-          total: `-${wallet.currency} ${amount.toLocaleString()}`
+          fee: fee,
+          total: `-${wallet.currency} ${amount.toLocaleString()}`,
+          returnTo: 'Wallet'
         }
       });
     }
@@ -117,13 +148,14 @@ export const WalletManagement = ({ wallet, onBack, onBalanceUpdate, onTransactio
   const confirmTransaction = () => {
     setTimeout(() => {
       const transaction = transactionModal.transaction;
-      if (transaction.type === 'Deposit') {
+      if (transaction.type === t('deposit')) {
         onBalanceUpdate(wallet.currency, parseFloat(depositAmount));
         setDepositAmount('');
         setSelectedDepositMethod('');
         setMobileNumber('');
         setSelectedBank('');
-      } else if (transaction.type === 'Send') {
+        setSelectedProvider('');
+      } else if (transaction.type === t('send')) {
         onBalanceUpdate(wallet.currency, -parseFloat(sendAmount));
         setSendAmount('');
         setRecipientAddress('');
@@ -133,13 +165,21 @@ export const WalletManagement = ({ wallet, onBack, onBalanceUpdate, onTransactio
       onTransactionUpdate({
         type: transaction.type,
         amount: transaction.amount,
-        description: `${transaction.type} - ${wallet.currency} Wallet via ${transaction.method}`,
+        description: `${transaction.type} - ${wallet.currency} ${t('wallet')}`,
         time: 'Just now',
         status: 'completed'
       });
 
       setTransactionModal(prev => ({ ...prev, showSuccess: true }));
     }, 1000);
+  };
+
+  const handleSettingsUpdate = () => {
+    // Apply the settings changes
+    toast({
+      title: t('success'),
+      description: 'Wallet settings updated successfully',
+    });
   };
 
   const formatBalance = (balance: number, currency: string) => {
@@ -176,7 +216,7 @@ export const WalletManagement = ({ wallet, onBack, onBalanceUpdate, onTransactio
         >
           <ArrowLeft className="w-4 h-4" />
         </Button>
-        <h2 className="text-2xl font-bold text-white">{wallet.currency} Wallet</h2>
+        <h2 className="text-2xl font-bold text-white">{wallet.currency} {t('wallet')}</h2>
       </div>
 
       {/* Wallet Overview */}
@@ -187,7 +227,7 @@ export const WalletManagement = ({ wallet, onBack, onBalanceUpdate, onTransactio
               <div className="text-2xl">💰</div>
               <div>
                 <h3 className="text-xl font-bold text-white">{wallet.currency}</h3>
-                <p className="text-sm text-white/70">Current Balance</p>
+                <p className="text-sm text-white/70">{t('balance')}</p>
               </div>
             </div>
             <Button
@@ -221,21 +261,21 @@ export const WalletManagement = ({ wallet, onBack, onBalanceUpdate, onTransactio
               className="bg-green-600/20 hover:bg-green-600/30 text-green-300 border-green-400/30"
             >
               <Plus className="w-4 h-4 mr-2" />
-              Deposit
+              {t('deposit')}
             </Button>
             <Button
               onClick={() => setActiveTab('send')}
               className="bg-blue-600/20 hover:bg-blue-600/30 text-blue-300 border-blue-400/30"
             >
               <Send className="w-4 h-4 mr-2" />
-              Send
+              {t('send')}
             </Button>
             <Button
               onClick={() => setActiveTab('settings')}
               className="bg-purple-600/20 hover:bg-purple-600/30 text-purple-300 border-purple-400/30"
             >
               <Settings className="w-4 h-4 mr-2" />
-              Settings
+              {t('settings')}
             </Button>
           </div>
         </CardContent>
@@ -257,7 +297,7 @@ export const WalletManagement = ({ wallet, onBack, onBalanceUpdate, onTransactio
           onClick={() => setActiveTab('deposit')}
           className={activeTab === 'deposit' ? 'bg-green-600' : 'text-gray-300'}
         >
-          Deposit
+          {t('deposit')}
         </Button>
         <Button
           variant={activeTab === 'send' ? 'default' : 'ghost'}
@@ -265,7 +305,7 @@ export const WalletManagement = ({ wallet, onBack, onBalanceUpdate, onTransactio
           onClick={() => setActiveTab('send')}
           className={activeTab === 'send' ? 'bg-blue-600' : 'text-gray-300'}
         >
-          Send
+          {t('send')}
         </Button>
         <Button
           variant={activeTab === 'settings' ? 'default' : 'ghost'}
@@ -273,7 +313,7 @@ export const WalletManagement = ({ wallet, onBack, onBalanceUpdate, onTransactio
           onClick={() => setActiveTab('settings')}
           className={activeTab === 'settings' ? 'bg-purple-600' : 'text-gray-300'}
         >
-          Settings
+          {t('settings')}
         </Button>
       </div>
 
@@ -286,7 +326,7 @@ export const WalletManagement = ({ wallet, onBack, onBalanceUpdate, onTransactio
           <CardContent className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label className="text-gray-300">Currency</Label>
+                <Label className="text-gray-300">{t('currency')}</Label>
                 <p className="text-white font-semibold">{wallet.currency}</p>
               </div>
               <div>
@@ -294,7 +334,7 @@ export const WalletManagement = ({ wallet, onBack, onBalanceUpdate, onTransactio
                 <p className="text-green-400 font-semibold">Active</p>
               </div>
               <div>
-                <Label className="text-gray-300">Balance</Label>
+                <Label className="text-gray-300">{t('balance')}</Label>
                 <p className="text-white font-semibold">{formatBalance(wallet.balance, wallet.currency)}</p>
               </div>
               <div>
@@ -311,11 +351,11 @@ export const WalletManagement = ({ wallet, onBack, onBalanceUpdate, onTransactio
       {activeTab === 'deposit' && (
         <Card className="bg-gray-900/80 backdrop-blur-xl border-gray-700/50 shadow-2xl">
           <CardHeader>
-            <CardTitle className="text-white">Deposit {wallet.currency}</CardTitle>
+            <CardTitle className="text-white">{t('deposit')} {wallet.currency}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <Label htmlFor="depositAmount" className="text-white">Amount</Label>
+              <Label htmlFor="depositAmount" className="text-white">{t('amount')}</Label>
               <Input
                 id="depositAmount"
                 type="number"
@@ -352,15 +392,20 @@ export const WalletManagement = ({ wallet, onBack, onBalanceUpdate, onTransactio
                         className="bg-gray-800/60 border-gray-600/50 text-white placeholder-gray-400"
                       />
                     </div>
-                    <div className="space-y-2">
-                      {mobileMoneyProviders.map((provider) => (
-                        <div key={provider.name} className="p-3 bg-gray-800/40 rounded-lg border border-gray-600/50">
-                          <div className="flex justify-between items-center">
-                            <span className="text-white">{provider.name}</span>
-                            <span className="text-gray-300 text-sm">Fee: {provider.fee}</span>
-                          </div>
-                        </div>
-                      ))}
+                    <div>
+                      <Label className="text-white">Select Provider</Label>
+                      <Select value={selectedProvider} onValueChange={setSelectedProvider}>
+                        <SelectTrigger className="bg-gray-800/60 border-gray-600/50 text-white">
+                          <SelectValue placeholder="Choose mobile money provider" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-gray-900 border-gray-700">
+                          {mobileMoneyProviders.map((provider) => (
+                            <SelectItem key={provider.code} value={provider.code} className="text-white">
+                              {provider.name} (Fee: {provider.fee})
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
                   </>
                 )}
@@ -398,7 +443,7 @@ export const WalletManagement = ({ wallet, onBack, onBalanceUpdate, onTransactio
               className="w-full bg-green-600 hover:bg-green-700"
             >
               <Plus className="w-4 h-4 mr-2" />
-              Deposit {wallet.currency}
+              {t('deposit')} {wallet.currency}
             </Button>
           </CardContent>
         </Card>
@@ -407,11 +452,11 @@ export const WalletManagement = ({ wallet, onBack, onBalanceUpdate, onTransactio
       {activeTab === 'send' && (
         <Card className="bg-gray-900/80 backdrop-blur-xl border-gray-700/50 shadow-2xl">
           <CardHeader>
-            <CardTitle className="text-white">Send {wallet.currency}</CardTitle>
+            <CardTitle className="text-white">{t('send')} {wallet.currency}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <Label htmlFor="sendAmount" className="text-white">Amount</Label>
+              <Label htmlFor="sendAmount" className="text-white">{t('amount')}</Label>
               <Input
                 id="sendAmount"
                 type="number"
@@ -456,7 +501,7 @@ export const WalletManagement = ({ wallet, onBack, onBalanceUpdate, onTransactio
               className="w-full bg-blue-600 hover:bg-blue-700"
             >
               <Send className="w-4 h-4 mr-2" />
-              Send {wallet.currency}
+              {t('send')} {wallet.currency}
             </Button>
             {parseFloat(sendAmount) > wallet.balance && (
               <p className="text-red-400 text-sm">Insufficient balance</p>
@@ -505,7 +550,7 @@ export const WalletManagement = ({ wallet, onBack, onBalanceUpdate, onTransactio
                   className="bg-gray-800/60 border-gray-600/50 text-white"
                 />
               </div>
-              <Button className="w-full bg-green-600 hover:bg-green-700">
+              <Button onClick={handleSettingsUpdate} className="w-full bg-green-600 hover:bg-green-700">
                 Update Limits
               </Button>
             </CardContent>
