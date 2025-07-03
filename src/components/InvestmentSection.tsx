@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { PiggyBank, Target, Calendar, DollarSign, Plus, ArrowLeft, Users, Trash2 } from 'lucide-react';
+import { PiggyBank, Target, Calendar, DollarSign, Plus, ArrowLeft, Users, Trash2, AlertCircle } from 'lucide-react';
 import { VillageBankSection } from './VillageBankSection';
 
 interface InvestmentSectionProps {
@@ -18,6 +18,9 @@ interface InvestmentSectionProps {
 export const InvestmentSection = ({ onBalanceUpdate, onTransactionUpdate, onBack }: InvestmentSectionProps) => {
   const [activeTab, setActiveTab] = useState('savings');
   const [showCreateGoal, setShowCreateGoal] = useState(false);
+  const [showDepositModal, setShowDepositModal] = useState(false);
+  const [selectedGoalId, setSelectedGoalId] = useState<number | null>(null);
+  const [depositAmount, setDepositAmount] = useState('');
   const [newGoal, setNewGoal] = useState({
     name: '',
     target: '',
@@ -101,10 +104,27 @@ export const InvestmentSection = ({ onBalanceUpdate, onTransactionUpdate, onBack
     setShowCreateGoal(false);
   };
 
-  const handleDeposit = (goalId: number, amount: number) => {
+  const handleDepositClick = (goalId: number) => {
+    setSelectedGoalId(goalId);
+    setShowDepositModal(true);
+  };
+
+  const confirmDeposit = () => {
+    if (!selectedGoalId || !depositAmount) return;
+    
+    const amount = parseFloat(depositAmount);
+    if (amount <= 0) {
+      alert('Please enter a valid amount');
+      return;
+    }
+
+    // Platform fee (2% on deposits)
+    const platformFee = amount * 0.02;
+    const netAmount = amount - platformFee;
+
     setSavingsGoals(prevGoals =>
       prevGoals.map(goal =>
-        goal.id === goalId ? { ...goal, saved: Math.min(goal.target, goal.saved + amount) } : goal
+        goal.id === selectedGoalId ? { ...goal, saved: Math.min(goal.target, goal.saved + netAmount) } : goal
       )
     );
 
@@ -116,11 +136,15 @@ export const InvestmentSection = ({ onBalanceUpdate, onTransactionUpdate, onBack
       onTransactionUpdate({
         type: 'Savings Deposit',
         amount: `-MWK ${amount.toLocaleString()}`,
-        description: `Deposit to savings goal`,
+        description: `Deposit to savings goal (Fee: MWK ${platformFee.toLocaleString()})`,
         time: 'Just now',
         status: 'completed'
       });
     }
+
+    setDepositAmount('');
+    setShowDepositModal(false);
+    setSelectedGoalId(null);
   };
 
   const handleWithdraw = (goalId: number) => {
@@ -135,7 +159,10 @@ export const InvestmentSection = ({ onBalanceUpdate, onTransactionUpdate, onBack
       return;
     }
 
-    const withdrawAmount = goal.saved;
+    // Platform fee (1% on withdrawals)
+    const platformFee = goal.saved * 0.01;
+    const withdrawAmount = goal.saved - platformFee;
+    
     setSavingsGoals(prev => prev.filter(g => g.id !== goalId));
 
     if (onBalanceUpdate) {
@@ -146,7 +173,7 @@ export const InvestmentSection = ({ onBalanceUpdate, onTransactionUpdate, onBack
       onTransactionUpdate({
         type: 'Savings Withdrawal',
         amount: `+MWK ${withdrawAmount.toLocaleString()}`,
-        description: `Withdrawal from ${goal.name}`,
+        description: `Withdrawal from ${goal.name} (Fee: MWK ${platformFee.toLocaleString()})`,
         time: 'Just now',
         status: 'completed'
       });
@@ -157,8 +184,18 @@ export const InvestmentSection = ({ onBalanceUpdate, onTransactionUpdate, onBack
     const goal = savingsGoals.find(g => g.id === goalId);
     if (!goal) return;
 
+    const today = new Date();
+    const deadline = new Date(goal.deadline);
+
+    // Prevent deletion of active goals (not matured)
+    if (today < deadline && !goal.isMatured) {
+      alert('Cannot delete active savings goal. This is a commitment until maturity date.');
+      return;
+    }
+
     if (goal.saved > 0) {
-      const refund = goal.saved;
+      const platformFee = goal.saved * 0.005; // 0.5% deletion fee
+      const refund = goal.saved - platformFee;
       if (onBalanceUpdate) {
         onBalanceUpdate('MWK', refund);
       }
@@ -166,7 +203,7 @@ export const InvestmentSection = ({ onBalanceUpdate, onTransactionUpdate, onBack
         onTransactionUpdate({
           type: 'Goal Deletion Refund',
           amount: `+MWK ${refund.toLocaleString()}`,
-          description: `Refund from deleted goal: ${goal.name}`,
+          description: `Refund from deleted goal: ${goal.name} (Fee: MWK ${platformFee.toLocaleString()})`,
           time: 'Just now',
           status: 'completed'
         });
@@ -181,7 +218,7 @@ export const InvestmentSection = ({ onBalanceUpdate, onTransactionUpdate, onBack
   }
 
   return (
-    <div className="space-y-6 pb-24">
+    <div className="space-y-4 pb-24">
       {/* Header with Back Button */}
       {onBack && (
         <div className="flex items-center space-x-3">
@@ -193,77 +230,84 @@ export const InvestmentSection = ({ onBalanceUpdate, onTransactionUpdate, onBack
           >
             <ArrowLeft className="w-4 h-4" />
           </Button>
-          <h2 className="text-2xl font-bold text-white">Save & Invest</h2>
+          <h2 className="text-lg sm:text-2xl font-bold text-white">Save & Invest</h2>
         </div>
       )}
 
-      {/* Tab Navigation */}
+      {/* Tab Navigation - Mobile Optimized */}
       <div className="flex space-x-1 bg-gray-800/50 p-1 rounded-lg">
         <Button
           onClick={() => setActiveTab('savings')}
-          className={`flex-1 ${activeTab === 'savings' 
+          className={`flex-1 text-xs sm:text-sm ${activeTab === 'savings' 
             ? 'bg-blue-500 text-white' 
             : 'bg-transparent text-gray-300 hover:text-white'
           }`}
         >
-          <PiggyBank className="w-4 h-4 mr-2" />
+          <PiggyBank className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
           Savings Goals
         </Button>
         <Button
           onClick={() => setActiveTab('village-bank')}
-          className={`flex-1 ${activeTab === 'village-bank' 
+          className={`flex-1 text-xs sm:text-sm ${activeTab === 'village-bank' 
             ? 'bg-blue-500 text-white' 
             : 'bg-transparent text-gray-300 hover:text-white'
           }`}
         >
-          <Users className="w-4 h-4 mr-2" />
+          <Users className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
           Village Bank
         </Button>
       </div>
 
       {/* Savings Goals */}
       <Card className="bg-gray-900/80 backdrop-blur-xl border-gray-700/50 shadow-2xl">
-        <CardHeader>
-          <CardTitle className="flex items-center justify-between">
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center justify-between text-sm sm:text-base">
             <span className="text-white">My Savings Goals</span>
             <Button 
               onClick={() => setShowCreateGoal(true)}
-              className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white"
+              size="sm"
+              className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white text-xs"
             >
-              <Plus className="w-4 h-4 mr-2" />
-              Create Goal
+              <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+              Create
             </Button>
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-3">
           {savingsGoals.map((goal) => {
             const today = new Date();
             const deadline = new Date(goal.deadline);
             const isMatured = today >= deadline || goal.saved >= goal.target;
             const progress = (goal.saved / goal.target) * 100;
+            const canDelete = isMatured;
 
             return (
-              <div key={goal.id} className="p-4 rounded-lg bg-gray-800/50 border border-gray-600/30">
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-lg font-medium text-white">{goal.name}</h3>
+              <div key={goal.id} className="p-3 sm:p-4 rounded-lg bg-gray-800/50 border border-gray-600/30">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-sm sm:text-lg font-medium text-white truncate">{goal.name}</h3>
                   <div className="flex items-center space-x-2">
-                    <Badge className={`${isMatured ? 'bg-green-500/20 text-green-300' : 'bg-blue-500/20 text-blue-300'} border-current/30`}>
+                    <Badge className={`text-xs ${isMatured ? 'bg-green-500/20 text-green-300' : 'bg-blue-500/20 text-blue-300'} border-current/30`}>
                       {progress.toFixed(1)}%
                     </Badge>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => deleteGoal(goal.id)}
-                      className="text-red-400 hover:text-red-300 hover:bg-red-500/10"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
+                    {canDelete && (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => deleteGoal(goal.id)}
+                        className="text-red-400 hover:text-red-300 hover:bg-red-500/10 p-1"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                      </Button>
+                    )}
+                    {!canDelete && (
+                      <AlertCircle className="w-3 h-3 text-yellow-400" title="Cannot delete active goal" />
+                    )}
                   </div>
                 </div>
                 
-                <Progress value={progress} className="h-2 mb-3" />
+                <Progress value={progress} className="h-2 mb-2" />
                 
-                <div className="grid grid-cols-2 gap-4 text-sm mb-4">
+                <div className="grid grid-cols-2 gap-2 text-xs mb-3">
                   <div>
                     <p className="text-gray-300">Saved</p>
                     <p className="text-white font-semibold">MWK {goal.saved.toLocaleString()}</p>
@@ -274,11 +318,11 @@ export const InvestmentSection = ({ onBalanceUpdate, onTransactionUpdate, onBack
                   </div>
                   <div>
                     <p className="text-gray-300">Deadline</p>
-                    <p className="text-white">{goal.deadline}</p>
+                    <p className="text-white text-xs">{goal.deadline}</p>
                   </div>
                   <div>
                     <p className="text-gray-300">Status</p>
-                    <p className={`font-medium ${isMatured ? 'text-green-400' : 'text-yellow-400'}`}>
+                    <p className={`font-medium text-xs ${isMatured ? 'text-green-400' : 'text-yellow-400'}`}>
                       {isMatured ? 'Matured' : 'Active'}
                     </p>
                   </div>
@@ -287,24 +331,21 @@ export const InvestmentSection = ({ onBalanceUpdate, onTransactionUpdate, onBack
                 <div className="flex space-x-2">
                   {!isMatured && (
                     <Button 
-                      onClick={() => {
-                        const depositAmount = parseInt(prompt('Enter amount to deposit:') || '0');
-                        if (!isNaN(depositAmount) && depositAmount > 0) {
-                          handleDeposit(goal.id, depositAmount);
-                        }
-                      }}
-                      className="flex-1 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white"
+                      onClick={() => handleDepositClick(goal.id)}
+                      size="sm"
+                      className="flex-1 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white text-xs"
                     >
-                      <Plus className="w-4 h-4 mr-2" />
+                      <Plus className="w-3 h-3 mr-1" />
                       Deposit
                     </Button>
                   )}
                   {isMatured && (
                     <Button 
                       onClick={() => handleWithdraw(goal.id)}
-                      className="flex-1 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white"
+                      size="sm"
+                      className="flex-1 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white text-xs"
                     >
-                      <DollarSign className="w-4 h-4 mr-2" />
+                      <DollarSign className="w-3 h-3 mr-1" />
                       Withdraw
                     </Button>
                   )}
@@ -314,9 +355,9 @@ export const InvestmentSection = ({ onBalanceUpdate, onTransactionUpdate, onBack
           })}
 
           {savingsGoals.length === 0 && (
-            <div className="text-center py-8">
-              <PiggyBank className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-400">No savings goals yet. Create your first goal!</p>
+            <div className="text-center py-6">
+              <PiggyBank className="w-8 h-8 sm:w-12 sm:h-12 text-gray-400 mx-auto mb-3" />
+              <p className="text-gray-400 text-sm">No savings goals yet. Create your first goal!</p>
             </div>
           )}
         </CardContent>
@@ -324,63 +365,110 @@ export const InvestmentSection = ({ onBalanceUpdate, onTransactionUpdate, onBack
 
       {/* Create Goal Modal */}
       <Dialog open={showCreateGoal} onOpenChange={setShowCreateGoal}>
-        <DialogContent className="bg-gray-800 border-gray-700 text-white">
+        <DialogContent className="bg-gray-800 border-gray-700 text-white max-w-sm">
           <DialogHeader>
-            <DialogTitle>Create Savings Goal</DialogTitle>
+            <DialogTitle className="text-sm sm:text-base">Create Savings Goal</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4">
+          <div className="space-y-3">
             <div>
-              <label className="text-sm font-medium mb-2 block text-gray-300">Goal Name</label>
+              <label className="text-xs font-medium mb-1 block text-gray-300">Goal Name</label>
               <Input
                 value={newGoal.name}
                 onChange={(e) => setNewGoal({ ...newGoal, name: e.target.value })}
                 placeholder="e.g. Emergency Fund"
-                className="bg-gray-700/50 border-gray-600/50 text-white"
+                className="bg-gray-700/50 border-gray-600/50 text-white text-sm"
               />
             </div>
             <div>
-              <label className="text-sm font-medium mb-2 block text-gray-300">Target Amount (MWK)</label>
+              <label className="text-xs font-medium mb-1 block text-gray-300">Target Amount (MWK)</label>
               <Input
                 type="number"
                 value={newGoal.target}
                 onChange={(e) => setNewGoal({ ...newGoal, target: e.target.value })}
                 placeholder="500000"
-                className="bg-gray-700/50 border-gray-600/50 text-white"
+                className="bg-gray-700/50 border-gray-600/50 text-white text-sm"
               />
             </div>
             <div>
-              <label className="text-sm font-medium mb-2 block text-gray-300">Deadline (Minimum 30 days)</label>
+              <label className="text-xs font-medium mb-1 block text-gray-300">Deadline (Minimum 30 days)</label>
               <Input
                 type="date"
                 value={newGoal.deadline}
                 onChange={(e) => setNewGoal({ ...newGoal, deadline: e.target.value })}
                 min={new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]}
-                className="bg-gray-700/50 border-gray-600/50 text-white"
+                className="bg-gray-700/50 border-gray-600/50 text-white text-sm"
               />
             </div>
             <div>
-              <label className="text-sm font-medium mb-2 block text-gray-300">Initial Deposit (Optional)</label>
+              <label className="text-xs font-medium mb-1 block text-gray-300">Initial Deposit (Optional)</label>
               <Input
                 type="number"
                 value={newGoal.initialDeposit}
                 onChange={(e) => setNewGoal({ ...newGoal, initialDeposit: e.target.value })}
                 placeholder="0"
-                className="bg-gray-700/50 border-gray-600/50 text-white"
+                className="bg-gray-700/50 border-gray-600/50 text-white text-sm"
               />
             </div>
-            <div className="flex space-x-3">
+            <div className="bg-yellow-500/10 p-2 rounded border border-yellow-500/20">
+              <p className="text-yellow-300 text-xs">Platform fee: 2% on deposits, 1% on withdrawals</p>
+            </div>
+            <div className="flex space-x-2">
               <Button
                 variant="outline"
                 onClick={() => setShowCreateGoal(false)}
-                className="flex-1 border-gray-600 text-gray-300 hover:text-white"
+                className="flex-1 border-gray-600 text-gray-300 hover:text-white text-xs"
               >
                 Cancel
               </Button>
               <Button
                 onClick={handleCreateGoal}
-                className="flex-1 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white"
+                className="flex-1 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white text-xs"
               >
                 Create Goal
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Deposit Modal */}
+      <Dialog open={showDepositModal} onOpenChange={setShowDepositModal}>
+        <DialogContent className="bg-gray-800 border-gray-700 text-white max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="text-sm sm:text-base">Deposit to Savings Goal</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <label className="text-xs font-medium mb-1 block text-gray-300">Deposit Amount (MWK)</label>
+              <Input
+                type="number"
+                value={depositAmount}
+                onChange={(e) => setDepositAmount(e.target.value)}
+                placeholder="Enter amount"
+                className="bg-gray-700/50 border-gray-600/50 text-white text-sm"
+              />
+            </div>
+            {depositAmount && (
+              <div className="bg-blue-500/10 p-2 rounded border border-blue-500/20">
+                <p className="text-blue-300 text-xs">
+                  Platform fee: MWK {(parseFloat(depositAmount) * 0.02).toLocaleString()}<br/>
+                  Net deposit: MWK {(parseFloat(depositAmount) * 0.98).toLocaleString()}
+                </p>
+              </div>
+            )}
+            <div className="flex space-x-2">
+              <Button
+                variant="outline"
+                onClick={() => setShowDepositModal(false)}
+                className="flex-1 border-gray-600 text-gray-300 hover:text-white text-xs"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={confirmDeposit}
+                className="flex-1 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white text-xs"
+              >
+                Confirm Deposit
               </Button>
             </div>
           </div>

@@ -1,8 +1,9 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Wallet, Bitcoin, CreditCard, ArrowUpRight, ArrowDownLeft, TrendingUp, PiggyBank, Eye, EyeOff, Users, Zap, User as UserIcon, Plus, UserPlus, Send, ArrowLeft } from 'lucide-react';
+import { Wallet, Bitcoin, CreditCard, ArrowUpRight, ArrowDownLeft, TrendingUp, PiggyBank, Eye, EyeOff, Users, Zap, User as UserIcon, Plus, UserPlus, Send, ArrowLeft, Download } from 'lucide-react';
 import { WalletCard } from '@/components/WalletCard';
 import { ExchangeSection } from '@/components/ExchangeSection';
 import { InvestmentSection } from '@/components/InvestmentSection';
@@ -24,7 +25,7 @@ const Index = () => {
   const [balanceVisible, setBalanceVisible] = useState(true);
   const [activeTab, setActiveTab] = useState('dashboard');
   const [selectedWallet, setSelectedWallet] = useState<any>(null);
-  const [notificationCount, setNotificationCount] = useState(3);
+  const [currentLanguage, setCurrentLanguage] = useState('English');
   const [recentTransactions, setRecentTransactions] = useState([
     { type: 'Received', amount: '+MWK 50,000', description: 'TNM Mobile Money', time: '2 min ago', status: 'completed' },
     { type: 'Exchange', amount: '0.001 BTC → MWK 294,000', description: 'Crypto Exchange', time: '1 hour ago', status: 'completed' },
@@ -123,7 +124,6 @@ const Index = () => {
   };
 
   const handleCardPurchase = (cardType: string) => {
-    // Get card details
     const cardDetails = {
       Standard: { price: 0 },
       Gold: { price: 15000 },
@@ -133,7 +133,6 @@ const Index = () => {
     const cardInfo = cardDetails[cardType as keyof typeof cardDetails];
     if (!cardInfo) return;
 
-    // Deduct cost from wallet
     if (cardInfo.price > 0) {
       handleBalanceUpdate('MWK', -cardInfo.price);
     }
@@ -148,7 +147,6 @@ const Index = () => {
     };
     setPurchasedCards(prev => [...prev, newCard]);
 
-    // Add to transaction history
     handleTransactionUpdate({
       type: 'Card Purchase',
       amount: cardInfo.price > 0 ? `-MWK ${cardInfo.price.toLocaleString()}` : 'FREE',
@@ -163,20 +161,7 @@ const Index = () => {
     setActiveTab('wallet-management');
   };
 
-  const quickActions = [
-    { icon: Plus, label: 'Deposit', color: 'text-green-400', action: 'deposit' },
-    { icon: Send, label: 'Send', color: 'text-blue-400', action: 'send' },
-    { icon: ArrowDownLeft, label: 'Receive', color: 'text-emerald-400', action: 'receive' },
-    { icon: Bitcoin, label: 'Exchange', color: 'text-yellow-400', action: 'exchange' },
-    { icon: PiggyBank, label: 'Save', color: 'text-purple-400', action: 'save' },
-    { icon: CreditCard, label: 'Cards', color: 'text-pink-400', action: 'cards' },
-    { icon: Zap, label: 'Bills', color: 'text-orange-400', action: 'bills' },
-    { icon: Users, label: 'Village Bank', color: 'text-cyan-400', action: 'village' },
-    { icon: UserPlus, label: 'Invite', color: 'text-indigo-400', action: 'invite' }
-  ];
-
   const handleCreateWallet = (newWallet: any) => {
-    // Create actual wallet object with proper structure
     const walletToAdd = {
       currency: newWallet.currency,
       balance: 0,
@@ -189,7 +174,6 @@ const Index = () => {
   };
 
   const handleTransaction = (transactionDetails: any) => {
-    // Add return navigation info to transaction
     const transactionWithReturn = {
       ...transactionDetails,
       returnTo: getReturnDestination(transactionDetails.type),
@@ -225,7 +209,6 @@ const Index = () => {
       transaction: null
     });
 
-    // Navigate to appropriate tab after closing
     if (returnTo === 'Cards') {
       setActiveTab('cards');
     } else if (returnTo === 'Save') {
@@ -237,33 +220,10 @@ const Index = () => {
     }
   };
 
-  const handleQuickAction = (action: string) => {
-    if (action === 'save') {
-      setActiveTab('invest');
-    } else if (action === 'receive') {
-      setActiveTab('deposit');
-    } else if (action === 'invite') {
-      // Handle invite logic here
-      console.log('Invite friends to NeoVault');
-    } else {
-      setActiveTab(action);
-    }
-  };
-
-  const handleProfileClick = () => {
-    setActiveTab('profile');
-  };
-
-  const handleMobileNavigation = (tab: string) => {
-    if (tab === 'home') {
-      setActiveTab('dashboard');
-    } else if (tab === 'wallet') {
-      setActiveTab('cards');
-    } else if (tab === 'save') {
-      setActiveTab('invest');
-    } else {
-      setActiveTab(tab);
-    }
+  const handleLanguageChange = (language: string) => {
+    setCurrentLanguage(language);
+    // Apply language changes globally
+    document.documentElement.lang = language.toLowerCase();
   };
 
   const renderContent = () => {
@@ -287,6 +247,78 @@ const Index = () => {
           onTransactionUpdate={handleTransactionUpdate}
           onBack={() => setActiveTab('dashboard')}
         />;
+      case 'withdraw':
+        return (
+          <div className="space-y-4 pb-24">
+            <div className="flex items-center space-x-3">
+              <Button
+                onClick={() => setActiveTab('dashboard')}
+                variant="ghost"
+                size="sm"
+                className="text-white/70 hover:text-white hover:bg-white/10"
+              >
+                <ArrowLeft className="w-4 h-4" />
+              </Button>
+              <h2 className="text-lg sm:text-2xl font-bold text-white">Withdraw Money</h2>
+            </div>
+
+            <Card className="bg-gray-900/80 backdrop-blur-xl border-gray-700/50 shadow-2xl">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-white text-sm sm:text-base">Available Withdrawal Methods</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 gap-3">
+                  {[
+                    { name: 'Mobile Money (TNM)', fee: '1%', icon: '📱', description: 'Instant transfer to TNM Mpamba' },
+                    { name: 'Mobile Money (Airtel)', fee: '1%', icon: '📱', description: 'Instant transfer to Airtel Money' },
+                    { name: 'Mobile Money (MO626)', fee: '1%', icon: '📱', description: 'Instant transfer to MO626' },
+                    { name: 'Bank Transfer', fee: '0.5%', icon: '🏦', description: 'All banks in Malawi (1-2 business days)' },
+                    { name: 'Agent Withdrawal', fee: '2%', icon: '👤', description: 'Cash pickup at agent locations' },
+                    { name: 'ATM Withdrawal', fee: 'Free', icon: '💳', description: 'Use your NeoVault card at any ATM' }
+                  ].map((method, index) => (
+                    <div key={index} className="p-3 rounded-lg bg-gray-800/60 hover:bg-gray-700/60 transition-colors border border-gray-600/50">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3">
+                          <span className="text-xl">{method.icon}</span>
+                          <div>
+                            <h5 className="font-medium text-white text-sm">{method.name}</h5>
+                            <p className="text-xs text-gray-400">{method.description}</p>
+                            <p className="text-xs text-accent">Fee: {method.fee}</p>
+                          </div>
+                        </div>
+                        <Button 
+                          size="sm" 
+                          className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white text-xs"
+                          onClick={() => {
+                            const amount = prompt('Enter withdrawal amount (MWK):');
+                            if (amount && !isNaN(parseFloat(amount))) {
+                              const withdrawalAmount = parseFloat(amount);
+                              const fee = method.fee === 'Free' ? 0 : withdrawalAmount * (parseFloat(method.fee) / 100);
+                              const netAmount = withdrawalAmount - fee;
+                              
+                              handleBalanceUpdate('MWK', -withdrawalAmount);
+                              handleTransactionUpdate({
+                                type: 'Withdrawal',
+                                amount: `-MWK ${withdrawalAmount.toLocaleString()}`,
+                                description: `${method.name} withdrawal (Fee: MWK ${fee.toLocaleString()})`,
+                                time: 'Just now',
+                                status: 'completed'
+                              });
+                              alert(`Withdrawal of MWK ${netAmount.toLocaleString()} initiated via ${method.name}`);
+                            }
+                          }}
+                        >
+                          <Download className="w-3 h-3 mr-1" />
+                          Withdraw
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        );
       case 'receive':
         return <ReceiveSection onBack={() => setActiveTab('dashboard')} />;
       case 'invite':
@@ -299,7 +331,7 @@ const Index = () => {
         />;
       case 'cards':
         return (
-          <div className="space-y-6 pb-24">
+          <div className="space-y-4 pb-24">
             <div className="flex justify-between items-center">
               <div className="flex items-center space-x-3">
                 <Button
@@ -310,7 +342,7 @@ const Index = () => {
                 >
                   <ArrowLeft className="w-4 h-4" />
                 </Button>
-                <h2 className="text-2xl font-bold text-white">Wallet & Cards</h2>
+                <h2 className="text-lg sm:text-2xl font-bold text-white">Wallet & Cards</h2>
               </div>
               <CreateWalletModal onCreateWallet={handleCreateWallet} />
             </div>
@@ -327,7 +359,11 @@ const Index = () => {
           onBack={() => setActiveTab('dashboard')}
         />;
       case 'village':
-        return <VillageBankSection onBack={() => setActiveTab('invest')} />;
+        return <VillageBankSection 
+          onBack={() => setActiveTab('invest')}
+          onBalanceUpdate={handleBalanceUpdate}
+          onTransactionUpdate={handleTransactionUpdate}
+        />;
       case 'bills':
         return <BillsSection 
           onBalanceUpdate={handleBalanceUpdate}
@@ -335,55 +371,58 @@ const Index = () => {
           onBack={() => setActiveTab('dashboard')}
         />;
       case 'profile':
-        return <UserProfile onBack={() => setActiveTab('dashboard')} />;
+        return <UserProfile 
+          onBack={() => setActiveTab('dashboard')}
+          onLanguageChange={handleLanguageChange}
+        />;
       default:
         return (
-          <div className="space-y-4 sm:space-y-6 pb-32 sm:pb-24">
+          <div className="space-y-4 pb-32 sm:pb-24">
             {/* Total Balance Card - Mobile Optimized */}
             <Card className="bg-gradient-to-br from-slate-900/95 to-gray-800/90 backdrop-blur-2xl border-gray-600/30 card-hover shadow-2xl">
-              <CardHeader className="pb-3 sm:pb-6">
-                <CardTitle className="flex items-center justify-between text-base sm:text-lg text-white">
-                  <div className="flex items-center space-x-2 sm:space-x-3">
-                    <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-                      <Wallet className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+              <CardHeader className="pb-3">
+                <CardTitle className="flex items-center justify-between text-sm sm:text-lg text-white">
+                  <div className="flex items-center space-x-2">
+                    <div className="w-6 h-6 sm:w-10 sm:h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                      <Wallet className="w-3 h-3 sm:w-5 sm:h-5 text-white" />
                     </div>
-                    <span className="font-black text-sm sm:text-xl tracking-tight">Total Portfolio</span>
+                    <span className="font-black text-xs sm:text-xl tracking-tight">Total Portfolio</span>
                   </div>
-                  <Badge className="bg-green-500/20 text-green-300 border-green-400/30 text-xs px-2 sm:px-3 py-1">
-                    <TrendingUp className="w-3 h-3 mr-1" />
+                  <Badge className="bg-green-500/20 text-green-300 border-green-400/30 text-[10px] sm:text-xs px-1 sm:px-3 py-1">
+                    <TrendingUp className="w-2 h-2 sm:w-3 sm:h-3 mr-1" />
                     +8.7%
                   </Badge>
                 </CardTitle>
               </CardHeader>
               <CardContent className="pt-0">
-                <div className="mb-4">
+                <div className="mb-3">
                   {balanceVisible ? (
-                    <div className="space-y-1 sm:space-y-2">
-                      <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-black tracking-tighter bg-gradient-to-r from-white via-blue-100 to-purple-200 bg-clip-text text-transparent">
+                    <div className="space-y-1">
+                      <h2 className="text-base sm:text-2xl md:text-3xl font-black tracking-tighter bg-gradient-to-r from-white via-blue-100 to-purple-200 bg-clip-text text-transparent">
                         MWK {wallets.reduce((total, wallet) => total + (wallet.currency === 'MWK' ? wallet.balance : 0), 0).toLocaleString()}
                       </h2>
-                      <p className="text-sm sm:text-base md:text-lg lg:text-xl font-bold text-white/90 tracking-wide">
+                      <p className="text-xs sm:text-base md:text-lg font-bold text-white/90 tracking-wide">
                         ≈ $1,625 USD
                       </p>
                     </div>
                   ) : (
-                    <div className="space-y-1 sm:space-y-2">
-                      <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-black text-white/20 tracking-tighter">
+                    <div className="space-y-1">
+                      <h2 className="text-base sm:text-2xl md:text-3xl font-black text-white/20 tracking-tighter">
                         ••••••••••
                       </h2>
-                      <p className="text-sm sm:text-base md:text-lg lg:text-xl font-bold text-white/20">
+                      <p className="text-xs sm:text-base md:text-lg font-bold text-white/20">
                         ••••••••
                       </p>
                     </div>
                   )}
                 </div>
                 <div className="flex items-center justify-between">
-                  <p className="text-xs sm:text-sm text-white/70 font-semibold">
+                  <p className="text-[10px] sm:text-sm text-white/70 font-semibold">
                     🔄 Updated just now
                   </p>
-                  <div className="flex items-center space-x-2 text-green-400">
-                    <span className="text-xs sm:text-sm font-bold">+MWK 47,300</span>
-                    <span className="text-[10px] sm:text-xs font-medium">Today</span>
+                  <div className="flex items-center space-x-1 text-green-400">
+                    <span className="text-[10px] sm:text-sm font-bold">+MWK 47,300</span>
+                    <span className="text-[8px] sm:text-xs font-medium">Today</span>
                   </div>
                 </div>
               </CardContent>
@@ -391,70 +430,70 @@ const Index = () => {
 
             {/* Quick Actions Dashboard - Enhanced */}
             <Card className="bg-gray-900/80 backdrop-blur-xl border-gray-700/50 shadow-xl">
-              <CardContent className="p-4">
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <CardContent className="p-3">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                   <Button
-                    className="quick-action h-20 flex-col space-y-2 bg-green-500/20 hover:bg-green-500/30 text-green-300 border-green-400/30 backdrop-blur-sm"
+                    className="h-16 sm:h-20 flex-col space-y-1 bg-green-500/20 hover:bg-green-500/30 text-green-300 border-green-400/30 backdrop-blur-sm"
                     onClick={() => setActiveTab('deposit')}
                   >
-                    <Plus className="w-6 h-6" />
-                    <span className="text-xs font-medium">Deposit</span>
+                    <Plus className="w-4 h-4 sm:w-6 sm:h-6" />
+                    <span className="text-[10px] sm:text-xs font-medium">Deposit</span>
                   </Button>
                   <Button
-                    className="quick-action h-20 flex-col space-y-2 bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 border-blue-400/30 backdrop-blur-sm"
+                    className="h-16 sm:h-20 flex-col space-y-1 bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 border-blue-400/30 backdrop-blur-sm"
                     onClick={() => setActiveTab('send')}
                   >
-                    <Send className="w-6 h-6" />
-                    <span className="text-xs font-medium">Send</span>
+                    <Send className="w-4 h-4 sm:w-6 sm:h-6" />
+                    <span className="text-[10px] sm:text-xs font-medium">Send</span>
                   </Button>
                   <Button
-                    className="quick-action h-20 flex-col space-y-2 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border-emerald-400/30 backdrop-blur-sm"
+                    className="h-16 sm:h-20 flex-col space-y-1 bg-orange-500/20 hover:bg-orange-500/30 text-orange-300 border-orange-400/30 backdrop-blur-sm"
+                    onClick={() => setActiveTab('withdraw')}
+                  >
+                    <Download className="w-4 h-4 sm:w-6 sm:h-6" />
+                    <span className="text-[10px] sm:text-xs font-medium">Withdraw</span>
+                  </Button>
+                  <Button
+                    className="h-16 sm:h-20 flex-col space-y-1 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border-emerald-400/30 backdrop-blur-sm"
                     onClick={() => setActiveTab('receive')}
                   >
-                    <ArrowDownLeft className="w-6 h-6" />
-                    <span className="text-xs font-medium">Receive</span>
+                    <ArrowDownLeft className="w-4 h-4 sm:w-6 sm:h-6" />
+                    <span className="text-[10px] sm:text-xs font-medium">Receive</span>
                   </Button>
                   <Button
-                    className="quick-action h-20 flex-col space-y-2 bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 border-purple-400/30 backdrop-blur-sm"
+                    className="h-16 sm:h-20 flex-col space-y-1 bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 border-purple-400/30 backdrop-blur-sm"
                     onClick={() => setActiveTab('cards')}
                   >
-                    <CreditCard className="w-6 h-6" />
-                    <span className="text-xs font-medium">Cards</span>
+                    <CreditCard className="w-4 h-4 sm:w-6 sm:h-6" />
+                    <span className="text-[10px] sm:text-xs font-medium">Cards</span>
                   </Button>
                   <Button
-                    className="quick-action h-20 flex-col space-y-2 bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-300 border-yellow-400/30 backdrop-blur-sm"
+                    className="h-16 sm:h-20 flex-col space-y-1 bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-300 border-yellow-400/30 backdrop-blur-sm"
                     onClick={() => setActiveTab('exchange')}
                   >
-                    <Bitcoin className="w-6 h-6" />
-                    <span className="text-xs font-medium">Exchange</span>
+                    <Bitcoin className="w-4 h-4 sm:w-6 sm:h-6" />
+                    <span className="text-[10px] sm:text-xs font-medium">Exchange</span>
                   </Button>
                   <Button
-                    className="quick-action h-20 flex-col space-y-2 bg-pink-500/20 hover:bg-pink-500/30 text-pink-300 border-pink-400/30 backdrop-blur-sm"
+                    className="h-16 sm:h-20 flex-col space-y-1 bg-pink-500/20 hover:bg-pink-500/30 text-pink-300 border-pink-400/30 backdrop-blur-sm"
                     onClick={() => setActiveTab('invest')}
                   >
-                    <PiggyBank className="w-6 h-6" />
-                    <span className="text-xs font-medium">Save</span>
+                    <PiggyBank className="w-4 h-4 sm:w-6 sm:h-6" />
+                    <span className="text-[10px] sm:text-xs font-medium">Save</span>
                   </Button>
                   <Button
-                    className="quick-action h-20 flex-col space-y-2 bg-orange-500/20 hover:bg-orange-500/30 text-orange-300 border-orange-400/30 backdrop-blur-sm"
-                    onClick={() => setActiveTab('bills')}
-                  >
-                    <Zap className="w-6 h-6" />
-                    <span className="text-xs font-medium">Bills</span>
-                  </Button>
-                  <Button
-                    className="quick-action h-20 flex-col space-y-2 bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 border-cyan-400/30 backdrop-blur-sm"
+                    className="h-16 sm:h-20 flex-col space-y-1 bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 border-cyan-400/30 backdrop-blur-sm"
                     onClick={() => setActiveTab('invite')}
                   >
-                    <UserPlus className="w-6 h-6" />
-                    <span className="text-xs font-medium">Invite</span>
+                    <UserPlus className="w-4 h-4 sm:w-6 sm:h-6" />
+                    <span className="text-[10px] sm:text-xs font-medium">Invite</span>
                   </Button>
                 </div>
               </CardContent>
             </Card>
 
-            {/* Wallets Grid - Now Clickable */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+            {/* Wallets Grid - Clickable */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               {wallets.map((wallet, index) => (
                 <div key={index} onClick={() => handleWalletClick(wallet)} className="cursor-pointer">
                   <WalletCard
@@ -465,22 +504,22 @@ const Index = () => {
               ))}
             </div>
 
-            {/* Recent Activity - Enhanced */}
+            {/* Recent Activity */}
             <Card className="bg-gray-900/80 backdrop-blur-xl border-gray-700/50 shadow-xl">
-              <CardHeader className="pb-3 sm:pb-6">
-                <CardTitle className="text-base sm:text-lg text-white font-bold">Recent Activity</CardTitle>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm sm:text-base text-white font-bold">Recent Activity</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-3 sm:space-y-4">
+                <div className="space-y-3">
                   {recentTransactions.map((activity, index) => (
-                    <div key={index} className="flex items-center justify-between p-3 rounded-lg bg-gray-800/50 hover:bg-gray-700/50 transition-colors border border-gray-600/30">
+                    <div key={index} className="flex items-center justify-between p-2 sm:p-3 rounded-lg bg-gray-800/50 hover:bg-gray-700/50 transition-colors border border-gray-600/30">
                       <div className="min-w-0 flex-1">
-                        <p className="font-medium text-sm sm:text-base truncate text-white">{activity.type}</p>
-                        <p className="text-xs sm:text-sm text-gray-300 truncate">{activity.description}</p>
+                        <p className="font-medium text-xs sm:text-sm truncate text-white">{activity.type}</p>
+                        <p className="text-[10px] sm:text-xs text-gray-300 truncate">{activity.description}</p>
                       </div>
                       <div className="text-right ml-2">
-                        <p className="font-medium text-xs sm:text-sm text-white">{activity.amount}</p>
-                        <p className="text-[10px] sm:text-xs text-gray-300">{activity.time}</p>
+                        <p className="font-medium text-[10px] sm:text-xs text-white">{activity.amount}</p>
+                        <p className="text-[8px] sm:text-[10px] text-gray-300">{activity.time}</p>
                       </div>
                     </div>
                   ))}
@@ -498,15 +537,15 @@ const Index = () => {
       <header className="bg-white/10 backdrop-blur-2xl border-b border-white/20 sticky top-0 z-40">
         <div className="container mx-auto px-3 sm:px-4 py-3 sm:py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2 sm:space-x-3">
-              <div className="w-8 h-8 sm:w-10 sm:h-10 gradient-primary rounded-xl flex items-center justify-center">
-                <Wallet className="w-4 h-4 sm:w-6 sm:h-6 text-white" />
+            <div className="flex items-center space-x-2">
+              <div className="w-6 h-6 sm:w-10 sm:h-10 gradient-primary rounded-xl flex items-center justify-center">
+                <Wallet className="w-3 h-3 sm:w-6 sm:h-6 text-white" />
               </div>
               <div>
-                <h1 className="text-lg sm:text-2xl font-bold text-premium font-wealth">
+                <h1 className="text-sm sm:text-2xl font-bold text-premium font-wealth">
                   NeoVault
                 </h1>
-                <p className="text-[10px] sm:text-xs text-white/60">All Things Money. One App</p>
+                <p className="text-[8px] sm:text-xs text-white/60">All Things Money. One App</p>
               </div>
             </div>
             <div className="flex items-center space-x-2">
@@ -516,31 +555,26 @@ const Index = () => {
                 onClick={() => setBalanceVisible(!balanceVisible)}
                 className="text-white/70 hover:text-white hover:bg-white/10 rounded-full"
               >
-                {balanceVisible ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+                {balanceVisible ? <Eye className="w-3 h-3 sm:w-4 sm:h-4" /> : <EyeOff className="w-3 h-3 sm:w-4 sm:h-4" />}
               </Button>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => setActiveTab('profile')}
-                className="w-8 h-8 gradient-secondary rounded-full flex items-center justify-center p-0 relative"
+                className="w-6 h-6 sm:w-8 sm:h-8 gradient-secondary rounded-full flex items-center justify-center p-0"
               >
-                <UserIcon className="w-4 h-4 text-white" />
-                {notificationCount > 0 && (
-                  <div className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                    {notificationCount > 99 ? '99+' : notificationCount}
-                  </div>
-                )}
+                <UserIcon className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
               </Button>
             </div>
           </div>
         </div>
       </header>
 
-      <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 pb-32 sm:pb-24">
+      <div className="container mx-auto px-3 sm:px-4 py-3 sm:py-6 pb-32 sm:pb-24">
         {renderContent()}
       </div>
 
-      {/* Mobile Navigation - Fixed with proper padding */}
+      {/* Mobile Navigation */}
       <MobileNavigation 
         activeTab={activeTab} 
         onTabChange={(tab) => {
@@ -554,7 +588,7 @@ const Index = () => {
             setActiveTab(tab);
           }
         }}
-        notificationCount={notificationCount}
+        notificationCount={0}
       />
 
       {/* Transaction Confirmation Modal */}

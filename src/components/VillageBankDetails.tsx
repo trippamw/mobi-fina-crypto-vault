@@ -1,28 +1,30 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Users, Plus, UserCheck, UserX, ArrowLeft, MessageCircle, DollarSign, Calendar } from 'lucide-react';
+import { Users, Plus, UserCheck, UserX, ArrowLeft, MessageCircle, DollarSign, Calendar, CheckCircle, XCircle, Clock } from 'lucide-react';
 
 interface VillageBankDetailsProps {
   group: any;
   onBack: () => void;
   onUpdateGroup: (updatedGroup: any) => void;
+  loanRequests?: any[];
+  onLoanAction?: (requestId: string, action: 'approve' | 'decline') => void;
 }
 
-export const VillageBankDetails = ({ group, onBack, onUpdateGroup }: VillageBankDetailsProps) => {
+export const VillageBankDetails = ({ group, onBack, onUpdateGroup, loanRequests = [], onLoanAction }: VillageBankDetailsProps) => {
   const [activeSection, setActiveSection] = useState('overview');
   const [showAddMember, setShowAddMember] = useState(false);
   const [showContribution, setShowContribution] = useState(false);
   const [showLoanRequest, setShowLoanRequest] = useState(false);
-  const [showChat, setShowChat] = useState(false);
   const [newMemberName, setNewMemberName] = useState('');
   const [newMemberPhone, setNewMemberPhone] = useState('');
   const [contributionAmount, setContributionAmount] = useState('');
   const [loanAmount, setLoanAmount] = useState('');
+  const [loanDuration, setLoanDuration] = useState('');
+  const [loanReason, setLoanReason] = useState('');
   const [chatMessage, setChatMessage] = useState('');
 
   const [members] = useState([
@@ -43,11 +45,10 @@ export const VillageBankDetails = ({ group, onBack, onUpdateGroup }: VillageBank
       return;
     }
     
-    // Simulate checking if member is registered
-    const isRegistered = Math.random() > 0.5; // Random for demo
+    const isRegistered = Math.random() > 0.3;
     
     if (!isRegistered) {
-      alert('This member is not registered on the platform. Please invite them via the Invite tab first.');
+      alert('This member is not registered on the platform. Please invite them via SMS first.');
       return;
     }
 
@@ -64,34 +65,53 @@ export const VillageBankDetails = ({ group, onBack, onUpdateGroup }: VillageBank
     }
     
     const amount = parseFloat(contributionAmount);
+    const platformFee = amount * 0.01; // 1% platform fee
+    const netAmount = amount - platformFee;
+    
     const updatedGroup = {
       ...group,
-      myContribution: group.myContribution + amount,
-      totalPool: group.totalPool + amount
+      myContribution: group.myContribution + netAmount,
+      totalPool: group.totalPool + netAmount
     };
     
     onUpdateGroup(updatedGroup);
-    alert(`Contribution of MWK ${amount.toLocaleString()} recorded successfully!`);
+    alert(`Contribution of MWK ${netAmount.toLocaleString()} recorded successfully! (Platform fee: MWK ${platformFee.toLocaleString()})`);
     setContributionAmount('');
     setShowContribution(false);
   };
 
   const handleLoanRequest = () => {
-    if (!loanAmount) {
-      alert('Please enter loan amount');
+    if (!loanAmount || !loanDuration || !loanReason) {
+      alert('Please fill in all fields');
       return;
     }
     
     const amount = parseFloat(loanAmount);
+    const duration = parseInt(loanDuration);
     const maxLoan = group.myContribution * 3;
     
     if (amount > maxLoan) {
       alert(`Maximum loan amount is MWK ${maxLoan.toLocaleString()} (3x your contribution)`);
       return;
     }
+
+    if (duration < 7 || duration > 365) {
+      alert('Loan duration must be between 7 and 365 days');
+      return;
+    }
     
-    alert(`Loan request of MWK ${amount.toLocaleString()} submitted for approval!`);
+    // Calculate payback date
+    const paybackDate = new Date();
+    paybackDate.setDate(paybackDate.getDate() + duration);
+    
+    const totalInterest = (amount * group.interestRate / 100) * (duration / 365);
+    const totalPayback = amount + totalInterest;
+    
+    alert(`Loan request submitted!\nAmount: MWK ${amount.toLocaleString()}\nInterest: MWK ${totalInterest.toLocaleString()}\nTotal to pay: MWK ${totalPayback.toLocaleString()}\nDue date: ${paybackDate.toDateString()}`);
+    
     setLoanAmount('');
+    setLoanDuration('');
+    setLoanReason('');
     setShowLoanRequest(false);
   };
 
@@ -110,7 +130,7 @@ export const VillageBankDetails = ({ group, onBack, onUpdateGroup }: VillageBank
   };
 
   return (
-    <div className="space-y-6 pb-24">
+    <div className="space-y-4 pb-24">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-3">
@@ -123,35 +143,37 @@ export const VillageBankDetails = ({ group, onBack, onUpdateGroup }: VillageBank
             <ArrowLeft className="w-4 h-4" />
           </Button>
           <div>
-            <h2 className="text-2xl font-bold text-white">{group.name}</h2>
-            <p className="text-gray-400">Group Management</p>
+            <h2 className="text-lg sm:text-2xl font-bold text-white">{group.name}</h2>
+            <p className="text-gray-400 text-sm">Group Management</p>
           </div>
         </div>
-        <Badge className="bg-green-500/20 text-green-300 border-green-400/30">
+        <Badge className="bg-green-500/20 text-green-300 border-green-400/30 text-xs">
           {group.status}
         </Badge>
       </div>
 
       {/* Navigation */}
       <Card className="bg-gray-900/80 backdrop-blur-xl border-gray-700/50">
-        <CardContent className="p-4">
-          <div className="flex space-x-2 overflow-x-auto">
+        <CardContent className="p-3">
+          <div className="flex space-x-1 overflow-x-auto">
             {[
               { id: 'overview', label: 'Overview', icon: Users },
               { id: 'members', label: 'Members', icon: UserCheck },
               { id: 'contributions', label: 'Contributions', icon: DollarSign },
-              { id: 'chat', label: 'Group Chat', icon: MessageCircle }
+              { id: 'loans', label: 'Loans', icon: Calendar },
+              { id: 'chat', label: 'Chat', icon: MessageCircle }
             ].map((tab) => (
               <Button
                 key={tab.id}
                 onClick={() => setActiveSection(tab.id)}
-                className={`flex items-center space-x-2 whitespace-nowrap ${
+                size="sm"
+                className={`flex items-center space-x-1 whitespace-nowrap text-xs ${
                   activeSection === tab.id
                     ? 'bg-blue-600/60 border-blue-400/50 text-white'
                     : 'bg-gray-800/60 text-gray-300 hover:text-white'
                 }`}
               >
-                <tab.icon className="w-4 h-4" />
+                <tab.icon className="w-3 h-3" />
                 <span>{tab.label}</span>
               </Button>
             ))}
@@ -161,49 +183,114 @@ export const VillageBankDetails = ({ group, onBack, onUpdateGroup }: VillageBank
 
       {/* Content based on active section */}
       {activeSection === 'overview' && (
-        <div className="space-y-6">
+        <div className="space-y-4">
           <Card className="bg-gray-900/80 backdrop-blur-xl border-gray-700/50">
-            <CardHeader>
-              <CardTitle className="text-white">Group Overview</CardTitle>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-white text-sm sm:text-base">Group Overview</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="text-center">
-                  <p className="text-2xl font-bold text-white">{group.members}</p>
-                  <p className="text-gray-400">Total Members</p>
+              <div className="grid grid-cols-2 gap-3 text-xs sm:text-sm">
+                <div className="text-center p-2 bg-gray-800/50 rounded">
+                  <p className="text-lg sm:text-2xl font-bold text-white">{group.members}</p>
+                  <p className="text-gray-400">Members</p>
                 </div>
-                <div className="text-center">
-                  <p className="text-2xl font-bold text-white">MWK {group.totalPool.toLocaleString()}</p>
+                <div className="text-center p-2 bg-gray-800/50 rounded">
+                  <p className="text-lg sm:text-2xl font-bold text-white">MWK {group.totalPool.toLocaleString()}</p>
                   <p className="text-gray-400">Total Pool</p>
                 </div>
-                <div className="text-center">
-                  <p className="text-2xl font-bold text-white">MWK {group.myContribution.toLocaleString()}</p>
-                  <p className="text-gray-400">My Contribution</p>
+                <div className="text-center p-2 bg-gray-800/50 rounded">
+                  <p className="text-lg sm:text-2xl font-bold text-white">MWK {group.myContribution.toLocaleString()}</p>
+                  <p className="text-gray-400">My Share</p>
                 </div>
-                <div className="text-center">
-                  <p className="text-2xl font-bold text-white">{group.nextMeeting}</p>
+                <div className="text-center p-2 bg-gray-800/50 rounded">
+                  <p className="text-lg sm:text-2xl font-bold text-white">{group.nextMeeting}</p>
                   <p className="text-gray-400">Next Meeting</p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <Button
               onClick={() => setShowContribution(true)}
-              className="h-20 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white"
+              className="h-16 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white text-sm"
             >
-              <Plus className="w-6 h-6 mr-2" />
-              Make Contribution
+              <Plus className="w-4 h-4 mr-2" />
+              Contribute
             </Button>
             <Button
               onClick={() => setShowLoanRequest(true)}
-              className="h-20 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white"
+              className="h-16 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white text-sm"
             >
-              <DollarSign className="w-6 h-6 mr-2" />
+              <DollarSign className="w-4 h-4 mr-2" />
               Request Loan
             </Button>
           </div>
+        </div>
+      )}
+
+      {activeSection === 'loans' && group.isAdmin && (
+        <div className="space-y-4">
+          <Card className="bg-gray-900/80 backdrop-blur-xl border-gray-700/50">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-white text-sm sm:text-base">Loan Requests (Admin)</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {loanRequests.filter(r => r.status === 'pending').map((request) => (
+                  <div key={request.id} className="p-3 rounded-lg bg-gray-800/50 border border-gray-600/30">
+                    <div className="flex items-center justify-between mb-2">
+                      <div>
+                        <h5 className="font-medium text-white text-sm">{request.memberName}</h5>
+                        <p className="text-xs text-gray-400">{request.reason}</p>
+                      </div>
+                      <Badge className="bg-yellow-500/20 text-yellow-300 text-xs">
+                        <Clock className="w-3 h-3 mr-1" />
+                        Pending
+                      </Badge>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-2 text-xs mb-3">
+                      <div>
+                        <span className="text-gray-300">Amount: </span>
+                        <span className="text-white font-medium">MWK {request.amount.toLocaleString()}</span>
+                      </div>
+                      <div>
+                        <span className="text-gray-300">Duration: </span>
+                        <span className="text-white">{request.duration} days</span>
+                      </div>
+                    </div>
+                    
+                    <div className="flex space-x-2">
+                      <Button
+                        size="sm"
+                        onClick={() => onLoanAction?.(request.id, 'approve')}
+                        className="flex-1 bg-green-600 hover:bg-green-700 text-white text-xs"
+                      >
+                        <CheckCircle className="w-3 h-3 mr-1" />
+                        Approve
+                      </Button>
+                      <Button
+                        size="sm"
+                        onClick={() => onLoanAction?.(request.id, 'decline')}
+                        className="flex-1 bg-red-600 hover:bg-red-700 text-white text-xs"
+                      >
+                        <XCircle className="w-3 h-3 mr-1" />
+                        Decline
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+                
+                {loanRequests.filter(r => r.status === 'pending').length === 0 && (
+                  <div className="text-center py-4">
+                    <Clock className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                    <p className="text-gray-400 text-sm">No pending loan requests</p>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
         </div>
       )}
 
@@ -332,7 +419,7 @@ export const VillageBankDetails = ({ group, onBack, onUpdateGroup }: VillageBank
 
       {/* Add Member Modal */}
       <Dialog open={showAddMember} onOpenChange={setShowAddMember}>
-        <DialogContent className="bg-gray-800 border-gray-700 text-white">
+        <DialogContent className="bg-gray-800 border-gray-700 text-white max-w-sm">
           <DialogHeader>
             <DialogTitle>Add New Member</DialogTitle>
           </DialogHeader>
@@ -375,24 +462,32 @@ export const VillageBankDetails = ({ group, onBack, onUpdateGroup }: VillageBank
 
       {/* Contribution Modal */}
       <Dialog open={showContribution} onOpenChange={setShowContribution}>
-        <DialogContent className="bg-gray-800 border-gray-700 text-white">
+        <DialogContent className="bg-gray-800 border-gray-700 text-white max-w-sm">
           <DialogHeader>
-            <DialogTitle>Make Contribution</DialogTitle>
+            <DialogTitle className="text-sm sm:text-base">Make Contribution</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4">
+          <div className="space-y-3">
             <div>
-              <label className="text-sm font-medium text-gray-300 mb-2 block">Contribution Amount (MWK)</label>
+              <label className="text-xs font-medium text-gray-300 mb-1 block">Contribution Amount (MWK)</label>
               <Input
                 type="number"
                 value={contributionAmount}
                 onChange={(e) => setContributionAmount(e.target.value)}
                 placeholder="Enter amount"
-                className="bg-gray-700 border-gray-600 text-white"
+                className="bg-gray-700 border-gray-600 text-white text-sm"
               />
             </div>
+            {contributionAmount && (
+              <div className="bg-blue-500/10 p-2 rounded border border-blue-500/20">
+                <p className="text-blue-300 text-xs">
+                  Platform fee: MWK {(parseFloat(contributionAmount) * 0.01).toLocaleString()}<br/>
+                  Net contribution: MWK {(parseFloat(contributionAmount) * 0.99).toLocaleString()}
+                </p>
+              </div>
+            )}
             <Button 
               onClick={handleContribution}
-              className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700"
+              className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-xs"
             >
               Contribute MWK {contributionAmount ? parseFloat(contributionAmount).toLocaleString() : '0'}
             </Button>
@@ -402,32 +497,61 @@ export const VillageBankDetails = ({ group, onBack, onUpdateGroup }: VillageBank
 
       {/* Loan Request Modal */}
       <Dialog open={showLoanRequest} onOpenChange={setShowLoanRequest}>
-        <DialogContent className="bg-gray-800 border-gray-700 text-white">
+        <DialogContent className="bg-gray-800 border-gray-700 text-white max-w-sm">
           <DialogHeader>
-            <DialogTitle>Request Loan</DialogTitle>
+            <DialogTitle className="text-sm sm:text-base">Request Loan</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4">
-            <div className="bg-gray-700/50 p-3 rounded-lg">
-              <p className="text-sm text-gray-300">
-                Maximum loan amount: MWK {(group.myContribution * 3).toLocaleString()} 
+          <div className="space-y-3">
+            <div className="bg-gray-700/50 p-2 rounded">
+              <p className="text-xs text-gray-300">
+                Maximum loan: MWK {(group.myContribution * 3).toLocaleString()} 
                 <span className="text-gray-400"> (3x your contribution)</span>
               </p>
             </div>
             <div>
-              <label className="text-sm font-medium text-gray-300 mb-2 block">Loan Amount (MWK)</label>
+              <label className="text-xs font-medium text-gray-300 mb-1 block">Loan Amount (MWK)</label>
               <Input
                 type="number"
                 value={loanAmount}
                 onChange={(e) => setLoanAmount(e.target.value)}
                 placeholder="Enter loan amount"
-                className="bg-gray-700 border-gray-600 text-white"
+                className="bg-gray-700 border-gray-600 text-white text-sm"
               />
             </div>
+            <div>
+              <label className="text-xs font-medium text-gray-300 mb-1 block">Duration (Days)</label>
+              <Input
+                type="number"
+                value={loanDuration}
+                onChange={(e) => setLoanDuration(e.target.value)}
+                placeholder="7-365 days"
+                min="7"
+                max="365"
+                className="bg-gray-700 border-gray-600 text-white text-sm"
+              />
+            </div>
+            <div>
+              <label className="text-xs font-medium text-gray-300 mb-1 block">Reason for Loan</label>
+              <Input
+                value={loanReason}
+                onChange={(e) => setLoanReason(e.target.value)}
+                placeholder="e.g. Business expansion"
+                className="bg-gray-700 border-gray-600 text-white text-sm"
+              />
+            </div>
+            {loanAmount && loanDuration && (
+              <div className="bg-orange-500/10 p-2 rounded border border-orange-500/20">
+                <p className="text-orange-300 text-xs">
+                  Interest: MWK {((parseFloat(loanAmount) * group.interestRate / 100) * (parseInt(loanDuration) / 365)).toLocaleString()}<br/>
+                  Total to pay: MWK {(parseFloat(loanAmount) + ((parseFloat(loanAmount) * group.interestRate / 100) * (parseInt(loanDuration) / 365))).toLocaleString()}
+                </p>
+              </div>
+            )}
             <Button 
               onClick={handleLoanRequest}
-              className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700"
+              className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-xs"
             >
-              Request Loan MWK {loanAmount ? parseFloat(loanAmount).toLocaleString() : '0'}
+              Submit Loan Request
             </Button>
           </div>
         </DialogContent>

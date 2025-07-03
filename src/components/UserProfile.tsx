@@ -7,15 +7,19 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { User, Settings, Bell, Shield, CreditCard, HelpCircle, LogOut, ArrowLeft, FileText, MessageCircle, Eye, Upload, Download, Globe } from 'lucide-react';
+import { User, Settings, Bell, Shield, CreditCard, HelpCircle, LogOut, ArrowLeft, FileText, MessageCircle, Eye, Upload, Download, Globe, Fingerprint, Camera } from 'lucide-react';
 
 interface UserProfileProps {
   onBack?: () => void;
+  onLanguageChange?: (language: string) => void;
 }
 
-export const UserProfile = ({ onBack }: UserProfileProps) => {
+export const UserProfile = ({ onBack, onLanguageChange }: UserProfileProps) => {
   const [activeTab, setActiveTab] = useState('personal');
   const [showChatBot, setShowChatBot] = useState(false);
+  const [showTerms, setShowTerms] = useState(false);
+  const [showPrivacy, setShowPrivacy] = useState(false);
+  const [showBiometric, setShowBiometric] = useState(false);
   const [chatMessages, setChatMessages] = useState([
     { sender: 'bot', message: 'Hello! How can I help you today?' }
   ]);
@@ -39,14 +43,21 @@ export const UserProfile = ({ onBack }: UserProfileProps) => {
     twoFactorEnabled: true,
     notificationsEnabled: true,
     biometricEnabled: false,
-    loginAlerts: true
+    loginAlerts: true,
+    passwordChanged: false
   });
 
   const [complianceData, setComplianceData] = useState({
     kycLevel: 'Level 3',
     amlStatus: 'Compliant',
     lastReview: '2024-01-15',
-    riskRating: 'Low'
+    riskRating: 'Low',
+    documents: {
+      idDocument: { uploaded: true, verified: true, type: 'National ID' },
+      proofOfAddress: { uploaded: true, verified: true, type: 'Utility Bill' },
+      biometricData: { uploaded: false, verified: false, type: 'Fingerprint & Face' },
+      signature: { uploaded: true, verified: true, type: 'Digital Signature' }
+    }
   });
 
   const languages = [
@@ -81,7 +92,13 @@ export const UserProfile = ({ onBack }: UserProfileProps) => {
       liveChatAssistant: 'Live AI Chat Assistant',
       frequentlyAskedQuestions: 'Frequently Asked Questions',
       termsAndConditions: 'Terms and Conditions',
-      privacyPolicy: 'Privacy Policy'
+      privacyPolicy: 'Privacy Policy',
+      changePassword: 'Change Password',
+      twoFactorAuth: 'Two-Factor Authentication',
+      biometricLogin: 'Biometric Login',
+      pushNotifications: 'Push Notifications',
+      loginAlerts: 'Login Alerts',
+      addBiometric: 'Add Biometric Data'
     },
     ny: {
       profile: 'Mbiri',
@@ -108,7 +125,13 @@ export const UserProfile = ({ onBack }: UserProfileProps) => {
       liveChatAssistant: 'Wothandizira AI',
       frequentlyAskedQuestions: 'Mafunso Ofunsidwa Kawirikawiri',
       termsAndConditions: 'Malamulo ndi Zikondwerero',
-      privacyPolicy: 'Ndondomeko Ya Chinsinsi'
+      privacyPolicy: 'Ndondomeko Ya Chinsinsi',
+      changePassword: 'Sintha Password',
+      twoFactorAuth: 'Chitetezo Cha Magawo Awiri',
+      biometricLogin: 'Kulowa Ndi Biometric',
+      pushNotifications: 'Zidziwitso',
+      loginAlerts: 'Zidziwitso Za Kulowa',
+      addBiometric: 'Onjezera Biometric Data'
     },
     sw: {
       profile: 'Wasifu',
@@ -135,7 +158,13 @@ export const UserProfile = ({ onBack }: UserProfileProps) => {
       liveChatAssistant: 'Msaidizi wa AI',
       frequentlyAskedQuestions: 'Maswali Yanayoulizwa Mara Kwa Mara',
       termsAndConditions: 'Sheria na Masharti',
-      privacyPolicy: 'Sera ya Faragha'
+      privacyPolicy: 'Sera ya Faragha',
+      changePassword: 'Badilisha Password',
+      twoFactorAuth: 'Uthibitisho wa Hatua Mbili',
+      biometricLogin: 'Kuingia kwa Biometric',
+      pushNotifications: 'Arifa za Kusonga',
+      loginAlerts: 'Arifa za Kuingia',
+      addBiometric: 'Ongeza Data ya Biometric'
     }
   };
 
@@ -151,8 +180,37 @@ export const UserProfile = ({ onBack }: UserProfileProps) => {
 
   const handleLanguageChange = (newLanguage: string) => {
     setLanguage(newLanguage);
-    // In a real app, this would trigger a full UI translation
-    alert(`Language changed to ${newLanguage}. App interface updated.`);
+    onLanguageChange?.(newLanguage);
+    alert(`${t.language} changed to ${newLanguage}. App interface updated.`);
+  };
+
+  const handleSaveProfile = () => {
+    alert('Profile information saved successfully!');
+  };
+
+  const handleChangePassword = () => {
+    setSecuritySettings(prev => ({ ...prev, passwordChanged: true }));
+    alert('Password change initiated. Check your email for instructions.');
+  };
+
+  const handleBiometricSetup = () => {
+    setShowBiometric(true);
+  };
+
+  const handleBiometricCapture = (type: 'fingerprint' | 'face') => {
+    // Simulate biometric capture
+    setTimeout(() => {
+      setComplianceData(prev => ({
+        ...prev,
+        documents: {
+          ...prev.documents,
+          biometricData: { uploaded: true, verified: true, type: 'Fingerprint & Face' }
+        }
+      }));
+      setSecuritySettings(prev => ({ ...prev, biometricEnabled: true }));
+      setShowBiometric(false);
+      alert(`${type === 'fingerprint' ? 'Fingerprint' : 'Face'} biometric data captured successfully!`);
+    }, 2000);
   };
 
   const sendMessage = () => {
@@ -160,7 +218,6 @@ export const UserProfile = ({ onBack }: UserProfileProps) => {
 
     setChatMessages(prev => [...prev, { sender: 'user', message: newMessage }]);
     
-    // Simulate AI response
     setTimeout(() => {
       const responses = [
         "I understand your concern. Let me help you with that.",
@@ -199,88 +256,88 @@ export const UserProfile = ({ onBack }: UserProfileProps) => {
     switch (activeTab) {
       case 'personal':
         return (
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <Label className="text-gray-300">{t.firstName}</Label>
+                <Label className="text-gray-300 text-xs">{t.firstName}</Label>
                 <Input
                   value={profile.firstName}
                   onChange={(e) => handleInputChange('firstName', e.target.value)}
-                  className="bg-gray-800/60 border-gray-600/50 text-white"
+                  className="bg-gray-800/60 border-gray-600/50 text-white text-sm"
                 />
               </div>
               <div>
-                <Label className="text-gray-300">{t.lastName}</Label>
+                <Label className="text-gray-300 text-xs">{t.lastName}</Label>
                 <Input
                   value={profile.lastName}
                   onChange={(e) => handleInputChange('lastName', e.target.value)}
-                  className="bg-gray-800/60 border-gray-600/50 text-white"
+                  className="bg-gray-800/60 border-gray-600/50 text-white text-sm"
                 />
               </div>
             </div>
             <div>
-              <Label className="text-gray-300">{t.email}</Label>
+              <Label className="text-gray-300 text-xs">{t.email}</Label>
               <Input
                 type="email"
                 value={profile.email}
                 onChange={(e) => handleInputChange('email', e.target.value)}
-                className="bg-gray-800/60 border-gray-600/50 text-white"
+                className="bg-gray-800/60 border-gray-600/50 text-white text-sm"
               />
             </div>
             <div>
-              <Label className="text-gray-300">{t.phone}</Label>
+              <Label className="text-gray-300 text-xs">{t.phone}</Label>
               <Input
                 value={profile.phone}
                 onChange={(e) => handleInputChange('phone', e.target.value)}
-                className="bg-gray-800/60 border-gray-600/50 text-white"
+                className="bg-gray-800/60 border-gray-600/50 text-white text-sm"
               />
             </div>
             <div>
-              <Label className="text-gray-300">{t.address}</Label>
+              <Label className="text-gray-300 text-xs">{t.address}</Label>
               <Input
                 value={profile.address}
                 onChange={(e) => handleInputChange('address', e.target.value)}
-                className="bg-gray-800/60 border-gray-600/50 text-white"
+                className="bg-gray-800/60 border-gray-600/50 text-white text-sm"
               />
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <Label className="text-gray-300">{t.dateOfBirth}</Label>
+                <Label className="text-gray-300 text-xs">{t.dateOfBirth}</Label>
                 <Input
                   type="date"
                   value={profile.dateOfBirth}
                   onChange={(e) => handleInputChange('dateOfBirth', e.target.value)}
-                  className="bg-gray-800/60 border-gray-600/50 text-white"
+                  className="bg-gray-800/60 border-gray-600/50 text-white text-sm"
                 />
               </div>
               <div>
-                <Label className="text-gray-300">{t.nationality}</Label>
+                <Label className="text-gray-300 text-xs">{t.nationality}</Label>
                 <Input
                   value={profile.nationality}
                   onChange={(e) => handleInputChange('nationality', e.target.value)}
-                  className="bg-gray-800/60 border-gray-600/50 text-white"
+                  className="bg-gray-800/60 border-gray-600/50 text-white text-sm"
                 />
               </div>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <Label className="text-gray-300">{t.occupation}</Label>
+                <Label className="text-gray-300 text-xs">{t.occupation}</Label>
                 <Input
                   value={profile.occupation}
                   onChange={(e) => handleInputChange('occupation', e.target.value)}
-                  className="bg-gray-800/60 border-gray-600/50 text-white"
+                  className="bg-gray-800/60 border-gray-600/50 text-white text-sm"
                 />
               </div>
               <div>
-                <Label className="text-gray-300">{t.idNumber}</Label>
+                <Label className="text-gray-300 text-xs">{t.idNumber}</Label>
                 <Input
                   value={profile.idNumber}
                   onChange={(e) => handleInputChange('idNumber', e.target.value)}
-                  className="bg-gray-800/60 border-gray-600/50 text-white"
+                  className="bg-gray-800/60 border-gray-600/50 text-white text-sm"
                 />
               </div>
             </div>
-            <Button className="w-full bg-green-600 hover:bg-green-700 text-white">
+            <Button onClick={handleSaveProfile} className="w-full bg-green-600 hover:bg-green-700 text-white text-sm">
               {t.save}
             </Button>
           </div>
@@ -288,94 +345,95 @@ export const UserProfile = ({ onBack }: UserProfileProps) => {
 
       case 'security':
         return (
-          <div className="space-y-6">
+          <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <Label className="text-white">Two-Factor Authentication</Label>
+              <Label className="text-white text-sm">{t.twoFactorAuth}</Label>
               <Switch 
                 checked={securitySettings.twoFactorEnabled} 
                 onCheckedChange={(value) => handleSecurityChange('twoFactorEnabled', value)}
               />
             </div>
             <div className="flex items-center justify-between">
-              <Label className="text-white">Push Notifications</Label>
+              <Label className="text-white text-sm">{t.pushNotifications}</Label>
               <Switch 
                 checked={securitySettings.notificationsEnabled} 
                 onCheckedChange={(value) => handleSecurityChange('notificationsEnabled', value)}
               />
             </div>
             <div className="flex items-center justify-between">
-              <Label className="text-white">Biometric Login</Label>
+              <Label className="text-white text-sm">{t.biometricLogin}</Label>
               <Switch 
                 checked={securitySettings.biometricEnabled} 
                 onCheckedChange={(value) => handleSecurityChange('biometricEnabled', value)}
               />
             </div>
             <div className="flex items-center justify-between">
-              <Label className="text-white">Login Alerts</Label>
+              <Label className="text-white text-sm">{t.loginAlerts}</Label>
               <Switch 
                 checked={securitySettings.loginAlerts} 
                 onCheckedChange={(value) => handleSecurityChange('loginAlerts', value)}
               />
             </div>
-            <Button className="w-full bg-orange-600 hover:bg-orange-700 text-white">
-              Change Password
+            <Button onClick={handleChangePassword} className="w-full bg-orange-600 hover:bg-orange-700 text-white text-sm">
+              {t.changePassword}
             </Button>
           </div>
         );
 
       case 'ekyc':
         return (
-          <div className="space-y-6">
-            <div className="p-4 bg-green-500/20 border border-green-400/30 rounded-lg">
-              <h4 className="text-green-300 font-medium mb-2">KYC Status: {profile.kycStatus}</h4>
-              <p className="text-gray-300 text-sm">Your account is fully verified and compliant.</p>
+          <div className="space-y-4">
+            <div className="p-3 bg-green-500/20 border border-green-400/30 rounded-lg">
+              <h4 className="text-green-300 font-medium mb-1 text-sm">KYC Status: {profile.kycStatus}</h4>
+              <p className="text-gray-300 text-xs">Your account is fully verified and compliant.</p>
             </div>
             
-            <div className="space-y-4">
-              <div className="flex justify-between items-center p-3 bg-gray-800/50 rounded-lg">
-                <div>
-                  <p className="text-white font-medium">Identity Document</p>
-                  <p className="text-gray-400 text-sm">National ID verified</p>
+            <div className="space-y-3">
+              {Object.entries(complianceData.documents).map(([key, doc]) => (
+                <div key={key} className="flex justify-between items-center p-2 bg-gray-800/50 rounded-lg">
+                  <div>
+                    <p className="text-white font-medium text-sm">{doc.type}</p>
+                    <p className="text-gray-400 text-xs">
+                      {doc.verified ? 'Verified' : doc.uploaded ? 'Pending verification' : 'Not uploaded'}
+                    </p>
+                  </div>
+                  <div className="flex space-x-2">
+                    {doc.uploaded ? (
+                      <Button size="sm" variant="outline" className="border-gray-600 text-gray-300 text-xs">
+                        <Eye className="w-3 h-3 mr-1" />
+                        View
+                      </Button>
+                    ) : (
+                      <Button 
+                        size="sm" 
+                        onClick={() => key === 'biometricData' ? handleBiometricSetup() : alert('Document upload initiated')}
+                        className="bg-blue-600 hover:bg-blue-700 text-white text-xs"
+                      >
+                        <Upload className="w-3 h-3 mr-1" />
+                        Upload
+                      </Button>
+                    )}
+                  </div>
                 </div>
-                <Button size="sm" variant="outline" className="border-gray-600 text-gray-300">
-                  <Eye className="w-4 h-4 mr-2" />
-                  View
-                </Button>
-              </div>
-              
-              <div className="flex justify-between items-center p-3 bg-gray-800/50 rounded-lg">
-                <div>
-                  <p className="text-white font-medium">Proof of Address</p>
-                  <p className="text-gray-400 text-sm">Utility bill verified</p>
-                </div>
-                <Button size="sm" variant="outline" className="border-gray-600 text-gray-300">
-                  <Eye className="w-4 h-4 mr-2" />
-                  View
-                </Button>
-              </div>
+              ))}
             </div>
-            
-            <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white">
-              <Upload className="w-4 h-4 mr-2" />
-              {t.uploadDocument}
-            </Button>
           </div>
         );
 
       case 'settings':
         return (
-          <div className="space-y-6">
+          <div className="space-y-4">
             <div>
-              <Label className="text-white">{t.language}</Label>
+              <Label className="text-white text-sm">{t.language}</Label>
               <Select value={language} onValueChange={handleLanguageChange}>
-                <SelectTrigger className="bg-gray-800/60 border-gray-600/50 text-white">
+                <SelectTrigger className="bg-gray-800/60 border-gray-600/50 text-white text-sm">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="bg-gray-900 border-gray-700">
                   {languages.map((lang) => (
-                    <SelectItem key={lang.code} value={lang.name} className="text-white">
+                    <SelectItem key={lang.code} value={lang.name} className="text-white text-sm">
                       <div className="flex items-center space-x-2">
-                        <Globe className="w-4 h-4" />
+                        <Globe className="w-3 h-3" />
                         <span>{lang.name}</span>
                       </div>
                     </SelectItem>
@@ -384,8 +442,8 @@ export const UserProfile = ({ onBack }: UserProfileProps) => {
               </Select>
             </div>
             
-            <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white">
-              <Download className="w-4 h-4 mr-2" />
+            <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white text-sm">
+              <Download className="w-3 h-3 mr-2" />
               {t.downloadStatement}
             </Button>
           </div>
@@ -393,27 +451,29 @@ export const UserProfile = ({ onBack }: UserProfileProps) => {
 
       case 'compliance':
         return (
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="p-4 bg-gray-800/50 rounded-lg text-center">
-                <h4 className="text-white font-medium">KYC Level</h4>
+          <div className="space-y-3">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="p-3 bg-gray-800/50 rounded-lg text-center">
+                <h4 className="text-white font-medium text-sm">KYC Level</h4>
                 <p className="text-green-400 text-lg font-bold">{complianceData.kycLevel}</p>
               </div>
-              <div className="p-4 bg-gray-800/50 rounded-lg text-center">
-                <h4 className="text-white font-medium">AML Status</h4>
+              <div className="p-3 bg-gray-800/50 rounded-lg text-center">
+                <h4 className="text-white font-medium text-sm">AML Status</h4>
                 <p className="text-green-400 text-lg font-bold">{complianceData.amlStatus}</p>
               </div>
             </div>
             
-            <div className="p-4 bg-gray-800/50 rounded-lg">
-              <h4 className="text-white font-medium mb-2">Risk Assessment</h4>
-              <div className="flex justify-between items-center">
-                <span className="text-gray-300">Risk Rating:</span>
-                <span className="text-green-400 font-bold">{complianceData.riskRating}</span>
-              </div>
-              <div className="flex justify-between items-center mt-2">
-                <span className="text-gray-300">Last Review:</span>
-                <span className="text-white">{complianceData.lastReview}</span>
+            <div className="p-3 bg-gray-800/50 rounded-lg">
+              <h4 className="text-white font-medium mb-2 text-sm">Risk Assessment</h4>
+              <div className="space-y-1 text-xs">
+                <div className="flex justify-between">
+                  <span className="text-gray-300">Risk Rating:</span>
+                  <span className="text-green-400 font-bold">{complianceData.riskRating}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-300">Last Review:</span>
+                  <span className="text-white">{complianceData.lastReview}</span>
+                </div>
               </div>
             </div>
           </div>
@@ -421,36 +481,44 @@ export const UserProfile = ({ onBack }: UserProfileProps) => {
 
       case 'help':
         return (
-          <div className="space-y-4">
+          <div className="space-y-3">
             <Button 
               onClick={() => setShowChatBot(true)}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white text-sm"
             >
-              <MessageCircle className="w-4 h-4 mr-2" />
+              <MessageCircle className="w-3 h-3 mr-2" />
               {t.liveChatAssistant}
             </Button>
             
             <Card className="bg-gray-800/50 border-gray-700/50">
-              <CardHeader>
-                <CardTitle className="text-white text-sm">{t.frequentlyAskedQuestions}</CardTitle>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-white text-xs">{t.frequentlyAskedQuestions}</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3">
+              <CardContent className="space-y-2">
                 {faqData.map((faq, index) => (
-                  <div key={index} className="p-3 bg-gray-700/50 rounded-lg">
-                    <h5 className="text-white font-medium text-sm mb-1">{faq.question}</h5>
-                    <p className="text-gray-300 text-xs">{faq.answer}</p>
+                  <div key={index} className="p-2 bg-gray-700/50 rounded-lg">
+                    <h5 className="text-white font-medium text-xs mb-1">{faq.question}</h5>
+                    <p className="text-gray-300 text-[10px]">{faq.answer}</p>
                   </div>
                 ))}
               </CardContent>
             </Card>
             
             <div className="space-y-2">
-              <Button variant="outline" className="w-full border-gray-600 text-gray-300 hover:text-white">
-                <FileText className="w-4 h-4 mr-2" />
+              <Button 
+                onClick={() => setShowTerms(true)}
+                variant="outline" 
+                className="w-full border-gray-600 text-gray-300 hover:text-white text-sm"
+              >
+                <FileText className="w-3 h-3 mr-2" />
                 {t.termsAndConditions}
               </Button>
-              <Button variant="outline" className="w-full border-gray-600 text-gray-300 hover:text-white">
-                <Shield className="w-4 h-4 mr-2" />
+              <Button 
+                onClick={() => setShowPrivacy(true)}
+                variant="outline" 
+                className="w-full border-gray-600 text-gray-300 hover:text-white text-sm"
+              >
+                <Shield className="w-3 h-3 mr-2" />
                 {t.privacyPolicy}
               </Button>
             </div>
@@ -463,7 +531,7 @@ export const UserProfile = ({ onBack }: UserProfileProps) => {
   };
 
   return (
-    <div className="space-y-6 pb-24">
+    <div className="space-y-4 pb-24">
       {/* Header */}
       {onBack && (
         <div className="flex items-center space-x-3">
@@ -475,7 +543,7 @@ export const UserProfile = ({ onBack }: UserProfileProps) => {
           >
             <ArrowLeft className="w-4 h-4" />
           </Button>
-          <h2 className="text-2xl font-bold text-white">{t.profile}</h2>
+          <h2 className="text-lg sm:text-2xl font-bold text-white">{t.profile}</h2>
         </div>
       )}
 
@@ -492,13 +560,13 @@ export const UserProfile = ({ onBack }: UserProfileProps) => {
           <Button
             key={key}
             onClick={() => setActiveTab(key)}
-            className={`flex flex-col items-center p-2 text-xs ${
+            className={`flex flex-col items-center p-2 text-[10px] sm:text-xs ${
               activeTab === key 
                 ? 'bg-blue-500 text-white' 
                 : 'bg-transparent text-gray-300 hover:text-white'
             }`}
           >
-            <Icon className="w-4 h-4 mb-1" />
+            <Icon className="w-3 h-3 mb-1" />
             <span className="truncate">{label}</span>
           </Button>
         ))}
@@ -506,45 +574,46 @@ export const UserProfile = ({ onBack }: UserProfileProps) => {
 
       {/* Tab Content */}
       <Card className="bg-gray-900/80 backdrop-blur-xl border-gray-700/50 shadow-2xl">
-        <CardContent className="p-6">
+        <CardContent className="p-4">
           {renderTabContent()}
         </CardContent>
       </Card>
 
       {/* Logout Button */}
       <Card className="bg-gray-900/80 backdrop-blur-xl border-gray-700/50 shadow-2xl">
-        <CardContent className="p-4">
-          <Button className="w-full bg-red-500 hover:bg-red-600 text-white">
-            <LogOut className="w-4 h-4 mr-2" />
+        <CardContent className="p-3">
+          <Button className="w-full bg-red-500 hover:bg-red-600 text-white text-sm">
+            <LogOut className="w-3 h-3 mr-2" />
             {t.logout}
           </Button>
         </CardContent>
       </Card>
 
+      {/* Modals */}
       {/* Chat Bot Modal */}
       <Dialog open={showChatBot} onOpenChange={setShowChatBot}>
-        <DialogContent className="bg-gray-800 border-gray-700 text-white max-w-md max-h-[80vh]">
+        <DialogContent className="bg-gray-800 border-gray-700 text-white max-w-sm max-h-[80vh]">
           <DialogHeader>
-            <DialogTitle className="flex items-center">
-              <MessageCircle className="w-5 h-5 mr-2" />
+            <DialogTitle className="flex items-center text-sm">
+              <MessageCircle className="w-4 h-4 mr-2" />
               {t.liveChatAssistant}
             </DialogTitle>
           </DialogHeader>
-          <div className="space-y-4">
-            <div className="h-64 overflow-y-auto bg-gray-700/50 p-3 rounded-lg">
+          <div className="space-y-3">
+            <div className="h-48 overflow-y-auto bg-gray-700/50 p-2 rounded-lg">
               {chatMessages.map((msg, index) => (
                 <div
                   key={index}
-                  className={`mb-3 ${msg.sender === 'user' ? 'text-right' : 'text-left'}`}
+                  className={`mb-2 ${msg.sender === 'user' ? 'text-right' : 'text-left'}`}
                 >
                   <div
-                    className={`inline-block p-2 rounded-lg max-w-xs ${
+                    className={`inline-block p-2 rounded-lg max-w-xs text-xs ${
                       msg.sender === 'user'
                         ? 'bg-blue-500 text-white'
                         : 'bg-gray-600 text-gray-100'
                     }`}
                   >
-                    <p className="text-sm">{msg.message}</p>
+                    <p>{msg.message}</p>
                   </div>
                 </div>
               ))}
@@ -555,11 +624,95 @@ export const UserProfile = ({ onBack }: UserProfileProps) => {
                 onChange={(e) => setNewMessage(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
                 placeholder="Type your message..."
-                className="bg-gray-700/50 border-gray-600/50 text-white"
+                className="bg-gray-700/50 border-gray-600/50 text-white text-sm"
               />
-              <Button onClick={sendMessage} className="bg-blue-600 hover:bg-blue-700">
+              <Button onClick={sendMessage} size="sm" className="bg-blue-600 hover:bg-blue-700 text-xs">
                 Send
               </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Biometric Setup Modal */}
+      <Dialog open={showBiometric} onOpenChange={setShowBiometric}>
+        <DialogContent className="bg-gray-800 border-gray-700 text-white max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="text-sm">{t.addBiometric}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="text-center">
+              <p className="text-gray-300 text-sm mb-4">Choose biometric authentication method:</p>
+              <div className="space-y-3">
+                <Button
+                  onClick={() => handleBiometricCapture('fingerprint')}
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white text-sm"
+                >
+                  <Fingerprint className="w-4 h-4 mr-2" />
+                  Capture Fingerprint
+                </Button>
+                <Button
+                  onClick={() => handleBiometricCapture('face')}
+                  className="w-full bg-green-600 hover:bg-green-700 text-white text-sm"
+                >
+                  <Camera className="w-4 h-4 mr-2" />
+                  Capture Face
+                </Button>
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Terms Modal */}
+      <Dialog open={showTerms} onOpenChange={setShowTerms}>
+        <DialogContent className="bg-gray-800 border-gray-700 text-white max-w-md max-h-[80vh]">
+          <DialogHeader>
+            <DialogTitle className="text-sm">{t.termsAndConditions}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 max-h-96 overflow-y-auto">
+            <div className="text-xs space-y-2 text-gray-300">
+              <h3 className="text-white font-medium">1. Acceptance of Terms</h3>
+              <p>By using NeoVault services, you agree to these terms and conditions...</p>
+              
+              <h3 className="text-white font-medium">2. Account Security</h3>
+              <p>You are responsible for maintaining the security of your account credentials...</p>
+              
+              <h3 className="text-white font-medium">3. Transaction Limits</h3>
+              <p>Daily and monthly transaction limits apply based on your account tier...</p>
+              
+              <h3 className="text-white font-medium">4. Fees and Charges</h3>
+              <p>Platform fees apply to certain transactions as disclosed in the app...</p>
+              
+              <h3 className="text-white font-medium">5. Privacy and Data Protection</h3>
+              <p>We protect your personal and financial data in accordance with applicable laws...</p>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Privacy Policy Modal */}
+      <Dialog open={showPrivacy} onOpenChange={setShowPrivacy}>
+        <DialogContent className="bg-gray-800 border-gray-700 text-white max-w-md max-h-[80vh]">
+          <DialogHeader>
+            <DialogTitle className="text-sm">{t.privacyPolicy}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 max-h-96 overflow-y-auto">
+            <div className="text-xs space-y-2 text-gray-300">
+              <h3 className="text-white font-medium">Data Collection</h3>
+              <p>We collect information necessary to provide financial services safely and securely...</p>
+              
+              <h3 className="text-white font-medium">Data Usage</h3>
+              <p>Your data is used to process transactions, verify identity, and improve services...</p>
+              
+              <h3 className="text-white font-medium">Data Sharing</h3>
+              <p>We do not sell your personal information to third parties...</p>
+              
+              <h3 className="text-white font-medium">Data Security</h3>
+              <p>We employ bank-grade security measures to protect your information...</p>
+              
+              <h3 className="text-white font-medium">Your Rights</h3>
+              <p>You have the right to access, correct, or delete your personal information...</p>
             </div>
           </div>
         </DialogContent>
