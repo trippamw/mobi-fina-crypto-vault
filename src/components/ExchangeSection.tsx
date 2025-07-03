@@ -50,12 +50,25 @@ export const ExchangeSection: React.FC<ExchangeSectionProps> = ({ onBalanceUpdat
 
   const allCurrencies = [...fiatCurrencies, ...cryptoCurrencies];
 
+  // Use the same exchange rates as AddMoneyToCard - updated rates
+  const standardExchangeRates = {
+    'USD': 1,
+    'MWK': 1751,
+    'GBP': 0.79,
+    'EUR': 0.92,
+    'ZAR': 18.2,
+    'BTC': 0.000015,
+    'ETH': 0.00026,
+    'USDT': 1,
+    'USDC': 1
+  };
+
   // Fetch live exchange rates using the currency service
   const fetchAllRates = async () => {
     setIsLoading(true);
     try {
-      const rates = await fetchLiveExchangeRates();
-      setExchangeRates(rates);
+      // Use the same exchange rates as AddMoneyToCard
+      setExchangeRates(standardExchangeRates);
       setLastUpdated(new Date());
       
       // Recalculate if exchange is already set up
@@ -78,8 +91,11 @@ export const ExchangeSection: React.FC<ExchangeSectionProps> = ({ onBalanceUpdat
     if (!fromCurrency || !toCurrency || !amount) return;
 
     try {
-      const rate = await getExchangeRate(fromCurrency, toCurrency);
-      const converted = await convertCurrency(parseFloat(amount), fromCurrency, toCurrency);
+      // Use standard exchange rates for consistency
+      const fromRate = standardExchangeRates[fromCurrency as keyof typeof standardExchangeRates] || 1;
+      const toRate = standardExchangeRates[toCurrency as keyof typeof standardExchangeRates] || 1;
+      const rate = toRate / fromRate;
+      const converted = parseFloat(amount) * rate;
       
       setExchangeRate(rate);
       setConvertedAmount(converted);
@@ -102,7 +118,7 @@ export const ExchangeSection: React.FC<ExchangeSectionProps> = ({ onBalanceUpdat
       isOpen: true,
       showSuccess: false,
       transaction: {
-        type: String((t('exchange') as string) || 'Exchange'),
+        type: 'Exchange',
         amount: `${amount} ${fromCurrency} → ${convertedAmount.toFixed(6)} ${toCurrency}`,
         recipient: `${fromCurrency} to ${toCurrency}`,
         reference: `EXC${Date.now()}`,
@@ -127,7 +143,7 @@ export const ExchangeSection: React.FC<ExchangeSectionProps> = ({ onBalanceUpdat
     // Add to transaction history
     if (onTransactionUpdate) {
       onTransactionUpdate({
-        type: String((t('exchange') as string) || 'Exchange'),
+        type: 'Exchange',
         amount: `${amount} ${fromCurrency} → ${convertedAmount.toFixed(6)} ${toCurrency}`,
         description: `Currency exchange from ${fromCurrency} to ${toCurrency}`,
         time: 'Just now',
@@ -181,7 +197,7 @@ export const ExchangeSection: React.FC<ExchangeSectionProps> = ({ onBalanceUpdat
             <ArrowLeft className="w-4 h-4" />
           </Button>
           <h2 className="text-2xl font-bold text-white">
-            {String((t('exchange') as string) || 'Exchange')} {String((t('currency') as string) || 'Currency')}
+            Exchange Currency
           </h2>
         </div>
       )}
@@ -232,7 +248,7 @@ export const ExchangeSection: React.FC<ExchangeSectionProps> = ({ onBalanceUpdat
       <Card className="bg-gray-900/80 backdrop-blur-xl border-gray-700/50 shadow-2xl">
         <CardHeader>
           <CardTitle className="text-white">
-            {String((t('exchange') as string) || 'Exchange')} {String((t('currency') as string) || 'Currency')}
+            Exchange Currency
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -297,11 +313,11 @@ export const ExchangeSection: React.FC<ExchangeSectionProps> = ({ onBalanceUpdat
           {exchangeRate > 0 && (
             <div className="bg-gray-800/60 p-3 rounded-lg border border-gray-600/30">
               <div className="flex justify-between text-sm">
-                <span className="text-gray-300">{String(t('exchangeRate') || 'Exchange Rate')}:</span>
+                <span className="text-gray-300">Exchange Rate:</span>
                 <span className="text-white">1 {fromCurrency} = {exchangeRate.toFixed(8)} {toCurrency}</span>
               </div>
               <div className="flex justify-between text-sm">
-                <span className="text-gray-300">{String(t('fee') || 'Fee')} (4.75%):</span>
+                <span className="text-gray-300">Fee (4.75%):</span>
                 <span className="text-white">{(parseFloat(amount || '0') * 0.0475).toFixed(8)} {fromCurrency}</span>
               </div>
             </div>
@@ -312,7 +328,7 @@ export const ExchangeSection: React.FC<ExchangeSectionProps> = ({ onBalanceUpdat
             className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold"
             disabled={!fromCurrency || !toCurrency || !amount || isLoading}
           >
-            {isLoading ? 'Updating Rates...' : `${String(t('exchange') || 'Exchange')} ${String(t('currency') || 'Currency')}`}
+            {isLoading ? 'Updating Rates...' : 'Exchange Currency'}
           </Button>
         </CardContent>
       </Card>
