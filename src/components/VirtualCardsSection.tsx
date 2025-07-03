@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { CreditCard, Plus, Settings, Eye, EyeOff, Copy, Check, Freeze, Trash2, DollarSign } from 'lucide-react';
+import { CreditCard, Plus, Settings, Eye, EyeOff, Copy, Check, Lock, Trash2, DollarSign } from 'lucide-react';
 
 interface VirtualCardsSectionProps {
   onCardPurchase?: (cardType: string) => void;
@@ -57,7 +56,6 @@ export const VirtualCardsSection = ({ onCardPurchase, purchasedCards = [] }: Vir
     }
   ];
 
-  // Include standard card by default and purchased cards (max 3 total)
   const myCards = [
     {
       id: 'standard',
@@ -566,7 +564,7 @@ export const VirtualCardsSection = ({ onCardPurchase, purchasedCards = [] }: Vir
                   onClick={() => handleCardAction(selectedCard.id, 'freeze')}
                   className={`w-full ${selectedCard.isBlocked ? 'bg-green-600 hover:bg-green-700' : 'bg-orange-600 hover:bg-orange-700'}`}
                 >
-                  <Freeze className="w-4 h-4 mr-2" />
+                  <Lock className="w-4 h-4 mr-2" />
                   {selectedCard.isBlocked ? 'Unfreeze Card' : 'Freeze Card'}
                 </Button>
 
