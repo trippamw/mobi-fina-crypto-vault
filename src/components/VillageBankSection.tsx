@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -96,11 +95,6 @@ export const VillageBankSection = ({ onBack, onBalanceUpdate, onTransactionUpdat
     setActiveView('details');
   };
 
-  const handleGroupUpdate = (updatedGroup: any) => {
-    setGroups(groups.map(g => g.id === updatedGroup.id ? updatedGroup : g));
-    setSelectedGroup(updatedGroup);
-  };
-
   const handleLoanAction = (requestId: string, action: 'approve' | 'decline') => {
     setLoanRequests(loanRequests.map(req => 
       req.id === requestId 
@@ -123,9 +117,6 @@ export const VillageBankSection = ({ onBack, onBalanceUpdate, onTransactionUpdat
       <VillageBankDetails
         group={selectedGroup}
         onBack={() => setActiveView('main')}
-        onUpdateGroup={handleGroupUpdate}
-        loanRequests={loanRequests.filter(req => req.groupId === selectedGroup.id)}
-        onLoanAction={handleLoanAction}
       />
     );
   }
