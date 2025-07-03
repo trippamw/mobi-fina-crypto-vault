@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ArrowLeft, Plus, CreditCard, Eye, EyeOff, Settings, DollarSign } from 'lucide-react';
 import { CardSettings } from '@/components/CardSettings';
+import { useToast } from '@/hooks/use-toast';
 
 interface Card {
   id: string;
@@ -47,6 +48,8 @@ interface VirtualCardsSectionProps {
 }
 
 export const VirtualCardsSection = ({ onBack, onBalanceUpdate, onTransactionUpdate, wallets }: VirtualCardsSectionProps) => {
+  const { toast } = useToast();
+  
   const [cards, setCards] = useState<Card[]>([
     {
       id: '1',
@@ -82,6 +85,8 @@ export const VirtualCardsSection = ({ onBack, onBalanceUpdate, onTransactionUpda
   const [isPhysicalCard, setIsPhysicalCard] = useState(false);
   const [showCardSettings, setShowCardSettings] = useState(false);
   const [selectedCard, setSelectedCard] = useState<Card | null>(null);
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [pendingCard, setPendingCard] = useState<any>(null);
 
   const [cardForm, setCardForm] = useState({
     holderName: '',
@@ -167,12 +172,29 @@ export const VirtualCardsSection = ({ onBack, onBalanceUpdate, onTransactionUpda
 
   const handleCreateCard = () => {
     if (!selectedCardType) {
-      alert('Please select a card type');
+      toast({
+        title: "Error",
+        description: "Please select a card type",
+        variant: "destructive"
+      });
       return;
     }
 
-    if (isPhysicalCard && (!cardForm.holderName || !cardForm.address || !cardForm.phone)) {
-      alert('Please fill in all required fields for physical card');
+    if (!cardForm.holderName.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter the cardholder name",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (isPhysicalCard && (!cardForm.address || !cardForm.phone)) {
+      toast({
+        title: "Error",
+        description: "Please fill in all required fields for physical card",
+        variant: "destructive"
+      });
       return;
     }
 
@@ -186,7 +208,7 @@ export const VirtualCardsSection = ({ onBack, onBalanceUpdate, onTransactionUpda
       type: 'visa',
       cardType: cardTypeKey,
       number: generateCardNumber('visa'),
-      holderName: cardForm.holderName || 'JOHN BANDA',
+      holderName: cardForm.holderName.toUpperCase(),
       expiryDate: generateExpiryDate(),
       cvv: generateCVV(),
       currency: 'USD',
@@ -196,9 +218,49 @@ export const VirtualCardsSection = ({ onBack, onBalanceUpdate, onTransactionUpda
       status: 'active'
     };
 
-    setCards([...cards, newCard]);
-    
-    // Reset form
+    // Create pending card with transaction details
+    const pendingTransaction = {
+      card: newCard,
+      cardType: selectedType,
+      totalCost: selectedType.setupFee + (isPhysicalCard ? 15000 : 0),
+      deliveryFee: isPhysicalCard ? 15000 : 0
+    };
+
+    setPendingCard(pendingTransaction);
+    setShowConfirmation(true);
+  };
+
+  const confirmCardCreation = () => {
+    if (!pendingCard) return;
+
+    const { card, cardType, totalCost } = pendingCard;
+
+    // Add the new card
+    setCards(prevCards => [...prevCards, card]);
+
+    // Update balance if there's a cost
+    if (totalCost > 0 && onBalanceUpdate) {
+      onBalanceUpdate('MWK', -totalCost);
+    }
+
+    // Add transaction record
+    if (onTransactionUpdate) {
+      onTransactionUpdate({
+        type: 'Card Creation',
+        amount: totalCost > 0 ? `-MWK ${totalCost.toLocaleString()}` : 'Free',
+        description: `${isPhysicalCard ? 'Physical' : 'Virtual'} ${cardType.name} created`,
+        time: 'Just now',
+        status: 'completed'
+      });
+    }
+
+    // Show success toast
+    toast({
+      title: "Card Created Successfully!",
+      description: `Your ${isPhysicalCard ? 'physical' : 'virtual'} ${cardType.name} has been created and is ready to use.`
+    });
+
+    // Reset form and close modals
     setCardForm({
       holderName: '',
       address: '',
@@ -210,11 +272,13 @@ export const VirtualCardsSection = ({ onBack, onBalanceUpdate, onTransactionUpda
     setSelectedCardType('');
     setIsPhysicalCard(false);
     setShowCreateCard(false);
+    setShowConfirmation(false);
+    setPendingCard(null);
+  };
 
-    const setupFeeText = selectedType.setupFee === 0 ? 'Free' : `MWK ${selectedType.setupFee.toLocaleString()}`;
-    const monthlyFeeText = selectedType.monthlyFee === 0 ? 'Free' : `MWK ${selectedType.monthlyFee.toLocaleString()}`;
-    
-    alert(`${isPhysicalCard ? 'Physical' : 'Virtual'} ${selectedType.name} created successfully! Setup fee: ${setupFeeText}, Monthly fee: ${monthlyFeeText}`);
+  const cancelCardCreation = () => {
+    setShowConfirmation(false);
+    setPendingCard(null);
   };
 
   const generateCardNumber = (type: 'visa' | 'mastercard') => {
@@ -259,9 +323,15 @@ export const VirtualCardsSection = ({ onBack, onBalanceUpdate, onTransactionUpda
     });
 
     if (action === 'delete') {
-      alert('Card deleted successfully');
+      toast({
+        title: "Card Deleted",
+        description: "Card deleted successfully"
+      });
     } else {
-      alert(`Card ${action}d successfully`);
+      toast({
+        title: "Card Updated",
+        description: `Card ${action}d successfully`
+      });
     }
   };
 
@@ -296,7 +366,10 @@ export const VirtualCardsSection = ({ onBack, onBalanceUpdate, onTransactionUpda
         });
       }
       
-      alert(`Successfully added ${card.currency} ${numAmount.toFixed(2)} to your card`);
+      toast({
+        title: "Money Added",
+        description: `Successfully added ${card.currency} ${numAmount.toFixed(2)} to your card`
+      });
     }
   };
 
@@ -333,7 +406,7 @@ export const VirtualCardsSection = ({ onBack, onBalanceUpdate, onTransactionUpda
           <div key={card.id} className="space-y-3">
             {/* Card Visual */}
             <div className={`relative w-full h-48 rounded-2xl p-6 text-white shadow-2xl ${getCardGradient(card.cardType)}`}>
-              {/* VISA Logo and Status at Top */}
+              {/* VISA Logo at Top */}
               <div className="flex justify-between items-start mb-2">
                 <div className="text-lg font-bold italic text-white/90">
                   VISA
@@ -356,7 +429,7 @@ export const VirtualCardsSection = ({ onBack, onBalanceUpdate, onTransactionUpda
                 </div>
               </div>
 
-              {/* NEOVAULT Brand Name */}
+              {/* NEOVAULT Brand Name Below VISA */}
               <div className="text-lg font-bold text-white mb-4">
                 NEOVAULT
               </div>
@@ -442,6 +515,17 @@ export const VirtualCardsSection = ({ onBack, onBalanceUpdate, onTransactionUpda
           </DialogHeader>
           
           <div className="space-y-4">
+            {/* Cardholder Name Input - Always Required */}
+            <div>
+              <Label className="text-white mb-2 block">Cardholder Name *</Label>
+              <Input
+                value={cardForm.holderName}
+                onChange={(e) => setCardForm({...cardForm, holderName: e.target.value})}
+                className="bg-gray-700 border-gray-600 text-white"
+                placeholder="Enter full name as it should appear on card"
+              />
+            </div>
+
             {/* Card Type Selection */}
             <div>
               <Label className="text-white mb-3 block">Select Card Type</Label>
@@ -497,16 +581,6 @@ export const VirtualCardsSection = ({ onBack, onBalanceUpdate, onTransactionUpda
               <div className="space-y-3 p-4 bg-gray-700/50 rounded-lg">
                 <h4 className="font-semibold text-white mb-3">Delivery Details</h4>
                 
-                <div>
-                  <Label className="text-white text-sm">Full Name *</Label>
-                  <Input
-                    value={cardForm.holderName}
-                    onChange={(e) => setCardForm({...cardForm, holderName: e.target.value})}
-                    className="bg-gray-700 border-gray-600 text-white mt-1"
-                    placeholder="Enter full name as it should appear on card"
-                  />
-                </div>
-
                 <div>
                   <Label className="text-white text-sm">Address *</Label>
                   <Input
@@ -568,6 +642,72 @@ export const VirtualCardsSection = ({ onBack, onBalanceUpdate, onTransactionUpda
               Create {isPhysicalCard ? 'Physical' : 'Virtual'} Card
             </Button>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Transaction Confirmation Modal */}
+      <Dialog open={showConfirmation} onOpenChange={setShowConfirmation}>
+        <DialogContent className="bg-gray-800 border-gray-700 text-white max-w-md">
+          <DialogHeader>
+            <DialogTitle>Confirm Card Creation</DialogTitle>
+          </DialogHeader>
+          
+          {pendingCard && (
+            <div className="space-y-4">
+              <div className="p-4 bg-gray-700/50 rounded-lg">
+                <h3 className="font-semibold text-white mb-2">Card Details</h3>
+                <p className="text-sm text-gray-300">Type: {pendingCard.cardType.name}</p>
+                <p className="text-sm text-gray-300">Holder: {pendingCard.card.holderName}</p>
+                <p className="text-sm text-gray-300">Format: {isPhysicalCard ? 'Physical' : 'Virtual'}</p>
+              </div>
+
+              <div className="p-4 bg-gray-700/50 rounded-lg">
+                <h3 className="font-semibold text-white mb-2">Cost Breakdown</h3>
+                <div className="space-y-1 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-gray-300">Setup Fee:</span>
+                    <span className="text-white">
+                      {pendingCard.cardType.setupFee === 0 ? 'Free' : `MWK ${pendingCard.cardType.setupFee.toLocaleString()}`}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-300">Monthly Fee:</span>
+                    <span className="text-white">
+                      {pendingCard.cardType.monthlyFee === 0 ? 'Free' : `MWK ${pendingCard.cardType.monthlyFee.toLocaleString()}`}
+                    </span>
+                  </div>
+                  {isPhysicalCard && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-300">Delivery Fee:</span>
+                      <span className="text-white">MWK 15,000</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between font-semibold border-t border-gray-600 pt-2 mt-2">
+                    <span className="text-white">Total Cost:</span>
+                    <span className="text-white">
+                      {pendingCard.totalCost === 0 ? 'Free' : `MWK ${pendingCard.totalCost.toLocaleString()}`}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex space-x-3">
+                <Button
+                  onClick={cancelCardCreation}
+                  variant="outline"
+                  className="flex-1 border-gray-600 text-white hover:bg-gray-700"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={confirmCardCreation}
+                  className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+                >
+                  Confirm & Create
+                </Button>
+              </div>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
 
