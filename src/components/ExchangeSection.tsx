@@ -102,7 +102,7 @@ export const ExchangeSection: React.FC<ExchangeSectionProps> = ({ onBalanceUpdat
       isOpen: true,
       showSuccess: false,
       transaction: {
-        type: String(t('exchange')),
+        type: String(t('exchange') || 'Exchange'),
         amount: `${amount} ${fromCurrency} → ${convertedAmount.toFixed(6)} ${toCurrency}`,
         recipient: `${fromCurrency} to ${toCurrency}`,
         reference: `EXC${Date.now()}`,
@@ -127,7 +127,7 @@ export const ExchangeSection: React.FC<ExchangeSectionProps> = ({ onBalanceUpdat
     // Add to transaction history
     if (onTransactionUpdate) {
       onTransactionUpdate({
-        type: String(t('exchange')),
+        type: String(t('exchange') || 'Exchange'),
         amount: `${amount} ${fromCurrency} → ${convertedAmount.toFixed(6)} ${toCurrency}`,
         description: `Currency exchange from ${fromCurrency} to ${toCurrency}`,
         time: 'Just now',
@@ -180,7 +180,7 @@ export const ExchangeSection: React.FC<ExchangeSectionProps> = ({ onBalanceUpdat
           >
             <ArrowLeft className="w-4 h-4" />
           </Button>
-          <h2 className="text-2xl font-bold text-white">{String(t('exchange'))} {String(t('currency'))}</h2>
+          <h2 className="text-2xl font-bold text-white">{String(t('exchange') || 'Exchange')} {String(t('currency') || 'Currency')}</h2>
         </div>
       )}
 
@@ -229,7 +229,7 @@ export const ExchangeSection: React.FC<ExchangeSectionProps> = ({ onBalanceUpdat
       {/* Exchange Form */}
       <Card className="bg-gray-900/80 backdrop-blur-xl border-gray-700/50 shadow-2xl">
         <CardHeader>
-          <CardTitle className="text-white">{String(t('exchange'))} {String(t('currency'))}</CardTitle>
+          <CardTitle className="text-white">{String(t('exchange') || 'Exchange')} {String(t('currency') || 'Currency')}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-5 gap-4 items-end">
@@ -293,11 +293,11 @@ export const ExchangeSection: React.FC<ExchangeSectionProps> = ({ onBalanceUpdat
           {exchangeRate > 0 && (
             <div className="bg-gray-800/60 p-3 rounded-lg border border-gray-600/30">
               <div className="flex justify-between text-sm">
-                <span className="text-gray-300">{String(t('exchangeRate'))}:</span>
+                <span className="text-gray-300">{String(t('exchangeRate') || 'Exchange Rate')}:</span>
                 <span className="text-white">1 {fromCurrency} = {exchangeRate.toFixed(8)} {toCurrency}</span>
               </div>
               <div className="flex justify-between text-sm">
-                <span className="text-gray-300">{String(t('fee'))} (4.75%):</span>
+                <span className="text-gray-300">{String(t('fee') || 'Fee')} (4.75%):</span>
                 <span className="text-white">{(parseFloat(amount || '0') * 0.0475).toFixed(8)} {fromCurrency}</span>
               </div>
             </div>
@@ -308,7 +308,7 @@ export const ExchangeSection: React.FC<ExchangeSectionProps> = ({ onBalanceUpdat
             className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold"
             disabled={!fromCurrency || !toCurrency || !amount || isLoading}
           >
-            {isLoading ? 'Updating Rates...' : `${String(t('exchange'))} ${String(t('currency'))}`}
+            {isLoading ? 'Updating Rates...' : `${String(t('exchange') || 'Exchange')} ${String(t('currency') || 'Currency')}`}
           </Button>
         </CardContent>
       </Card>
