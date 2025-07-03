@@ -1,13 +1,16 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { UserPlus, Share2, Copy, Gift, Smartphone } from 'lucide-react';
+import { UserPlus, Share2, Copy, Gift, Users, Smartphone, Mail, ArrowLeft } from 'lucide-react';
 
-export const InviteSection = () => {
+interface InviteSectionProps {
+  onBack?: () => void;
+}
+
+export const InviteSection = ({ onBack }: InviteSectionProps) => {
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [inviteLink, setInviteLink] = useState('');
@@ -51,7 +54,22 @@ export const InviteSection = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6 pb-24">
+      {/* Header with Back Button */}
+      {onBack && (
+        <div className="flex items-center space-x-3">
+          <Button
+            onClick={onBack}
+            variant="ghost"
+            size="sm"
+            className="text-white/70 hover:text-white hover:bg-white/10"
+          >
+            <ArrowLeft className="w-4 h-4" />
+          </Button>
+          <h2 className="text-2xl font-bold text-white">Invite Friends</h2>
+        </div>
+      )}
+
       <Card className="gradient-card border-border/50">
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,14 +5,15 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { CreditCard, Smartphone, Building, User, CheckCircle, QrCode, Link, Share2, Copy } from 'lucide-react';
+import { CreditCard, Smartphone, Building, User, CheckCircle, QrCode, Link, Share2, Copy, ArrowLeft } from 'lucide-react';
 
 interface DepositSectionProps {
   onBalanceUpdate?: (currency: string, amount: number) => void;
   onTransactionUpdate?: (transaction: any) => void;
+  onBack?: () => void;
 }
 
-export const DepositSection = ({ onBalanceUpdate, onTransactionUpdate }: DepositSectionProps) => {
+export const DepositSection = ({ onBalanceUpdate, onTransactionUpdate, onBack }: DepositSectionProps) => {
   const [amount, setAmount] = useState('');
   const [selectedMethod, setSelectedMethod] = useState('');
   const [paymentLink, setPaymentLink] = useState('');
@@ -101,6 +101,21 @@ export const DepositSection = ({ onBalanceUpdate, onTransactionUpdate }: Deposit
 
   return (
     <div className="space-y-4 sm:space-y-6 pb-24">
+      {/* Header with Back Button */}
+      {onBack && (
+        <div className="flex items-center space-x-3">
+          <Button
+            onClick={onBack}
+            variant="ghost"
+            size="sm"
+            className="text-white/70 hover:text-white hover:bg-white/10"
+          >
+            <ArrowLeft className="w-4 h-4" />
+          </Button>
+          <h2 className="text-2xl font-bold text-white">Deposit Money</h2>
+        </div>
+      )}
+
       <Card className="bg-gray-900/80 backdrop-blur-xl border-gray-700/50 shadow-2xl">
         <CardHeader className="pb-4">
           <CardTitle className="flex items-center space-x-2 text-base sm:text-lg text-white">

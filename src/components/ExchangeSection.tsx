@@ -3,15 +3,16 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowUpDown, TrendingUp, TrendingDown } from 'lucide-react';
+import { ArrowUpDown, TrendingUp, TrendingDown, ArrowLeft } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
 interface ExchangeSectionProps {
   onBalanceUpdate?: (currency: string, amount: number) => void;
   onTransactionUpdate?: (transaction: any) => void;
+  onBack?: () => void;
 }
 
-export const ExchangeSection: React.FC<ExchangeSectionProps> = ({ onBalanceUpdate, onTransactionUpdate }) => {
+export const ExchangeSection: React.FC<ExchangeSectionProps> = ({ onBalanceUpdate, onTransactionUpdate, onBack }) => {
   const [fromCurrency, setFromCurrency] = useState('');
   const [toCurrency, setToCurrency] = useState('');
   const [amount, setAmount] = useState('');
@@ -123,6 +124,21 @@ export const ExchangeSection: React.FC<ExchangeSectionProps> = ({ onBalanceUpdat
 
   return (
     <div className="space-y-6 pb-24">
+      {/* Header with Back Button */}
+      {onBack && (
+        <div className="flex items-center space-x-3">
+          <Button
+            onClick={onBack}
+            variant="ghost"
+            size="sm"
+            className="text-white/70 hover:text-white hover:bg-white/10"
+          >
+            <ArrowLeft className="w-4 h-4" />
+          </Button>
+          <h2 className="text-2xl font-bold text-white">Currency Exchange</h2>
+        </div>
+      )}
+
       {/* Exchange Rates */}
       <Card className="bg-gray-900/80 backdrop-blur-xl border-gray-700/50 shadow-2xl">
         <CardHeader>

@@ -1,97 +1,98 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
-import { QrCode, Link, Share2, Copy, ArrowDownLeft } from 'lucide-react';
+import { QrCode, Copy, Share2, Link, Smartphone, ArrowLeft } from 'lucide-react';
 
-export const ReceiveSection = () => {
-  const [amount, setAmount] = useState('');
+interface ReceiveSectionProps {
+  onBack?: () => void;
+}
+
+export const ReceiveSection = ({ onBack }: ReceiveSectionProps) => {
   const [paymentLink, setPaymentLink] = useState('');
   const [showQRCode, setShowQRCode] = useState(false);
+  const [amount, setAmount] = useState('');
 
   const generatePaymentLink = () => {
     const link = `https://neovault.app/pay?amount=${amount}&id=${Math.random().toString(36).substring(7)}`;
     setPaymentLink(link);
   };
 
-  const generateQRCode = () => {
-    setShowQRCode(true);
-  };
-
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
   };
 
-  const sharePaymentLink = () => {
-    if (navigator.share) {
-      navigator.share({
-        title: 'NeoVault Payment Request',
-        text: `Send me MWK ${amount} via NeoVault`,
-        url: paymentLink
-      });
-    }
-  };
-
   return (
-    <div className="space-y-6">
-      <Card className="gradient-card border-border/50">
-        <CardHeader>
-          <CardTitle className="flex items-center space-x-2">
-            <div className="w-8 h-8 gradient-primary rounded-lg flex items-center justify-center">
-              <ArrowDownLeft className="w-5 h-5 text-white" />
+    <div className="space-y-4 sm:space-y-6 pb-24">
+      {/* Header with Back Button */}
+      {onBack && (
+        <div className="flex items-center space-x-3">
+          <Button
+            onClick={onBack}
+            variant="ghost"
+            size="sm"
+            className="text-white/70 hover:text-white hover:bg-white/10"
+          >
+            <ArrowLeft className="w-4 h-4" />
+          </Button>
+          <h2 className="text-2xl font-bold text-white">Receive Money</h2>
+        </div>
+      )}
+
+      {/* Request Money */}
+      <Card className="bg-gray-900/80 backdrop-blur-xl border-gray-700/50 shadow-2xl">
+        <CardHeader className="pb-4">
+          <CardTitle className="flex items-center space-x-2 text-base sm:text-lg text-white">
+            <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-r from-emerald-500 to-green-600 rounded-lg flex items-center justify-center">
+              <Smartphone className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
             </div>
-            <span>Receive Money</span>
+            <span>Request Money</span>
           </CardTitle>
         </CardHeader>
-        <CardContent>
-          <p className="text-muted-foreground mb-6">
-            Generate QR code or payment link to receive money from anyone
-          </p>
-
-          <div className="space-y-4 mb-6">
-            <div>
-              <Label htmlFor="amount">Amount to Request (Optional)</Label>
-              <Input
-                id="amount"
-                type="number"
-                placeholder="Enter amount in MWK"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                className="text-lg font-semibold"
-              />
-            </div>
+        <CardContent className="space-y-4">
+          <div className="text-center mb-6">
+            <h3 className="text-lg font-semibold mb-2 text-white">Get Paid Easily</h3>
+            <p className="text-sm text-gray-300">Generate QR code or payment link to receive money</p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-            <Card className="p-6 bg-white/5 border-border/50">
+          <div>
+            <Label htmlFor="amount" className="text-sm text-white">Amount to Receive</Label>
+            <Input
+              id="amount"
+              type="number"
+              placeholder="Enter amount in MWK"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              className="text-base sm:text-lg font-semibold bg-gray-800/60 border-gray-600/50 text-white placeholder-gray-400 mt-1"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Card className="p-4 bg-gray-800/60 border-gray-600/50">
               <div className="text-center space-y-4">
-                <QrCode className="w-16 h-16 mx-auto text-primary" />
-                <h4 className="font-semibold">QR Code</h4>
-                <p className="text-xs text-muted-foreground">
-                  Let others scan to pay you instantly
-                </p>
-                <Button 
-                  onClick={generateQRCode}
-                  className="w-full gradient-primary"
+                <QrCode className="w-16 h-16 mx-auto text-blue-400" />
+                <h4 className="font-semibold text-white">QR Code</h4>
+                <p className="text-xs text-gray-300">Let others scan to pay you</p>
+                <Button
+                  onClick={() => setShowQRCode(true)}
+                  className="w-full bg-gradient-to-r from-blue-500 to-purple-600"
+                  disabled={!amount}
                 >
                   Generate QR Code
                 </Button>
               </div>
             </Card>
 
-            <Card className="p-6 bg-white/5 border-border/50">
+            <Card className="p-4 bg-gray-800/60 border-gray-600/50">
               <div className="text-center space-y-4">
-                <Link className="w-16 h-16 mx-auto text-accent" />
-                <h4 className="font-semibold">Payment Link</h4>
-                <p className="text-xs text-muted-foreground">
-                  Share a link to receive payment
-                </p>
-                <Button 
+                <Link className="w-16 h-16 mx-auto text-cyan-400" />
+                <h4 className="font-semibold text-white">Payment Link</h4>
+                <p className="text-xs text-gray-300">Share a link to receive payment</p>
+                <Button
                   onClick={generatePaymentLink}
-                  className="w-full gradient-secondary"
+                  className="w-full bg-gradient-to-r from-cyan-500 to-blue-600"
+                  disabled={!amount}
                 >
                   Generate Link
                 </Button>
@@ -100,48 +101,36 @@ export const ReceiveSection = () => {
           </div>
 
           {paymentLink && (
-            <Card className="p-4 bg-accent/10 border-accent/30">
+            <Card className="p-4 bg-cyan-500/10 border-cyan-400/30">
               <div className="space-y-3">
-                <Label>Your Payment Link</Label>
+                <Label className="text-white">Your Payment Link</Label>
                 <div className="flex items-center space-x-2">
-                  <Input value={paymentLink} readOnly className="flex-1" />
-                  <Button size="sm" onClick={() => copyToClipboard(paymentLink)}>
+                  <Input value={paymentLink} readOnly className="flex-1 bg-gray-800/60 border-gray-600/50 text-white" />
+                  <Button size="sm" onClick={() => copyToClipboard(paymentLink)} className="bg-cyan-500 hover:bg-cyan-600">
                     <Copy className="w-4 h-4" />
                   </Button>
-                  <Button size="sm" onClick={sharePaymentLink}>
+                  <Button size="sm" className="bg-blue-500 hover:bg-blue-600">
                     <Share2 className="w-4 h-4" />
                   </Button>
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  Share this link with anyone to receive payments
-                </p>
               </div>
             </Card>
           )}
 
-          {showQRCode && (
-            <Card className="p-6 bg-card text-center border-border/50">
-              <div className="w-48 h-48 mx-auto bg-gradient-to-br from-primary to-accent rounded-lg flex items-center justify-center mb-4">
+          {showQRCode && amount && (
+            <Card className="p-6 bg-white text-center border-gray-600/50">
+              <div className="w-48 h-48 mx-auto bg-gradient-to-br from-blue-500 to-cyan-500 rounded-lg flex items-center justify-center mb-4">
                 <QrCode className="w-24 h-24 text-white" />
               </div>
-              {amount && (
-                <p className="text-lg font-semibold mb-2">MWK {amount}</p>
-              )}
-              <p className="text-sm text-muted-foreground mb-4">
-                Scan to pay via NeoVault
-              </p>
-              <div className="flex space-x-2 justify-center">
-                <Button 
-                  variant="outline" 
-                  onClick={() => setShowQRCode(false)}
-                >
-                  Close
-                </Button>
-                <Button className="gradient-primary">
-                  <Share2 className="w-4 h-4 mr-2" />
-                  Share QR
-                </Button>
-              </div>
+              <p className="text-lg font-semibold text-gray-800">MWK {amount}</p>
+              <p className="text-sm text-gray-600">Scan to pay via NeoVault</p>
+              <Button
+                variant="outline"
+                className="mt-4"
+                onClick={() => setShowQRCode(false)}
+              >
+                Close
+              </Button>
             </Card>
           )}
         </CardContent>
