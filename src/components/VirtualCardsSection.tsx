@@ -1,10 +1,11 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent as DialogContentPrimitive, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { useToast } from '@/hooks/use-toast';
 
 interface VirtualCardProps {
@@ -99,8 +100,8 @@ const VirtualCard: React.FC<VirtualCardProps> = ({
               <Label htmlFor="wallet" className="text-right">
                 Wallet
               </Label>
-              <Select onValueChange={setSelectedWallet} defaultValue={selectedWallet} className="col-span-3">
-                <SelectTrigger className="bg-gray-700 border-gray-600 text-white">
+              <Select onValueChange={setSelectedWallet} defaultValue={selectedWallet}>
+                <SelectTrigger className="col-span-3 bg-gray-700 border-gray-600 text-white">
                   <SelectValue placeholder="Select a wallet" />
                 </SelectTrigger>
                 <SelectContent className="bg-gray-700 border-gray-600 text-white">
@@ -219,8 +220,8 @@ export const VirtualCardsSection: React.FC<VirtualCardsSectionProps> = ({
               <Label htmlFor="cardType" className="text-right">
                 Card Type
               </Label>
-              <Select onValueChange={setSelectedCardType} defaultValue={selectedCardType} className="col-span-3">
-                <SelectTrigger className="bg-gray-700 border-gray-600 text-white">
+              <Select onValueChange={setSelectedCardType} defaultValue={selectedCardType}>
+                <SelectTrigger className="col-span-3 bg-gray-700 border-gray-600 text-white">
                   <SelectValue placeholder="Select a card type" />
                 </SelectTrigger>
                 <SelectContent className="bg-gray-700 border-gray-600 text-white">
