@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { ArrowLeft, Plus, CreditCard, Eye, EyeOff, Settings, Lock, Unlock, Shield, DollarSign, MapPin, Phone, Mail } from 'lucide-react';
+import { ArrowLeft, Plus, CreditCard, Eye, EyeOff, Settings, DollarSign } from 'lucide-react';
 import { CardSettings } from '@/components/CardSettings';
 
 interface Card {
@@ -41,9 +40,10 @@ interface CardType {
 interface VirtualCardsSectionProps {
   onBack: () => void;
   onBalanceUpdate?: (currency: string, amount: number) => void;
+  onTransactionUpdate?: (transaction: any) => void;
 }
 
-export const VirtualCardsSection = ({ onBack, onBalanceUpdate }: VirtualCardsSectionProps) => {
+export const VirtualCardsSection = ({ onBack, onBalanceUpdate, onTransactionUpdate }: VirtualCardsSectionProps) => {
   const [cards, setCards] = useState<Card[]>([
     {
       id: '1',
@@ -235,6 +235,36 @@ export const VirtualCardsSection = ({ onBack, onBalanceUpdate }: VirtualCardsSec
     setShowCardSettings(true);
   };
 
+  const handleAddMoney = (card: Card) => {
+    const amount = prompt(`Enter amount to add to your ${card.currency} card:`);
+    if (amount && !isNaN(Number(amount))) {
+      const numAmount = Number(amount);
+      setCards(prevCards => 
+        prevCards.map(c => 
+          c.id === card.id 
+            ? { ...c, balance: c.balance + numAmount }
+            : c
+        )
+      );
+      
+      if (onBalanceUpdate) {
+        onBalanceUpdate(card.currency, numAmount);
+      }
+      
+      if (onTransactionUpdate) {
+        onTransactionUpdate({
+          type: 'Card Top-up',
+          amount: `+${card.currency} ${numAmount.toFixed(2)}`,
+          description: `Added money to ${card.type} card`,
+          time: 'Just now',
+          status: 'completed'
+        });
+      }
+      
+      alert(`Successfully added ${card.currency} ${numAmount.toFixed(2)} to your card`);
+    }
+  };
+
   return (
     <div className="space-y-6 pb-24">
       {/* Header */}
@@ -271,7 +301,7 @@ export const VirtualCardsSection = ({ onBack, onBalanceUpdate }: VirtualCardsSec
               card.type === 'visa' ? 'from-blue-600 to-blue-800' : 'from-orange-500 to-red-600'
             }`}>
               {/* Card Brand Logo */}
-              <div className="flex justify-between items-start mb-8">
+              <div className="flex justify-between items-start mb-4">
                 <div className={`text-2xl font-bold ${card.type === 'visa' ? 'text-white' : 'text-white'}`}>
                   {card.type.toUpperCase()}
                 </div>
@@ -293,8 +323,8 @@ export const VirtualCardsSection = ({ onBack, onBalanceUpdate }: VirtualCardsSec
                 </div>
               </div>
 
-              {/* Card Number - Positioned at top */}
-              <div className="mb-6">
+              {/* Card Number - Positioned higher */}
+              <div className="mb-8">
                 <div className="text-lg font-mono tracking-wider">
                   {showCardNumbers[card.id] ? card.number : '**** **** **** ' + card.number.slice(-4)}
                 </div>
@@ -345,7 +375,7 @@ export const VirtualCardsSection = ({ onBack, onBalanceUpdate }: VirtualCardsSec
                   <Button
                     size="sm"
                     className="bg-blue-600 hover:bg-blue-700 text-white"
-                    onClick={() => alert(`Add money to ${card.currency} card`)}
+                    onClick={() => handleAddMoney(card)}
                   >
                     <DollarSign className="w-3 h-3 mr-1" />
                     Add Money

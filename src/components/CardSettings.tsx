@@ -9,20 +9,33 @@ import { Settings, Snowflake, Banknote, Trash2, AlertTriangle } from 'lucide-rea
 import { TransactionConfirmation } from '@/components/TransactionConfirmation';
 import { useToast } from '@/hooks/use-toast';
 
-interface CardSettingsProps {
-  cardId: string;
-  cardType: string;
-  onSettingsChange: (settings: any) => void;
+interface Card {
+  id: string;
+  type: 'visa' | 'mastercard';
+  number: string;
+  holderName: string;
+  expiryDate: string;
+  cvv: string;
+  currency: string;
+  balance: number;
+  isBlocked: boolean;
+  isPhysical?: boolean;
+  status: 'active' | 'frozen' | 'blocked';
 }
 
-export const CardSettings = ({ cardId, cardType, onSettingsChange }: CardSettingsProps) => {
+interface CardSettingsProps {
+  card: Card;
+  onClose: () => void;
+  onCardAction: (cardId: string, action: 'freeze' | 'unfreeze' | 'block' | 'unblock' | 'delete') => void;
+}
+
+export const CardSettings = ({ card, onClose, onCardAction }: CardSettingsProps) => {
   const { toast } = useToast();
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(true);
   const [activeTab, setActiveTab] = useState('freeze');
-  const [isFrozen, setIsFrozen] = useState(false);
+  const [isFrozen, setIsFrozen] = useState(card.status === 'frozen');
   const [dailyLimit, setDailyLimit] = useState('50000');
   const [monthlyLimit, setMonthlyLimit] = useState('500000');
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [transactionModal, setTransactionModal] = useState({
     isOpen: false,
     showSuccess: false,
@@ -30,21 +43,23 @@ export const CardSettings = ({ cardId, cardType, onSettingsChange }: CardSetting
   });
 
   const handleFreezeCard = () => {
-    const newFrozeState = !isFrozen;
-    setIsFrozen(newFrozeState);
+    const action = isFrozen ? 'unfreeze' : 'freeze';
+    const newFrozenState = !isFrozen;
+    setIsFrozen(newFrozenState);
+    onCardAction(card.id, action);
     
     toast({
       title: 'Success',
-      description: `Card ${newFrozeState ? 'frozen' : 'unfrozen'} successfully!`,
+      description: `Card ${newFrozenState ? 'frozen' : 'unfrozen'} successfully!`,
     });
 
     setTransactionModal({
       isOpen: true,
       showSuccess: false,
       transaction: {
-        type: newFrozeState ? 'Card Frozen' : 'Card Unfrozen',
+        type: newFrozenState ? 'Card Frozen' : 'Card Unfrozen',
         amount: 'No charge',
-        recipient: `${cardType} Card`,
+        recipient: `${card.type} Card`,
         fee: 'FREE',
         total: 'Security action completed'
       }
@@ -71,6 +86,8 @@ export const CardSettings = ({ cardId, cardType, onSettingsChange }: CardSetting
   };
 
   const handleDeleteCard = () => {
+    onCardAction(card.id, 'delete');
+    
     toast({
       title: 'Card Deleted',
       description: 'Your card has been permanently deleted.',
@@ -83,7 +100,7 @@ export const CardSettings = ({ cardId, cardType, onSettingsChange }: CardSetting
       transaction: {
         type: 'Card Deleted',
         amount: 'Permanent deletion',
-        recipient: `${cardType} Card`,
+        recipient: `${card.type} Card`,
         fee: 'FREE',
         total: 'Card permanently removed'
       }
@@ -102,20 +119,22 @@ export const CardSettings = ({ cardId, cardType, onSettingsChange }: CardSetting
       showSuccess: false,
       transaction: null
     });
-    setIsOpen(false);
+    onClose();
+  };
+
+  const handleOpenChange = (open: boolean) => {
+    setIsOpen(open);
+    if (!open) {
+      onClose();
+    }
   };
 
   return (
     <>
-      <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogTrigger asChild>
-          <Button size="sm" className="bg-gray-800 hover:bg-gray-700 text-white text-xs px-2">
-            <Settings className="w-3 h-3" />
-          </Button>
-        </DialogTrigger>
+      <Dialog open={isOpen} onOpenChange={handleOpenChange}>
         <DialogContent className="bg-gray-800 border-gray-700 text-white max-w-md">
           <DialogHeader>
-            <DialogTitle>Card Settings - {cardType}</DialogTitle>
+            <DialogTitle>Card Settings - {card.type}</DialogTitle>
           </DialogHeader>
           
           {/* Tab Navigation */}

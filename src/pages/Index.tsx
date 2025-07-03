@@ -282,9 +282,9 @@ const Index = () => {
               <CreateWalletModal onCreateWallet={handleCreateWallet} />
             </div>
             <VirtualCardsSection 
-              wallets={wallets}
               onBalanceUpdate={handleBalanceUpdate}
               onTransactionUpdate={handleTransactionUpdate}
+              onBack={() => setActiveTab('dashboard')}
             />
           </div>
         );
