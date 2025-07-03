@@ -203,6 +203,3 @@ export const languages = [
   { code: 'tum', name: 'Tumbuka', flag: '🇲🇼' },
   { code: 'sw', name: 'Swahili', flag: '🇹🇿' },
 ];
-
-// Backward compatibility exports
-export const translateText = translateTextStatic;
