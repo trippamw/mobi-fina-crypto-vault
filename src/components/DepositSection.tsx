@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -11,8 +12,8 @@ interface DepositSectionProps {
   onBalanceUpdate?: (currency: string, amount: number) => void;
   onTransactionUpdate?: (transaction: any) => void;
   onBack?: () => void;
-  walletCurrency?: string;
-  walletBalance?: number;
+  walletCurrency: string;
+  walletBalance: number;
 }
 
 export const DepositSection = ({ onBalanceUpdate, onTransactionUpdate, onBack, walletCurrency, walletBalance }: DepositSectionProps) => {

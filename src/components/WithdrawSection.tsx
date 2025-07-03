@@ -12,8 +12,8 @@ interface WithdrawSectionProps {
   onBalanceUpdate?: (currency: string, amount: number) => void;
   onTransactionUpdate?: (transaction: any) => void;
   onBack?: () => void;
-  walletCurrency?: string;
-  walletBalance?: number;
+  walletCurrency: string;
+  walletBalance: number;
 }
 
 export const WithdrawSection = ({ onBalanceUpdate, onTransactionUpdate, onBack, walletCurrency = 'MWK', walletBalance = 0 }: WithdrawSectionProps) => {
