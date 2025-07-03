@@ -114,6 +114,8 @@ export const VillageBankManagement = ({ villageBank, onBack, onCreateGroup, onIn
   ];
 
   const handleCreateGroup = () => {
+    console.log('Creating group with form data:', groupForm);
+    
     if (!groupForm.name || !groupForm.description || !groupForm.contributionAmount) {
       toast({
         title: 'Error',
@@ -149,7 +151,8 @@ export const VillageBankManagement = ({ villageBank, onBack, onCreateGroup, onIn
       ]
     };
 
-    setUserGroups([...userGroups, newGroup]);
+    console.log('New group created:', newGroup);
+    setUserGroups(prev => [...prev, newGroup]);
 
     if (onCreateGroup) {
       onCreateGroup(newGroup);
@@ -174,6 +177,8 @@ export const VillageBankManagement = ({ villageBank, onBack, onCreateGroup, onIn
   };
 
   const handleInviteMember = () => {
+    console.log('Inviting member with form data:', inviteForm);
+    
     if (!inviteForm.name || (!inviteForm.phone && !inviteForm.email)) {
       toast({
         title: 'Error',
@@ -277,7 +282,7 @@ export const VillageBankManagement = ({ villageBank, onBack, onCreateGroup, onIn
           <Button
             onClick={() => setShowCreateGroup(true)}
             size="sm"
-            className="bg-blue-600 hover:bg-blue-700 text-xs"
+            className="bg-blue-600 hover:bg-blue-700 text-white text-xs"
           >
             <Plus className="w-3 h-3 mr-1" />
             Create
@@ -389,7 +394,7 @@ export const VillageBankManagement = ({ villageBank, onBack, onCreateGroup, onIn
                             setSelectedGroup(group);
                             setShowInviteMember(true);
                           }}
-                          className="flex-1 bg-blue-600 hover:bg-blue-700 text-xs"
+                          className="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-xs"
                         >
                           <UserPlus className="w-3 h-3 mr-1" />
                           Invite
@@ -399,7 +404,7 @@ export const VillageBankManagement = ({ villageBank, onBack, onCreateGroup, onIn
                         size="sm"
                         variant="outline"
                         onClick={() => shareGroup(group)}
-                        className="flex-1 border-gray-600 text-gray-300 hover:bg-gray-700/50 text-xs"
+                        className="flex-1 border-gray-600 text-gray-300 hover:bg-gray-700/50 hover:text-white text-xs"
                       >
                         <Share2 className="w-3 h-3 mr-1" />
                         Share
@@ -407,7 +412,7 @@ export const VillageBankManagement = ({ villageBank, onBack, onCreateGroup, onIn
                       <Button
                         size="sm"
                         variant="outline"
-                        className="border-gray-600 text-gray-300 hover:bg-gray-700/50 text-xs px-2"
+                        className="border-gray-600 text-gray-300 hover:bg-gray-700/50 hover:text-white text-xs px-2"
                       >
                         <MessageCircle className="w-3 h-3" />
                       </Button>
@@ -421,7 +426,7 @@ export const VillageBankManagement = ({ villageBank, onBack, onCreateGroup, onIn
                           size="sm"
                           variant="ghost"
                           onClick={() => copyInviteCode(group.inviteCode)}
-                          className="ml-auto p-1 h-auto"
+                          className="ml-auto p-1 h-auto text-gray-400 hover:text-white"
                         >
                           <Copy className="w-3 h-3" />
                         </Button>
@@ -524,13 +529,13 @@ export const VillageBankManagement = ({ villageBank, onBack, onCreateGroup, onIn
                 <Button
                   variant="outline"
                   onClick={() => setShowCreateGroup(false)}
-                  className="flex-1 border-gray-600 text-white hover:bg-gray-700 text-sm"
+                  className="flex-1 border-gray-600 text-white hover:bg-gray-700 hover:text-white text-sm"
                 >
                   Cancel
                 </Button>
                 <Button
                   onClick={handleCreateGroup}
-                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-sm"
+                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-sm"
                 >
                   Create Group
                 </Button>
@@ -605,13 +610,13 @@ export const VillageBankManagement = ({ villageBank, onBack, onCreateGroup, onIn
                 <Button
                   variant="outline"
                   onClick={() => setShowInviteMember(false)}
-                  className="flex-1 border-gray-600 text-white hover:bg-gray-700 text-sm"
+                  className="flex-1 border-gray-600 text-white hover:bg-gray-700 hover:text-white text-sm"
                 >
                   Cancel
                 </Button>
                 <Button
                   onClick={handleInviteMember}
-                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-sm"
+                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-sm"
                 >
                   Send Invitation
                 </Button>
