@@ -6,8 +6,10 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Search, Filter, Download, ArrowUpRight, ArrowDownLeft, Bitcoin, PiggyBank } from 'lucide-react';
+import { useLanguage } from '@/utils/languageApi';
 
 export const TransactionHistory = () => {
+  const { t } = useLanguage();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('all');
 
@@ -92,11 +94,11 @@ export const TransactionHistory = () => {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'completed':
-        return <Badge className="bg-green-500/20 text-green-300 border-green-500/30">Completed</Badge>;
+        return <Badge className="bg-green-500/20 text-green-300 border-green-500/30">{t('success')}</Badge>;
       case 'pending':
         return <Badge className="bg-yellow-500/20 text-yellow-300 border-yellow-500/30">Pending</Badge>;
       case 'failed':
-        return <Badge className="bg-red-500/20 text-red-300 border-red-500/30">Failed</Badge>;
+        return <Badge className="bg-red-500/20 text-red-300 border-red-500/30">{t('error')}</Badge>;
       default:
         return <Badge variant="secondary">Unknown</Badge>;
     }
@@ -134,10 +136,10 @@ export const TransactionHistory = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Types</SelectItem>
-                  <SelectItem value="received">Received</SelectItem>
-                  <SelectItem value="sent">Sent</SelectItem>
-                  <SelectItem value="exchange">Exchange</SelectItem>
-                  <SelectItem value="investment">Investment</SelectItem>
+                  <SelectItem value="received">{t('receive')}</SelectItem>
+                  <SelectItem value="sent">{t('send')}</SelectItem>
+                  <SelectItem value="exchange">{t('exchange')}</SelectItem>
+                  <SelectItem value="investment">{t('invest')}</SelectItem>
                 </SelectContent>
               </Select>
               <Button variant="outline" size="icon" className="border-white/10 hover:bg-white/10">

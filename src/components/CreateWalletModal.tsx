@@ -6,12 +6,14 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Plus, Wallet, Bitcoin } from 'lucide-react';
+import { useLanguage } from '@/utils/languageApi';
 
 interface CreateWalletModalProps {
   onCreateWallet: (wallet: any) => void;
 }
 
 export const CreateWalletModal = ({ onCreateWallet }: CreateWalletModalProps) => {
+  const { t } = useLanguage();
   const [isOpen, setIsOpen] = useState(false);
   const [walletType, setWalletType] = useState('');
   const [currency, setCurrency] = useState('');
@@ -58,25 +60,25 @@ export const CreateWalletModal = ({ onCreateWallet }: CreateWalletModalProps) =>
       <DialogTrigger asChild>
         <Button className="gradient-primary">
           <Plus className="w-4 h-4 mr-2" />
-          Create Wallet
+          {t('wallet')}
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Create New Wallet</DialogTitle>
+          <DialogTitle>{t('wallet')}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
           <div>
-            <Label>Wallet Type</Label>
+            <Label>{t('wallet')}</Label>
             <Select value={walletType} onValueChange={setWalletType}>
               <SelectTrigger>
-                <SelectValue placeholder="Select wallet type" />
+                <SelectValue placeholder={t('wallet')} />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="fiat">
                   <div className="flex items-center">
                     <Wallet className="w-4 h-4 mr-2" />
-                    Fiat Currency
+                    Fiat {t('currency')}
                   </div>
                 </SelectItem>
                 <SelectItem value="crypto">
@@ -91,10 +93,10 @@ export const CreateWalletModal = ({ onCreateWallet }: CreateWalletModalProps) =>
 
           {walletType && (
             <div>
-              <Label>Currency</Label>
+              <Label>{t('currency')}</Label>
               <Select value={currency} onValueChange={setCurrency}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select currency" />
+                  <SelectValue placeholder={t('currency')} />
                 </SelectTrigger>
                 <SelectContent>
                   {currencies[walletType as keyof typeof currencies]?.map((curr) => (
@@ -112,7 +114,7 @@ export const CreateWalletModal = ({ onCreateWallet }: CreateWalletModalProps) =>
             className="w-full gradient-primary"
             disabled={!walletType || !currency}
           >
-            Create Wallet
+            {t('wallet')}
           </Button>
         </div>
       </DialogContent>

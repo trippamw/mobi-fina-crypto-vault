@@ -1,7 +1,7 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Home, Wallet, ArrowUpDown, PiggyBank, User, Plus, Send, ArrowDownLeft, CreditCard, Zap } from 'lucide-react';
+import { useLanguage } from '@/utils/languageApi';
 
 interface MobileNavigationProps {
   activeTab: string;
@@ -10,43 +10,45 @@ interface MobileNavigationProps {
 }
 
 export const MobileNavigation = ({ activeTab, onTabChange, notificationCount = 0 }: MobileNavigationProps) => {
+  const { t } = useLanguage();
+
   const navItems = [
     {
       id: 'home',
-      label: 'Home',
+      label: t('home'),
       icon: Home,
       subItems: [
-        { id: 'deposit', label: 'Deposit', icon: Plus },
-        { id: 'send', label: 'Send', icon: Send },
-        { id: 'receive', label: 'Receive', icon: ArrowDownLeft },
-        { id: 'bills', label: 'Bills', icon: Zap }
+        { id: 'deposit', label: t('deposit'), icon: Plus },
+        { id: 'send', label: t('send'), icon: Send },
+        { id: 'receive', label: t('receive'), icon: ArrowDownLeft },
+        { id: 'bills', label: t('bills'), icon: Zap }
       ]
     },
     {
       id: 'wallet',
-      label: 'Wallet',
+      label: t('wallet'),
       icon: Wallet,
       subItems: [
-        { id: 'cards', label: 'Cards', icon: CreditCard }
+        { id: 'cards', label: t('cards'), icon: CreditCard }
       ]
     },
     {
       id: 'exchange',
-      label: 'Exchange',
+      label: t('exchange'),
       icon: ArrowUpDown
     },
     {
       id: 'save',
-      label: 'Save',
+      label: t('invest'),
       icon: PiggyBank,
       subItems: [
-        { id: 'invest', label: 'Invest', icon: PiggyBank },
-        { id: 'village', label: 'Village Bank', icon: PiggyBank }
+        { id: 'invest', label: t('invest'), icon: PiggyBank },
+        { id: 'village', label: t('villageBank'), icon: PiggyBank }
       ]
     },
     {
       id: 'profile',
-      label: 'Profile',
+      label: t('profile'),
       icon: User
     }
   ];
@@ -96,4 +98,17 @@ export const MobileNavigation = ({ activeTab, onTabChange, notificationCount = 0
       </div>
     </div>
   );
+
+  function getActiveMainTab() {
+    const subTabMappings: { [key: string]: string } = {
+      'deposit': 'home',
+      'send': 'home',
+      'receive': 'home',
+      'bills': 'home',
+      'cards': 'wallet',
+      'invest': 'save',
+      'village': 'save'
+    };
+    return subTabMappings[activeTab] || activeTab;
+  }
 };

@@ -22,16 +22,18 @@ import { TransactionConfirmation } from '@/components/TransactionConfirmation';
 import { WalletManagement } from '@/components/WalletManagement';
 import { VillageBankManagement } from '@/components/VillageBankManagement';
 import { VillageBankGroupCreation } from '@/components/VillageBankGroupCreation';
+import { useLanguage } from '@/utils/languageApi';
 
 const Index = () => {
+  const { t } = useLanguage();
   const [balanceVisible, setBalanceVisible] = useState(true);
   const [activeTab, setActiveTab] = useState('dashboard');
   const [selectedWallet, setSelectedWallet] = useState<any>(null);
   const [currentLanguage, setCurrentLanguage] = useState('English');
   const [recentTransactions, setRecentTransactions] = useState([
-    { type: 'Received', amount: '+MWK 50,000', description: 'TNM Mobile Money', time: '2 min ago', status: 'completed' },
-    { type: 'Exchange', amount: '0.001 BTC → MWK 294,000', description: 'Crypto Exchange', time: '1 hour ago', status: 'completed' },
-    { type: 'Investment', amount: '+MWK 25,000', description: 'Savings Goal', time: '3 hours ago', status: 'pending' }
+    { type: t('received'), amount: '+MWK 50,000', description: 'TNM Mobile Money', time: '2 min ago', status: 'completed' },
+    { type: t('exchange'), amount: '0.001 BTC → MWK 294,000', description: 'Crypto Exchange', time: '1 hour ago', status: 'completed' },
+    { type: t('investment'), amount: '+MWK 25,000', description: 'Savings Goal', time: '3 hours ago', status: 'pending' }
   ]);
   
   const [wallets, setWallets] = useState([
@@ -277,7 +279,7 @@ const Index = () => {
                 >
                   <ArrowLeft className="w-4 h-4" />
                 </Button>
-                <h2 className="text-lg sm:text-2xl font-bold text-white">Wallet & Cards</h2>
+                <h2 className="text-lg sm:text-2xl font-bold text-white">{t('wallet')} & {t('cards')}</h2>
               </div>
               <CreateWalletModal onCreateWallet={handleCreateWallet} />
             </div>
@@ -326,7 +328,7 @@ const Index = () => {
                     <div className="w-6 h-6 sm:w-10 sm:h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
                       <Wallet className="w-3 h-3 sm:w-5 sm:h-5 text-white" />
                     </div>
-                    <span className="font-black text-xs sm:text-xl tracking-tight">Total Portfolio</span>
+                    <span className="font-black text-xs sm:text-xl tracking-tight">{t('balance')}</span>
                   </div>
                   <Badge className="bg-green-500/20 text-green-300 border-green-400/30 text-[10px] sm:text-xs px-1 sm:px-3 py-1">
                     <TrendingUp className="w-2 h-2 sm:w-3 sm:h-3 mr-1" />
@@ -358,7 +360,7 @@ const Index = () => {
                 </div>
                 <div className="flex items-center justify-between">
                   <p className="text-[10px] sm:text-sm text-white/70 font-semibold">
-                    🔄 Updated just now
+                    🔄 {t('loading')}
                   </p>
                   <div className="flex items-center space-x-1 text-green-400">
                     <span className="text-[10px] sm:text-sm font-bold">+MWK 47,300</span>
@@ -377,49 +379,49 @@ const Index = () => {
                     onClick={() => setActiveTab('deposit')}
                   >
                     <Plus className="w-4 h-4 sm:w-6 sm:h-6" />
-                    <span className="text-[10px] sm:text-xs font-medium">Deposit</span>
+                    <span className="text-[10px] sm:text-xs font-medium">{t('deposit')}</span>
                   </Button>
                   <Button
                     className="h-16 sm:h-20 flex-col space-y-1 bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 border-blue-400/30 backdrop-blur-sm"
                     onClick={() => setActiveTab('send')}
                   >
                     <Send className="w-4 h-4 sm:w-6 sm:h-6" />
-                    <span className="text-[10px] sm:text-xs font-medium">Send</span>
+                    <span className="text-[10px] sm:text-xs font-medium">{t('send')}</span>
                   </Button>
                   <Button
                     className="h-16 sm:h-20 flex-col space-y-1 bg-orange-500/20 hover:bg-orange-500/30 text-orange-300 border-orange-400/30 backdrop-blur-sm"
                     onClick={() => setActiveTab('withdraw')}
                   >
                     <Download className="w-4 h-4 sm:w-6 sm:h-6" />
-                    <span className="text-[10px] sm:text-xs font-medium">Withdraw</span>
+                    <span className="text-[10px] sm:text-xs font-medium">{t('withdraw')}</span>
                   </Button>
                   <Button
                     className="h-16 sm:h-20 flex-col space-y-1 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border-emerald-400/30 backdrop-blur-sm"
                     onClick={() => setActiveTab('receive')}
                   >
                     <ArrowDownLeft className="w-4 h-4 sm:w-6 sm:h-6" />
-                    <span className="text-[10px] sm:text-xs font-medium">Receive</span>
+                    <span className="text-[10px] sm:text-xs font-medium">{t('receive')}</span>
                   </Button>
                   <Button
                     className="h-16 sm:h-20 flex-col space-y-1 bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 border-purple-400/30 backdrop-blur-sm"
                     onClick={() => setActiveTab('cards')}
                   >
                     <CreditCard className="w-4 h-4 sm:w-6 sm:h-6" />
-                    <span className="text-[10px] sm:text-xs font-medium">Cards</span>
+                    <span className="text-[10px] sm:text-xs font-medium">{t('cards')}</span>
                   </Button>
                   <Button
                     className="h-16 sm:h-20 flex-col space-y-1 bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-300 border-yellow-400/30 backdrop-blur-sm"
                     onClick={() => setActiveTab('exchange')}
                   >
                     <Bitcoin className="w-4 h-4 sm:w-6 sm:h-6" />
-                    <span className="text-[10px] sm:text-xs font-medium">Exchange</span>
+                    <span className="text-[10px] sm:text-xs font-medium">{t('exchange')}</span>
                   </Button>
                   <Button
                     className="h-16 sm:h-20 flex-col space-y-1 bg-pink-500/20 hover:bg-pink-500/30 text-pink-300 border-pink-400/30 backdrop-blur-sm"
                     onClick={() => setActiveTab('invest')}
                   >
                     <PiggyBank className="w-4 h-4 sm:w-6 sm:h-6" />
-                    <span className="text-[10px] sm:text-xs font-medium">Save</span>
+                    <span className="text-[10px] sm:text-xs font-medium">{t('invest')}</span>
                   </Button>
                   <Button
                     className="h-16 sm:h-20 flex-col space-y-1 bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 border-cyan-400/30 backdrop-blur-sm"

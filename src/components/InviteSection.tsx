@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -5,12 +6,14 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { UserPlus, Share2, Copy, Gift, Users, Smartphone, Mail, ArrowLeft } from 'lucide-react';
+import { useLanguage } from '@/utils/languageApi';
 
 interface InviteSectionProps {
   onBack?: () => void;
 }
 
 export const InviteSection = ({ onBack }: InviteSectionProps) => {
+  const { t } = useLanguage();
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [inviteLink, setInviteLink] = useState('');
@@ -94,11 +97,11 @@ export const InviteSection = ({ onBack }: InviteSectionProps) => {
             <Card className="p-4 bg-white/5 border-border/50">
               <h4 className="font-semibold mb-3 flex items-center">
                 <Smartphone className="w-4 h-4 mr-2" />
-                Invite by Phone/Email
+                Invite by {t('phone')}/{t('email')}
               </h4>
               <div className="space-y-3">
                 <div>
-                  <Label htmlFor="email">Email Address</Label>
+                  <Label htmlFor="email">{t('email')}</Label>
                   <div className="flex space-x-2">
                     <Input
                       id="email"
@@ -113,13 +116,13 @@ export const InviteSection = ({ onBack }: InviteSectionProps) => {
                       disabled={!email}
                       className="gradient-primary"
                     >
-                      Send
+                      {t('send')}
                     </Button>
                   </div>
                 </div>
                 
                 <div>
-                  <Label htmlFor="phone">Phone Number</Label>
+                  <Label htmlFor="phone">{t('phone')}</Label>
                   <div className="flex space-x-2">
                     <Input
                       id="phone"
@@ -134,7 +137,7 @@ export const InviteSection = ({ onBack }: InviteSectionProps) => {
                       disabled={!phone}
                       className="gradient-secondary"
                     >
-                      Send
+                      {t('send')}
                     </Button>
                   </div>
                 </div>

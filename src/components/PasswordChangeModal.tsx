@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Lock, Eye, EyeOff } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useLanguage } from '@/utils/languageApi';
 
 interface PasswordChangeModalProps {
   isOpen: boolean;
@@ -13,6 +14,7 @@ interface PasswordChangeModalProps {
 }
 
 export const PasswordChangeModal = ({ isOpen, onClose }: PasswordChangeModalProps) => {
+  const { t } = useLanguage();
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -51,7 +53,7 @@ export const PasswordChangeModal = ({ isOpen, onClose }: PasswordChangeModalProp
     setTimeout(() => {
       setIsLoading(false);
       toast({
-        title: "Password Changed",
+        title: t('changePassword'),
         description: "Your password has been successfully updated",
       });
       setCurrentPassword('');
@@ -74,7 +76,7 @@ export const PasswordChangeModal = ({ isOpen, onClose }: PasswordChangeModalProp
         <DialogHeader>
           <DialogTitle className="flex items-center text-lg">
             <Lock className="w-5 h-5 mr-2" />
-            Change Password
+            {t('changePassword')}
           </DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -151,14 +153,14 @@ export const PasswordChangeModal = ({ isOpen, onClose }: PasswordChangeModalProp
               onClick={onClose}
               className="flex-1 border-gray-600 text-gray-300 hover:text-white"
             >
-              Cancel
+              {t('cancel')}
             </Button>
             <Button
               type="submit"
               disabled={isLoading}
               className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
             >
-              {isLoading ? 'Changing...' : 'Change Password'}
+              {isLoading ? t('processing') : t('changePassword')}
             </Button>
           </div>
         </form>
