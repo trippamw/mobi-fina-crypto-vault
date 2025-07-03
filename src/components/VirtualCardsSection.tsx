@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -5,676 +6,505 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
-import { Separator } from '@/components/ui/separator';
-import { CreditCard, Lock, Eye, EyeOff, Plus, Settings, Trash2, Wallet, Shield, Snowflake, MapPin, Phone, Mail } from 'lucide-react';
+import { ArrowLeft, Plus, CreditCard, Eye, EyeOff, Settings, Lock, Unlock, Shield, DollarSign, MapPin, Phone, Mail } from 'lucide-react';
 import { CardSettings } from '@/components/CardSettings';
-import { useToast } from '@/hooks/use-toast';
 
-interface VirtualCardsSectionProps {
-  wallets: any[];
-  onBalanceUpdate?: (currency: string, amount: number) => void;
-  onTransactionUpdate?: (transaction: any) => void;
+interface Card {
+  id: string;
+  type: 'visa' | 'mastercard';
+  number: string;
+  holderName: string;
+  expiryDate: string;
+  cvv: string;
+  currency: string;
+  balance: number;
+  isBlocked: boolean;
+  isPhysical?: boolean;
+  status: 'active' | 'frozen' | 'blocked';
 }
 
-export const VirtualCardsSection = ({ wallets, onBalanceUpdate, onTransactionUpdate }: VirtualCardsSectionProps) => {
-  const { toast } = useToast();
+interface CardBenefit {
+  feature: string;
+  description: string;
+}
+
+interface CardType {
+  id: string;
+  name: string;
+  type: 'visa' | 'mastercard';
+  annualFee: number;
+  benefits: CardBenefit[];
+  color: string;
+  isPhysical?: boolean;
+}
+
+interface VirtualCardsSectionProps {
+  onBack: () => void;
+  onBalanceUpdate?: (currency: string, amount: number) => void;
+}
+
+export const VirtualCardsSection = ({ onBack, onBalanceUpdate }: VirtualCardsSectionProps) => {
+  const [cards, setCards] = useState<Card[]>([
+    {
+      id: '1',
+      type: 'visa',
+      number: '4532 1234 5678 9012',
+      holderName: 'JOHN BANDA',
+      expiryDate: '12/27',
+      cvv: '123',
+      currency: 'USD',
+      balance: 250.75,
+      isBlocked: false,
+      status: 'active'
+    },
+    {
+      id: '2',
+      type: 'mastercard',
+      number: '5555 4444 3333 2222',
+      holderName: 'JOHN BANDA',
+      expiryDate: '03/26',
+      cvv: '456',
+      currency: 'EUR',
+      balance: 180.50,
+      isBlocked: false,
+      status: 'active'
+    }
+  ]);
+
+  const [showCardNumbers, setShowCardNumbers] = useState<{[key: string]: boolean}>({});
   const [showCreateCard, setShowCreateCard] = useState(false);
-  const [showAddMoney, setShowAddMoney] = useState(false);
-  const [selectedCard, setSelectedCard] = useState<any>(null);
+  const [selectedCardType, setSelectedCardType] = useState<string>('');
+  const [isPhysicalCard, setIsPhysicalCard] = useState(false);
+  const [showCardSettings, setShowCardSettings] = useState(false);
+  const [selectedCard, setSelectedCard] = useState<Card | null>(null);
+
   const [cardForm, setCardForm] = useState({
-    type: 'standard',
-    currency: 'USD',
-    name: 'John Doe',
-    isPhysical: false,
-    // Physical card details
+    holderName: '',
     address: '',
     phone: '',
     email: '',
     location: '',
     postBox: ''
   });
-  const [addMoneyForm, setAddMoneyForm] = useState({
-    amount: '',
-    sourceWallet: ''
-  });
-  const [balanceVisible, setBalanceVisible] = useState<{[key: string]: boolean}>({});
 
-  const [cards, setCards] = useState([
+  const cardTypes: CardType[] = [
     {
-      id: '1',
-      type: 'standard',
-      currency: 'USD',
-      balance: 250,
-      cardNumber: '4532 •••• •••• 1234',
-      expiryDate: '12/28',
-      cvv: '123',
-      holderName: 'John Doe',
-      status: 'active',
-      isPhysical: false,
-      isBlocked: false,
-      dailyLimit: 1000,
-      monthlyLimit: 5000
-    },
-    {
-      id: '2',
-      type: 'gold',
-      currency: 'EUR',
-      balance: 580,
-      cardNumber: '5555 •••• •••• 8888',
-      expiryDate: '09/27',
-      cvv: '456',
-      holderName: 'John Doe',
-      status: 'active',
-      isPhysical: true,
-      isBlocked: false,
-      dailyLimit: 2500,
-      monthlyLimit: 15000
-    },
-    {
-      id: '3',
-      type: 'platinum',
-      currency: 'GBP',
-      balance: 1200,
-      cardNumber: '4111 •••• •••• 9999',
-      expiryDate: '03/29',
-      cvv: '789',
-      holderName: 'John Doe',
-      status: 'active',
-      isPhysical: true,
-      isBlocked: false,
-      dailyLimit: 5000,
-      monthlyLimit: 25000
-    }
-  ]);
-
-  const cardTypes = [
-    { 
-      value: 'standard', 
-      label: 'Standard Card', 
-      virtualFee: 'FREE',
-      physicalFee: 'MWK 5,000', 
+      id: 'visa-standard',
+      name: 'Visa Classic',
+      type: 'visa',
+      annualFee: 25000,
       color: 'from-blue-600 to-blue-800',
-      benefits: ['Online payments', 'Mobile money deposits', 'Basic security features']
+      benefits: [
+        { feature: 'Global Acceptance', description: 'Use worldwide at millions of locations' },
+        { feature: 'Online Shopping', description: 'Secure online transactions' },
+        { feature: 'ATM Access', description: 'Withdraw cash from ATMs globally' },
+        { feature: '24/7 Support', description: 'Round the clock customer service' }
+      ]
     },
-    { 
-      value: 'gold', 
-      label: 'Gold Card', 
-      virtualFee: 'MWK 3,000',
-      physicalFee: 'MWK 15,000', 
-      color: 'from-yellow-400 to-yellow-600',
-      benefits: ['Priority support', 'Higher limits', 'Cashback rewards', 'Airport lounge access']
+    {
+      id: 'mastercard-standard',
+      name: 'Mastercard Standard',
+      type: 'mastercard',
+      annualFee: 30000,
+      color: 'from-orange-500 to-red-600',
+      benefits: [
+        { feature: 'Worldwide Acceptance', description: 'Accepted at millions of locations' },
+        { feature: 'Contactless Payments', description: 'Tap and pay technology' },
+        { feature: 'Travel Benefits', description: 'Special travel offers and discounts' },
+        { feature: 'Fraud Protection', description: 'Advanced security monitoring' }
+      ]
     },
-    { 
-      value: 'platinum', 
-      label: 'Platinum Card', 
-      virtualFee: 'MWK 8,000',
-      physicalFee: 'MWK 35,000', 
-      color: 'from-gray-400 to-gray-600',
-      benefits: ['Premium support', 'Highest limits', 'Travel insurance', 'Concierge service', 'Global acceptance']
+    {
+      id: 'visa-gold',
+      name: 'Visa Gold',
+      type: 'visa',
+      annualFee: 75000,
+      color: 'from-yellow-500 to-yellow-700',
+      benefits: [
+        { feature: 'Premium Support', description: 'Priority customer service' },
+        { feature: 'Travel Insurance', description: 'Comprehensive travel coverage' },
+        { feature: 'Airport Lounge', description: 'Access to premium lounges' },
+        { feature: 'Concierge Service', description: '24/7 lifestyle assistance' }
+      ]
     }
   ];
 
-  const currencies = ['USD', 'EUR', 'GBP', 'MWK'];
-
-  const getCardGradient = (type: string) => {
-    switch (type) {
-      case 'gold':
-        return 'bg-gradient-to-br from-yellow-400 via-yellow-500 to-yellow-600';
-      case 'platinum':
-        return 'bg-gradient-to-br from-gray-400 via-gray-500 to-gray-600';
-      default:
-        return 'bg-gradient-to-br from-blue-600 via-blue-700 to-blue-800';
-    }
+  const toggleCardVisibility = (cardId: string) => {
+    setShowCardNumbers(prev => ({
+      ...prev,
+      [cardId]: !prev[cardId]
+    }));
   };
 
   const handleCreateCard = () => {
-    if (!cardForm.type || !cardForm.currency || !cardForm.name) {
-      toast({
-        title: 'Error',
-        description: 'Please fill in all required fields',
-        variant: 'destructive'
-      });
+    if (!selectedCardType) {
+      alert('Please select a card type');
       return;
     }
 
-    if (cardForm.isPhysical) {
-      if (!cardForm.address || !cardForm.phone || !cardForm.email || !cardForm.location) {
-        toast({
-          title: 'Error',
-          description: 'Please fill in all physical card delivery details',
-          variant: 'destructive'
-        });
-        return;
-      }
-    }
-
-    const selectedCardType = cardTypes.find(ct => ct.value === cardForm.type);
-    const fee = cardForm.isPhysical ? selectedCardType?.physicalFee : selectedCardType?.virtualFee;
-    const feeAmount = fee === 'FREE' ? 0 : parseInt(fee?.replace(/[^\d]/g, '') || '0');
-
-    // Check if user has enough MWK for the fee
-    const mwkWallet = wallets.find(w => w.currency === 'MWK');
-    if (feeAmount > 0 && (!mwkWallet || mwkWallet.balance < feeAmount)) {
-      toast({
-        title: 'Insufficient Balance',
-        description: `You need MWK ${feeAmount.toLocaleString()} to create this card`,
-        variant: 'destructive'
-      });
+    if (isPhysicalCard && (!cardForm.holderName || !cardForm.address || !cardForm.phone)) {
+      alert('Please fill in all required fields for physical card');
       return;
     }
 
-    const newCard = {
+    const selectedType = cardTypes.find(t => t.id === selectedCardType);
+    if (!selectedType) return;
+
+    const newCard: Card = {
       id: Date.now().toString(),
-      type: cardForm.type,
-      currency: cardForm.currency,
+      type: selectedType.type,
+      number: generateCardNumber(selectedType.type),
+      holderName: cardForm.holderName || 'JOHN BANDA',
+      expiryDate: generateExpiryDate(),
+      cvv: generateCVV(),
+      currency: selectedType.type === 'visa' ? 'USD' : 'EUR',
       balance: 0,
-      cardNumber: `${Math.floor(1000 + Math.random() * 9000)} •••• •••• ${Math.floor(1000 + Math.random() * 9000)}`,
-      expiryDate: `${String(Math.floor(Math.random() * 12) + 1).padStart(2, '0')}/${String(new Date().getFullYear() + 3).slice(-2)}`,
-      cvv: String(Math.floor(100 + Math.random() * 900)),
-      holderName: cardForm.name,
-      status: 'active',
-      isPhysical: cardForm.isPhysical,
       isBlocked: false,
-      dailyLimit: cardForm.type === 'platinum' ? 5000 : cardForm.type === 'gold' ? 2500 : 1000,
-      monthlyLimit: cardForm.type === 'platinum' ? 25000 : cardForm.type === 'gold' ? 15000 : 5000,
-      deliveryDetails: cardForm.isPhysical ? {
-        address: cardForm.address,
-        phone: cardForm.phone,
-        email: cardForm.email,
-        location: cardForm.location,
-        postBox: cardForm.postBox
-      } : null
+      isPhysical: isPhysicalCard,
+      status: 'active'
     };
 
     setCards([...cards, newCard]);
     
-    // Deduct fee if applicable
-    if (feeAmount > 0 && onBalanceUpdate) {
-      onBalanceUpdate('MWK', -feeAmount);
-    }
-
-    // Add transaction
-    if (onTransactionUpdate) {
-      onTransactionUpdate({
-        type: 'Card Purchase',
-        amount: feeAmount > 0 ? `-MWK ${feeAmount.toLocaleString()}` : 'FREE',
-        description: `${cardForm.type.charAt(0).toUpperCase() + cardForm.type.slice(1)} ${cardForm.isPhysical ? 'Physical' : 'Virtual'} card created`,
-        time: 'Just now',
-        status: 'completed'
-      });
-    }
-    
-    toast({
-      title: 'Success',
-      description: `${cardForm.type.charAt(0).toUpperCase() + cardForm.type.slice(1)} ${cardForm.isPhysical ? 'physical' : 'virtual'} card created successfully!${cardForm.isPhysical ? ' Physical card will be delivered in 5-7 business days.' : ''}`,
-    });
-
-    setShowCreateCard(false);
-    setCardForm({ 
-      type: 'standard', 
-      currency: 'USD', 
-      name: 'John Doe', 
-      isPhysical: false,
+    // Reset form
+    setCardForm({
+      holderName: '',
       address: '',
       phone: '',
       email: '',
       location: '',
       postBox: ''
     });
+    setSelectedCardType('');
+    setIsPhysicalCard(false);
+    setShowCreateCard(false);
+
+    alert(`${isPhysicalCard ? 'Physical' : 'Virtual'} ${selectedType.name} created successfully! Annual fee: MWK ${selectedType.annualFee.toLocaleString()}`);
   };
 
-  const handleAddMoney = () => {
-    const amount = parseFloat(addMoneyForm.amount);
-    if (!amount || amount <= 0) {
-      toast({
-        title: 'Error',
-        description: 'Please enter a valid amount',
-        variant: 'destructive'
-      });
-      return;
-    }
+  const generateCardNumber = (type: 'visa' | 'mastercard') => {
+    const prefix = type === 'visa' ? '4' : '5';
+    const remaining = Array.from({length: 15}, () => Math.floor(Math.random() * 10)).join('');
+    const fullNumber = prefix + remaining.substring(0, 14);
+    return fullNumber.replace(/(.{4})/g, '$1 ').trim();
+  };
 
-    if (!addMoneyForm.sourceWallet) {
-      toast({
-        title: 'Error',
-        description: 'Please select a source wallet',
-        variant: 'destructive'
-      });
-      return;
-    }
+  const generateExpiryDate = () => {
+    const currentYear = new Date().getFullYear() % 100;
+    const expiryYear = currentYear + 3 + Math.floor(Math.random() * 3);
+    const month = Math.floor(Math.random() * 12) + 1;
+    return `${month.toString().padStart(2, '0')}/${expiryYear}`;
+  };
 
-    const sourceWallet = wallets.find(w => w.currency === addMoneyForm.sourceWallet);
-    if (!sourceWallet || sourceWallet.balance < amount) {
-      toast({
-        title: 'Error',
-        description: 'Insufficient balance in source wallet',
-        variant: 'destructive'
-      });
-      return;
-    }
+  const generateCVV = () => {
+    return Math.floor(Math.random() * 900 + 100).toString();
+  };
 
-    // Update card balance
-    setCards(cards.map(card => 
-      card.id === selectedCard.id 
-        ? { ...card, balance: card.balance + amount }
-        : card
-    ));
-
-    // Update wallet balance
-    if (onBalanceUpdate) {
-      onBalanceUpdate(addMoneyForm.sourceWallet, -amount);
-    }
-
-    // Add transaction
-    if (onTransactionUpdate) {
-      onTransactionUpdate({
-        type: 'Card Top-up',
-        amount: `-${addMoneyForm.sourceWallet} ${amount.toLocaleString()}`,
-        description: `Added money to ${selectedCard.type} card`,
-        time: 'Just now',
-        status: 'completed'
-      });
-    }
-
-    toast({
-      title: 'Success',
-      description: `${selectedCard.currency} ${amount.toLocaleString()} added to your card successfully!`,
+  const handleCardAction = (cardId: string, action: 'freeze' | 'unfreeze' | 'block' | 'unblock' | 'delete') => {
+    setCards(prevCards => {
+      return prevCards.map(card => {
+        if (card.id === cardId) {
+          switch (action) {
+            case 'freeze':
+              return { ...card, status: 'frozen' as const };
+            case 'unfreeze':
+              return { ...card, status: 'active' as const };
+            case 'block':
+              return { ...card, status: 'blocked' as const, isBlocked: true };
+            case 'unblock':
+              return { ...card, status: 'active' as const, isBlocked: false };
+            case 'delete':
+              return card; // Will be filtered out below
+            default:
+              return card;
+          }
+        }
+        return card;
+      }).filter(card => !(card.id === cardId && action === 'delete'));
     });
 
-    setShowAddMoney(false);
-    setAddMoneyForm({ amount: '', sourceWallet: '' });
-  };
-
-  const toggleCardVisibility = (cardId: string) => {
-    setBalanceVisible(prev => ({
-      ...prev,
-      [cardId]: !prev[cardId]
-    }));
-  };
-
-  const handleBlockCard = (cardId: string) => {
-    setCards(cards.map(card => 
-      card.id === cardId 
-        ? { ...card, isBlocked: !card.isBlocked }
-        : card
-    ));
-    
-    const card = cards.find(c => c.id === cardId);
-    toast({
-      title: 'Success',
-      description: `Card ${card?.isBlocked ? 'unblocked' : 'blocked'} successfully!`,
-    });
-  };
-
-  const formatBalance = (balance: number, currency: string) => {
-    if (currency === 'MWK') {
-      return `MWK ${balance.toLocaleString()}`;
-    } else if (currency === 'USD') {
-      return `$${balance.toLocaleString()}`;
-    } else if (currency === 'EUR') {
-      return `€${balance.toLocaleString()}`;
-    } else if (currency === 'GBP') {
-      return `£${balance.toLocaleString()}`;
+    if (action === 'delete') {
+      alert('Card deleted successfully');
+    } else {
+      alert(`Card ${action}d successfully`);
     }
-    return `${balance.toLocaleString()} ${currency}`;
+  };
+
+  const openCardSettings = (card: Card) => {
+    setSelectedCard(card);
+    setShowCardSettings(true);
   };
 
   return (
-    <div className="space-y-4">
-      {/* Create Card Button */}
-      <div className="flex justify-end">
+    <div className="space-y-6 pb-24">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-3">
+          <Button
+            onClick={onBack}
+            variant="ghost"
+            size="sm"
+            className="text-white/70 hover:text-white hover:bg-white/10"
+          >
+            <ArrowLeft className="w-4 h-4" />
+          </Button>
+          <div>
+            <h2 className="text-xl font-bold text-white">Virtual Cards</h2>
+            <p className="text-sm text-white/70">Manage your payment cards</p>
+          </div>
+        </div>
         <Button
           onClick={() => setShowCreateCard(true)}
-          className="bg-blue-600 hover:bg-blue-700 text-white"
+          className="bg-green-600 hover:bg-green-700 text-white"
         >
           <Plus className="w-4 h-4 mr-2" />
           Create Card
         </Button>
       </div>
 
-      {/* Cards Grid - Better Rectangular Design */}
+      {/* Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {cards.map((card) => (
-          <div key={card.id} className="group">
-            {/* Card Design - More Rectangular Credit Card Style */}
-            <div className={`${getCardGradient(card.type)} rounded-2xl p-6 text-white shadow-2xl transform transition-all duration-300 group-hover:scale-[1.02] group-hover:shadow-3xl relative overflow-hidden`} style={{ aspectRatio: '1.6/1', minHeight: '200px' }}>
-              {/* Card Type Badge */}
-              <div className="absolute top-4 right-4">
-                <Badge className="bg-white/20 text-white border-0 text-xs backdrop-blur-sm">
-                  {card.type.charAt(0).toUpperCase() + card.type.slice(1)}
-                </Badge>
-              </div>
-
-              {/* Physical Card Indicator */}
-              {card.isPhysical && (
-                <div className="absolute top-4 left-4">
-                  <Badge className="bg-green-500/20 text-green-300 border-green-400/30 text-xs backdrop-blur-sm">
-                    Physical
+          <div key={card.id} className="space-y-3">
+            {/* Card Visual */}
+            <div className={`relative w-full h-48 rounded-2xl p-6 text-white shadow-2xl bg-gradient-to-br ${
+              card.type === 'visa' ? 'from-blue-600 to-blue-800' : 'from-orange-500 to-red-600'
+            }`}>
+              {/* Card Brand Logo */}
+              <div className="flex justify-between items-start mb-8">
+                <div className={`text-2xl font-bold ${card.type === 'visa' ? 'text-white' : 'text-white'}`}>
+                  {card.type.toUpperCase()}
+                </div>
+                <div className="flex items-center space-x-1">
+                  {card.isPhysical && (
+                    <Badge className="bg-white/20 text-white text-xs px-2 py-1">
+                      Physical
+                    </Badge>
+                  )}
+                  <Badge className={`text-xs px-2 py-1 ${
+                    card.status === 'active' 
+                      ? 'bg-green-500/20 text-green-300' 
+                      : card.status === 'frozen'
+                      ? 'bg-blue-500/20 text-blue-300'
+                      : 'bg-red-500/20 text-red-300'
+                  }`}>
+                    {card.status}
                   </Badge>
                 </div>
-              )}
-
-              {/* Card Brand Logo Area */}
-              <div className="flex justify-between items-start mb-6 mt-8">
-                <div className="flex items-center space-x-2">
-                  <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center backdrop-blur-sm">
-                    <CreditCard className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <p className="text-xs opacity-75">NeoVault</p>
-                    <p className="text-xs font-semibold">{card.currency}</p>
-                  </div>
-                </div>
-                {card.isBlocked && (
-                  <Lock className="w-5 h-5 text-red-300" />
-                )}
               </div>
 
-              {/* Card Number */}
+              {/* Card Number - Positioned at top */}
               <div className="mb-6">
-                <p className="text-lg font-mono font-bold tracking-wider">
-                  {card.cardNumber}
-                </p>
+                <div className="text-lg font-mono tracking-wider">
+                  {showCardNumbers[card.id] ? card.number : '**** **** **** ' + card.number.slice(-4)}
+                </div>
               </div>
 
-              {/* Card Details Bottom Section - Better Aligned */}
+              {/* Card Details at Bottom */}
               <div className="absolute bottom-6 left-6 right-6">
-                <div className="flex justify-between items-end mb-3">
+                <div className="flex justify-between items-end">
                   <div>
-                    <p className="text-xs opacity-75 mb-1">Card Holder</p>
-                    <p className="font-semibold text-sm">{card.holderName}</p>
+                    <div className="text-xs text-white/70 mb-1">CARD HOLDER</div>
+                    <div className="text-sm font-semibold">{card.holderName}</div>
                   </div>
                   <div className="text-right">
-                    <p className="text-xs opacity-75 mb-1">Balance</p>
-                    <p className="text-base font-bold">
-                      {balanceVisible[card.id] ? formatBalance(card.balance, card.currency) : '••••••'}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Expiry and CVV - Properly Aligned */}
-                <div className="flex justify-between items-center text-xs">
-                  <div>
-                    <span className="opacity-75">EXP </span>
-                    <span className="font-mono">{card.expiryDate}</span>
-                  </div>
-                  <div>
-                    <span className="opacity-75">CVV </span>
-                    <span className="font-mono">•••</span>
+                    <div className="text-xs text-white/70 mb-1">EXPIRES</div>
+                    <div className="text-sm font-semibold">{card.expiryDate}</div>
                   </div>
                 </div>
               </div>
 
-              {/* Decorative Elements */}
-              <div className="absolute -bottom-4 -right-4 w-24 h-24 bg-white/5 rounded-full"></div>
-              <div className="absolute -top-8 -left-8 w-32 h-32 bg-white/5 rounded-full"></div>
+              {/* CVV positioned separately when card is flipped */}
+              {showCardNumbers[card.id] && (
+                <div className="absolute top-6 right-6">
+                  <div className="text-xs text-white/70 mb-1">CVV</div>
+                  <div className="text-sm font-semibold">{card.cvv}</div>
+                </div>
+              )}
             </div>
 
-            {/* Card Action Buttons */}
-            <div className="mt-4 grid grid-cols-4 gap-2">
-              <Button
-                onClick={() => {
-                  setSelectedCard(card);
-                  setShowAddMoney(true);
-                }}
-                size="sm"
-                className="bg-gray-800 hover:bg-gray-700 text-white text-xs"
-              >
-                <Wallet className="w-3 h-3 mr-1" />
-                Add
-              </Button>
-              <Button
-                onClick={() => toggleCardVisibility(card.id)}
-                size="sm"
-                variant="outline"
-                className="border-gray-600 text-gray-300 hover:bg-gray-700/50 hover:text-white text-xs"
-              >
-                {balanceVisible[card.id] ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
-              </Button>
-              <Button
-                onClick={() => handleBlockCard(card.id)}
-                size="sm"
-                className={`text-xs ${card.isBlocked ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'} text-white`}
-              >
-                {card.isBlocked ? <Shield className="w-3 h-3" /> : <Lock className="w-3 h-3" />}
-              </Button>
-              <CardSettings
-                cardId={card.id}
-                cardType={card.type}
-                onSettingsChange={() => {}}
-              />
-            </div>
+            {/* Card Info */}
+            <Card className="bg-gray-900/80 backdrop-blur-xl border-gray-700/50">
+              <CardContent className="p-4">
+                <div className="flex justify-between items-center mb-3">
+                  <div>
+                    <p className="text-sm text-gray-400">{card.currency} Balance</p>
+                    <p className="text-xl font-bold text-white">{card.currency} {card.balance.toFixed(2)}</p>
+                  </div>
+                  <Button
+                    onClick={() => toggleCardVisibility(card.id)}
+                    variant="ghost"
+                    size="sm"
+                    className="text-gray-400 hover:text-white"
+                  >
+                    {showCardNumbers[card.id] ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </Button>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <Button
+                    size="sm"
+                    className="bg-blue-600 hover:bg-blue-700 text-white"
+                    onClick={() => alert(`Add money to ${card.currency} card`)}
+                  >
+                    <DollarSign className="w-3 h-3 mr-1" />
+                    Add Money
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="border-gray-600 text-white hover:bg-gray-700"
+                    onClick={() => openCardSettings(card)}
+                  >
+                    <Settings className="w-3 h-3 mr-1" />
+                    Settings
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         ))}
       </div>
 
-      {/* Create Card Modal - Enhanced with Physical Card Options */}
+      {/* Create Card Modal */}
       <Dialog open={showCreateCard} onOpenChange={setShowCreateCard}>
-        <DialogContent className="bg-gray-900 border-gray-700 text-white max-w-md mx-auto max-h-[90vh] overflow-y-auto">
+        <DialogContent className="bg-gray-800 border-gray-700 text-white max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="text-base">Create New Card</DialogTitle>
+            <DialogTitle>Create New Card</DialogTitle>
           </DialogHeader>
+          
           <div className="space-y-4">
+            {/* Card Type Selection */}
             <div>
-              <Label className="text-white text-sm">Card Holder Name</Label>
-              <Input
-                value={cardForm.name}
-                onChange={(e) => setCardForm({...cardForm, name: e.target.value})}
-                className="bg-gray-800 border-gray-600 text-white mt-1"
-                placeholder="Enter cardholder name"
+              <Label className="text-white mb-3 block">Select Card Type</Label>
+              <div className="space-y-3">
+                {cardTypes.map((cardType) => (
+                  <div
+                    key={cardType.id}
+                    onClick={() => setSelectedCardType(cardType.id)}
+                    className={`p-4 rounded-lg border cursor-pointer transition-colors ${
+                      selectedCardType === cardType.id
+                        ? 'border-blue-500 bg-blue-500/10'
+                        : 'border-gray-600 hover:border-gray-500'
+                    }`}
+                  >
+                    <div className="flex justify-between items-start mb-2">
+                      <h3 className="font-semibold text-white">{cardType.name}</h3>
+                      <Badge className="bg-green-500/20 text-green-300">
+                        MWK {cardType.annualFee.toLocaleString()}/year
+                      </Badge>
+                    </div>
+                    <div className="space-y-1">
+                      {cardType.benefits.slice(0, 2).map((benefit, index) => (
+                        <p key={index} className="text-xs text-gray-400">• {benefit.feature}</p>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Physical/Virtual Toggle */}
+            <div className="flex items-center space-x-3">
+              <input
+                type="checkbox"
+                id="physical-card"
+                checked={isPhysicalCard}
+                onChange={(e) => setIsPhysicalCard(e.target.checked)}
+                className="w-4 h-4"
               />
+              <Label htmlFor="physical-card" className="text-white">
+                Request Physical Card (+MWK 15,000 delivery fee)
+              </Label>
             </div>
 
-            <div>
-              <Label className="text-white text-sm">Card Type</Label>
-              <Select value={cardForm.type} onValueChange={(value) => setCardForm({...cardForm, type: value})}>
-                <SelectTrigger className="bg-gray-800 border-gray-600 text-white mt-1">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="bg-gray-900 border-gray-700 z-50">
-                  {cardTypes.map((type) => (
-                    <SelectItem key={type.value} value={type.value} className="text-white">
-                      <div className="flex flex-col">
-                        <div className="flex justify-between items-center w-full">
-                          <span>{type.label}</span>
-                        </div>
-                        <div className="text-xs text-gray-400 mt-1">
-                          Virtual: {type.virtualFee} | Physical: {type.physicalFee}
-                        </div>
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            {/* Physical Card Details */}
+            {isPhysicalCard && (
+              <div className="space-y-3 p-4 bg-gray-700/50 rounded-lg">
+                <h4 className="font-semibold text-white mb-3">Delivery Details</h4>
+                
+                <div>
+                  <Label className="text-white text-sm">Full Name *</Label>
+                  <Input
+                    value={cardForm.holderName}
+                    onChange={(e) => setCardForm({...cardForm, holderName: e.target.value})}
+                    className="bg-gray-700 border-gray-600 text-white mt-1"
+                    placeholder="Enter full name as it should appear on card"
+                  />
+                </div>
 
-            <div>
-              <Label className="text-white text-sm">Currency</Label>
-              <Select value={cardForm.currency} onValueChange={(value) => setCardForm({...cardForm, currency: value})}>
-                <SelectTrigger className="bg-gray-800 border-gray-600 text-white mt-1">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="bg-gray-900 border-gray-700 z-50">
-                  {currencies.map((currency) => (
-                    <SelectItem key={currency} value={currency} className="text-white">
-                      {currency}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+                <div>
+                  <Label className="text-white text-sm">Address *</Label>
+                  <Input
+                    value={cardForm.address}
+                    onChange={(e) => setCardForm({...cardForm, address: e.target.value})}
+                    className="bg-gray-700 border-gray-600 text-white mt-1"
+                    placeholder="Enter your full address"
+                  />
+                </div>
 
-            <div>
-              <Label className="text-white text-sm">Card Format</Label>
-              <Select value={cardForm.isPhysical ? 'physical' : 'virtual'} onValueChange={(value) => setCardForm({...cardForm, isPhysical: value === 'physical'})}>
-                <SelectTrigger className="bg-gray-800 border-gray-600 text-white mt-1">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="bg-gray-900 border-gray-700 z-50">
-                  <SelectItem value="virtual" className="text-white">Virtual Card</SelectItem>
-                  <SelectItem value="physical" className="text-white">Physical Card</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label className="text-white text-sm">Phone *</Label>
+                    <Input
+                      value={cardForm.phone}
+                      onChange={(e) => setCardForm({...cardForm, phone: e.target.value})}
+                      className="bg-gray-700 border-gray-600 text-white mt-1"
+                      placeholder="+265..."
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-white text-sm">Post Box</Label>
+                    <Input
+                      value={cardForm.postBox}
+                      onChange={(e) => setCardForm({...cardForm, postBox: e.target.value})}
+                      className="bg-gray-700 border-gray-600 text-white mt-1"
+                      placeholder="P.O. Box"
+                    />
+                  </div>
+                </div>
 
-            {/* Show benefits and pricing */}
-            {cardForm.type && (
-              <div className="bg-gray-800/50 p-3 rounded-lg">
-                <h4 className="text-sm font-semibold mb-2">
-                  {cardTypes.find(ct => ct.value === cardForm.type)?.label} Benefits
-                </h4>
-                <ul className="text-xs text-gray-300 space-y-1 mb-3">
-                  {cardTypes.find(ct => ct.value === cardForm.type)?.benefits.map((benefit, index) => (
-                    <li key={index}>• {benefit}</li>
-                  ))}
-                </ul>
-                <div className="text-xs">
-                  <p className="text-green-400">
-                    Cost: {cardForm.isPhysical 
-                      ? cardTypes.find(ct => ct.value === cardForm.type)?.physicalFee 
-                      : cardTypes.find(ct => ct.value === cardForm.type)?.virtualFee}
-                  </p>
+                <div>
+                  <Label className="text-white text-sm">Email</Label>
+                  <Input
+                    value={cardForm.email}
+                    onChange={(e) => setCardForm({...cardForm, email: e.target.value})}
+                    className="bg-gray-700 border-gray-600 text-white mt-1"
+                    placeholder="your@email.com"
+                  />
+                </div>
+
+                <div>
+                  <Label className="text-white text-sm">Location/City</Label>
+                  <Input
+                    value={cardForm.location}
+                    onChange={(e) => setCardForm({...cardForm, location: e.target.value})}
+                    className="bg-gray-700 border-gray-600 text-white mt-1"
+                    placeholder="City/District"
+                  />
                 </div>
               </div>
             )}
 
-            {/* Physical Card Details */}
-            {cardForm.isPhysical && (
-              <>
-                <Separator className="bg-gray-700" />
-                <div className="space-y-3">
-                  <h4 className="text-sm font-semibold text-white">Delivery Details</h4>
-                  
-                  <div>
-                    <Label className="text-white text-sm">Address</Label>
-                    <Textarea
-                      value={cardForm.address}
-                      onChange={(e) => setCardForm({...cardForm, address: e.target.value})}
-                      className="bg-gray-800 border-gray-600 text-white mt-1"
-                      placeholder="Enter your full address"
-                      rows={2}
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <Label className="text-white text-sm">Phone</Label>
-                      <Input
-                        value={cardForm.phone}
-                        onChange={(e) => setCardForm({...cardForm, phone: e.target.value})}
-                        className="bg-gray-800 border-gray-600 text-white mt-1"
-                        placeholder="+265..."
-                      />
-                    </div>
-                    <div>
-                      <Label className="text-white text-sm">Email</Label>
-                      <Input
-                        type="email"
-                        value={cardForm.email}
-                        onChange={(e) => setCardForm({...cardForm, email: e.target.value})}
-                        className="bg-gray-800 border-gray-600 text-white mt-1"
-                        placeholder="your@email.com"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <Label className="text-white text-sm">Location/City</Label>
-                      <Input
-                        value={cardForm.location}
-                        onChange={(e) => setCardForm({...cardForm, location: e.target.value})}
-                        className="bg-gray-800 border-gray-600 text-white mt-1"
-                        placeholder="Lilongwe"
-                      />
-                    </div>
-                    <div>
-                      <Label className="text-white text-sm">Post Box (Optional)</Label>
-                      <Input
-                        value={cardForm.postBox}
-                        onChange={(e) => setCardForm({...cardForm, postBox: e.target.value})}
-                        className="bg-gray-800 border-gray-600 text-white mt-1"
-                        placeholder="P.O. Box..."
-                      />
-                    </div>
-                  </div>
-                </div>
-              </>
-            )}
-
-            <div className="flex space-x-2 pt-4">
-              <Button
-                variant="outline"
-                onClick={() => setShowCreateCard(false)}
-                className="flex-1 border-gray-600 text-white hover:bg-gray-700 hover:text-white text-sm"
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={handleCreateCard}
-                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-sm"
-              >
-                Create Card
-              </Button>
-            </div>
+            <Button
+              onClick={handleCreateCard}
+              className="w-full bg-green-600 hover:bg-green-700 text-white"
+            >
+              <CreditCard className="w-4 h-4 mr-2" />
+              Create {isPhysicalCard ? 'Physical' : 'Virtual'} Card
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
 
-      {/* Add Money Modal */}
-      <Dialog open={showAddMoney} onOpenChange={setShowAddMoney}>
-        <DialogContent className="bg-gray-900 border-gray-700 text-white max-w-sm mx-auto">
-          <DialogHeader>
-            <DialogTitle className="text-base">Add Money to Card</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <Label className="text-white text-sm">Amount ({selectedCard?.currency})</Label>
-              <Input
-                type="number"
-                value={addMoneyForm.amount}
-                onChange={(e) => setAddMoneyForm({...addMoneyForm, amount: e.target.value})}
-                className="bg-gray-800 border-gray-600 text-white mt-1"
-                placeholder="Enter amount"
-              />
-            </div>
-
-            <div>
-              <Label className="text-white text-sm">Source Wallet</Label>
-              <Select value={addMoneyForm.sourceWallet} onValueChange={(value) => setAddMoneyForm({...addMoneyForm, sourceWallet: value})}>
-                <SelectTrigger className="bg-gray-800 border-gray-600 text-white mt-1">
-                  <SelectValue placeholder="Select wallet" />
-                </SelectTrigger>
-                <SelectContent className="bg-gray-900 border-gray-700 z-50">
-                  {wallets.filter(w => w.currency === selectedCard?.currency).map((wallet) => (
-                    <SelectItem key={wallet.currency} value={wallet.currency} className="text-white">
-                      {wallet.currency} (Balance: {formatBalance(wallet.balance, wallet.currency)})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="flex space-x-2 pt-4">
-              <Button
-                variant="outline"
-                onClick={() => setShowAddMoney(false)}
-                className="flex-1 border-gray-600 text-white hover:bg-gray-700 hover:text-white text-sm"
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={handleAddMoney}
-                className="flex-1 bg-green-600 hover:bg-green-700 text-white text-sm"
-              >
-                Add Money
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+      {/* Card Settings Modal */}
+      {showCardSettings && selectedCard && (
+        <CardSettings
+          card={selectedCard}
+          onClose={() => setShowCardSettings(false)}
+          onCardAction={handleCardAction}
+        />
+      )}
     </div>
   );
 };

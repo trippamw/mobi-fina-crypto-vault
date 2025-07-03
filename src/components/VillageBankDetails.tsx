@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Users, Plus, UserCheck, UserX, ArrowLeft, MessageCircle, DollarSign, Calendar, CheckCircle, XCircle, Clock } from 'lucide-react';
+import { VillageBankChat } from '@/components/VillageBankChat';
 
 interface VillageBankDetailsProps {
   group: any;
@@ -19,6 +20,7 @@ export const VillageBankDetails = ({ group, onBack, onUpdateGroup, loanRequests 
   const [showAddMember, setShowAddMember] = useState(false);
   const [showContribution, setShowContribution] = useState(false);
   const [showLoanRequest, setShowLoanRequest] = useState(false);
+  const [showChat, setShowChat] = useState(false);
   const [newMemberName, setNewMemberName] = useState('');
   const [newMemberPhone, setNewMemberPhone] = useState('');
   const [contributionAmount, setContributionAmount] = useState('');
@@ -147,9 +149,19 @@ export const VillageBankDetails = ({ group, onBack, onUpdateGroup, loanRequests 
             <p className="text-gray-400 text-sm">Group Management</p>
           </div>
         </div>
-        <Badge className="bg-green-500/20 text-green-300 border-green-400/30 text-xs">
-          {group.status}
-        </Badge>
+        <div className="flex items-center space-x-2">
+          <Button
+            onClick={() => setShowChat(true)}
+            className="bg-green-600 hover:bg-green-700 text-white"
+            size="sm"
+          >
+            <MessageCircle className="w-4 h-4 mr-1" />
+            Chat
+          </Button>
+          <Badge className="bg-green-500/20 text-green-300 border-green-400/30 text-xs">
+            {group.status}
+          </Badge>
+        </div>
       </div>
 
       {/* Navigation */}
@@ -415,6 +427,15 @@ export const VillageBankDetails = ({ group, onBack, onUpdateGroup, loanRequests 
             </CardContent>
           </Card>
         </div>
+      )}
+
+      {/* Chat Component */}
+      {showChat && (
+        <VillageBankChat
+          groupId={group.id}
+          groupName={group.name}
+          onClose={() => setShowChat(false)}
+        />
       )}
 
       {/* Add Member Modal */}

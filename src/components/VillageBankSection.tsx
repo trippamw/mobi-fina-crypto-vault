@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { ArrowLeft, Users, PiggyBank, TrendingUp, Calendar, Plus, UserPlus, Coins } from 'lucide-react';
 import { VillageBankGroupCreation } from '@/components/VillageBankGroupCreation';
+import { VillageBankDetails } from '@/components/VillageBankDetails';
 
 interface VillageBankSectionProps {
   onBack: () => void;
@@ -14,7 +15,31 @@ interface VillageBankSectionProps {
 }
 
 export const VillageBankSection = ({ onBack, onBalanceUpdate, onTransactionUpdate }: VillageBankSectionProps) => {
-  const [activeView, setActiveView] = useState<'main' | 'create'>('main');
+  const [activeView, setActiveView] = useState<'main' | 'create' | 'details'>('main');
+  const [selectedGroup, setSelectedGroup] = useState<any>(null);
+  const [loanRequests, setLoanRequests] = useState([
+    {
+      id: '1',
+      groupId: '1',
+      memberName: 'Peter Tembo',
+      amount: 50000,
+      duration: 30,
+      reason: 'Business expansion',
+      status: 'pending',
+      submittedAt: '2024-01-15T10:00:00Z'
+    },
+    {
+      id: '2',
+      groupId: '1',
+      memberName: 'Grace Mwale',
+      amount: 75000,
+      duration: 45,
+      reason: 'School fees',
+      status: 'pending',
+      submittedAt: '2024-01-15T11:00:00Z'
+    }
+  ]);
+
   const [groups, setGroups] = useState([
     {
       id: '1',
@@ -26,7 +51,12 @@ export const VillageBankSection = ({ onBack, onBalanceUpdate, onTransactionUpdat
       contributionAmount: 5000,
       frequency: 'weekly',
       nextContribution: '2024-01-15',
-      status: 'active'
+      status: 'active',
+      isAdmin: true,
+      myContribution: 45000,
+      totalPool: 285000,
+      nextMeeting: 'Jan 20',
+      interestRate: 5
     },
     {
       id: '2',
@@ -38,13 +68,45 @@ export const VillageBankSection = ({ onBack, onBalanceUpdate, onTransactionUpdat
       contributionAmount: 10000,
       frequency: 'monthly',
       nextContribution: '2024-01-20',
-      status: 'active'
+      status: 'active',
+      isAdmin: false,
+      myContribution: 25000,
+      totalPool: 120000,
+      nextMeeting: 'Jan 25',
+      interestRate: 4
     }
   ]);
 
   const handleGroupCreated = (newGroup: any) => {
-    setGroups([...groups, newGroup]);
+    const groupWithDefaults = {
+      ...newGroup,
+      currentAmount: 0,
+      isAdmin: true,
+      myContribution: 0,
+      totalPool: 0,
+      nextMeeting: 'TBD',
+      interestRate: 5
+    };
+    setGroups([...groups, groupWithDefaults]);
     setActiveView('main');
+  };
+
+  const handleGroupSelect = (group: any) => {
+    setSelectedGroup(group);
+    setActiveView('details');
+  };
+
+  const handleGroupUpdate = (updatedGroup: any) => {
+    setGroups(groups.map(g => g.id === updatedGroup.id ? updatedGroup : g));
+    setSelectedGroup(updatedGroup);
+  };
+
+  const handleLoanAction = (requestId: string, action: 'approve' | 'decline') => {
+    setLoanRequests(loanRequests.map(req => 
+      req.id === requestId 
+        ? { ...req, status: action === 'approve' ? 'approved' : 'declined' }
+        : req
+    ));
   };
 
   if (activeView === 'create') {
@@ -52,6 +114,18 @@ export const VillageBankSection = ({ onBack, onBalanceUpdate, onTransactionUpdat
       <VillageBankGroupCreation 
         onBack={() => setActiveView('main')}
         onGroupCreated={handleGroupCreated}
+      />
+    );
+  }
+
+  if (activeView === 'details' && selectedGroup) {
+    return (
+      <VillageBankDetails
+        group={selectedGroup}
+        onBack={() => setActiveView('main')}
+        onUpdateGroup={handleGroupUpdate}
+        loanRequests={loanRequests.filter(req => req.groupId === selectedGroup.id)}
+        onLoanAction={handleLoanAction}
       />
     );
   }
@@ -148,9 +222,16 @@ export const VillageBankSection = ({ onBack, onBalanceUpdate, onTransactionUpdat
                 <CardHeader className="pb-3">
                   <div className="flex items-center justify-between">
                     <CardTitle className="text-white text-base">{group.name}</CardTitle>
-                    <Badge className="bg-green-500/20 text-green-300 border-green-400/30">
-                      {group.status}
-                    </Badge>
+                    <div className="flex items-center space-x-2">
+                      <Badge className="bg-green-500/20 text-green-300 border-green-400/30">
+                        {group.status}
+                      </Badge>
+                      {group.isAdmin && (
+                        <Badge className="bg-blue-500/20 text-blue-300 border-blue-400/30">
+                          Admin
+                        </Badge>
+                      )}
+                    </div>
                   </div>
                   <p className="text-sm text-gray-400">{group.description}</p>
                 </CardHeader>
@@ -193,10 +274,19 @@ export const VillageBankSection = ({ onBack, onBalanceUpdate, onTransactionUpdat
 
                   {/* Action Buttons */}
                   <div className="flex space-x-2 pt-2">
-                    <Button size="sm" className="flex-1 bg-blue-600 hover:bg-blue-700 text-white">
+                    <Button 
+                      size="sm" 
+                      className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
+                      onClick={() => handleGroupSelect(group)}
+                    >
                       Contribute
                     </Button>
-                    <Button size="sm" variant="outline" className="flex-1 border-gray-600 text-white hover:bg-gray-700">
+                    <Button 
+                      size="sm" 
+                      variant="outline" 
+                      className="flex-1 border-gray-600 text-white hover:bg-gray-700"
+                      onClick={() => handleGroupSelect(group)}
+                    >
                       View Details
                     </Button>
                   </div>
