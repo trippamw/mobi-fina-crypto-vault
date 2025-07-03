@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -16,6 +15,7 @@ import { InviteSection } from '@/components/InviteSection';
 import { UserProfile } from '@/components/UserProfile';
 import { BillsSection } from '@/components/BillsSection';
 import { SendSection } from '@/components/SendSection';
+import { WithdrawSection } from '@/components/WithdrawSection';
 import { MobileNavigation } from '@/components/MobileNavigation';
 import { CreateWalletModal } from '@/components/CreateWalletModal';
 import { TransactionConfirmation } from '@/components/TransactionConfirmation';
@@ -248,77 +248,11 @@ const Index = () => {
           onBack={() => setActiveTab('dashboard')}
         />;
       case 'withdraw':
-        return (
-          <div className="space-y-4 pb-24">
-            <div className="flex items-center space-x-3">
-              <Button
-                onClick={() => setActiveTab('dashboard')}
-                variant="ghost"
-                size="sm"
-                className="text-white/70 hover:text-white hover:bg-white/10"
-              >
-                <ArrowLeft className="w-4 h-4" />
-              </Button>
-              <h2 className="text-lg sm:text-2xl font-bold text-white">Withdraw Money</h2>
-            </div>
-
-            <Card className="bg-gray-900/80 backdrop-blur-xl border-gray-700/50 shadow-2xl">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-white text-sm sm:text-base">Available Withdrawal Methods</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 gap-3">
-                  {[
-                    { name: 'Mobile Money (TNM)', fee: '1%', icon: '📱', description: 'Instant transfer to TNM Mpamba' },
-                    { name: 'Mobile Money (Airtel)', fee: '1%', icon: '📱', description: 'Instant transfer to Airtel Money' },
-                    { name: 'Mobile Money (MO626)', fee: '1%', icon: '📱', description: 'Instant transfer to MO626' },
-                    { name: 'Bank Transfer', fee: '0.5%', icon: '🏦', description: 'All banks in Malawi (1-2 business days)' },
-                    { name: 'Agent Withdrawal', fee: '2%', icon: '👤', description: 'Cash pickup at agent locations' },
-                    { name: 'ATM Withdrawal', fee: 'Free', icon: '💳', description: 'Use your NeoVault card at any ATM' }
-                  ].map((method, index) => (
-                    <div key={index} className="p-3 rounded-lg bg-gray-800/60 hover:bg-gray-700/60 transition-colors border border-gray-600/50">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-3">
-                          <span className="text-xl">{method.icon}</span>
-                          <div>
-                            <h5 className="font-medium text-white text-sm">{method.name}</h5>
-                            <p className="text-xs text-gray-400">{method.description}</p>
-                            <p className="text-xs text-accent">Fee: {method.fee}</p>
-                          </div>
-                        </div>
-                        <Button 
-                          size="sm" 
-                          className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white text-xs"
-                          onClick={() => {
-                            const amount = prompt('Enter withdrawal amount (MWK):');
-                            if (amount && !isNaN(parseFloat(amount))) {
-                              const withdrawalAmount = parseFloat(amount);
-                              const fee = method.fee === 'Free' ? 0 : withdrawalAmount * (parseFloat(method.fee) / 100);
-                              const netAmount = withdrawalAmount - fee;
-                              
-                              handleBalanceUpdate('MWK', -withdrawalAmount);
-                              handleTransactionUpdate({
-                                type: 'Withdrawal',
-                                amount: `-MWK ${withdrawalAmount.toLocaleString()}`,
-                                description: `${method.name} withdrawal (Fee: MWK ${fee.toLocaleString()})`,
-                                time: 'Just now',
-                                status: 'completed'
-                              });
-                              alert(`Withdrawal of MWK ${netAmount.toLocaleString()} initiated via ${method.name}`);
-                            }
-                          }}
-                        >
-                          <Download className="w-3 h-3 mr-1" />
-                          Withdraw
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        );
+        return <WithdrawSection 
+          onBalanceUpdate={handleBalanceUpdate} 
+          onTransactionUpdate={handleTransactionUpdate}
+          onBack={() => setActiveTab('dashboard')}
+        />;
       case 'receive':
         return <ReceiveSection onBack={() => setActiveTab('dashboard')} />;
       case 'invite':
