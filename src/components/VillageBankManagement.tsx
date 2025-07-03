@@ -40,8 +40,9 @@ export const VillageBankManagement = ({ villageBank, onBack, onCreateGroup, onIn
   });
 
   const [inviteForm, setInviteForm] = useState({
-    email: '',
+    name: '',
     phone: '',
+    email: '',
     role: 'member',
     message: ''
   });
@@ -105,7 +106,7 @@ export const VillageBankManagement = ({ villageBank, onBack, onCreateGroup, onIn
     }
 
     const newGroup = {
-      id: Math.random().toString(36).substring(7),
+      id: Date.now().toString(),
       name: groupForm.name,
       description: groupForm.description,
       type: groupForm.type,
@@ -118,7 +119,16 @@ export const VillageBankManagement = ({ villageBank, onBack, onCreateGroup, onIn
       contributionAmount: parseInt(groupForm.contributionAmount),
       frequency: groupForm.contributionFrequency,
       inviteCode: Math.random().toString(36).substring(2, 8).toUpperCase(),
-      created: new Date().toISOString()
+      created: new Date().toISOString(),
+      members: [
+        {
+          id: 'current-user',
+          name: 'You',
+          role: 'admin',
+          joinedDate: new Date().toISOString(),
+          totalContributions: 0
+        }
+      ]
     };
 
     setUserGroups([...userGroups, newGroup]);
@@ -146,17 +156,18 @@ export const VillageBankManagement = ({ villageBank, onBack, onCreateGroup, onIn
   };
 
   const handleInviteMember = () => {
-    if (!inviteForm.email && !inviteForm.phone) {
+    if (!inviteForm.name || (!inviteForm.phone && !inviteForm.email)) {
       toast({
         title: 'Error',
-        description: 'Please provide either email or phone number',
+        description: 'Please provide member name and either phone or email',
         variant: 'destructive'
       });
       return;
     }
 
     const inviteData = {
-      id: Math.random().toString(36).substring(7),
+      id: Date.now().toString(),
+      name: inviteForm.name,
       email: inviteForm.email,
       phone: inviteForm.phone,
       role: inviteForm.role,
@@ -165,19 +176,39 @@ export const VillageBankManagement = ({ villageBank, onBack, onCreateGroup, onIn
       status: 'pending'
     };
 
+    // Update the selected group's members
+    const updatedGroups = userGroups.map(group => {
+      if (group.id === selectedGroup?.id) {
+        return {
+          ...group,
+          memberCount: group.memberCount + 1,
+          members: [...(group.members || []), {
+            ...inviteData,
+            joinedDate: new Date().toISOString(),
+            totalContributions: 0,
+            status: 'pending'
+          }]
+        };
+      }
+      return group;
+    });
+
+    setUserGroups(updatedGroups);
+
     if (onInviteMember && selectedGroup) {
       onInviteMember(selectedGroup.id, inviteData);
     }
 
     toast({
       title: 'Invitation Sent',
-      description: 'Member invitation has been sent successfully',
+      description: `Invitation sent to ${inviteForm.name} successfully!`,
     });
 
     setShowInviteMember(false);
     setInviteForm({
-      email: '',
+      name: '',
       phone: '',
+      email: '',
       role: 'member',
       message: ''
     });
@@ -209,10 +240,10 @@ export const VillageBankManagement = ({ villageBank, onBack, onCreateGroup, onIn
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-4">
-      <div className="container mx-auto max-w-4xl space-y-6 pb-24">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-3 pb-24">
+      <div className="container mx-auto max-w-lg space-y-4">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between mb-4">
           <Button
             onClick={onBack}
             variant="ghost"
@@ -222,170 +253,163 @@ export const VillageBankManagement = ({ villageBank, onBack, onCreateGroup, onIn
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back
           </Button>
-          <h1 className="text-xl md:text-2xl font-bold text-white text-center flex-1">
-            Village Bank Management
+          <h1 className="text-lg font-bold text-white text-center flex-1">
+            Village Bank
           </h1>
           <Button
             onClick={() => setShowCreateGroup(true)}
-            className="bg-blue-600 hover:bg-blue-700"
+            size="sm"
+            className="bg-blue-600 hover:bg-blue-700 text-xs"
           >
-            <Plus className="w-4 h-4 mr-2" />
-            Create Group
+            <Plus className="w-3 h-3 mr-1" />
+            Create
           </Button>
         </div>
 
         {/* Stats Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card className="bg-gradient-to-br from-blue-600 to-blue-800 border-gray-600/50">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-blue-100 text-sm">Total Groups</p>
-                  <p className="text-white text-2xl font-bold">{userGroups.length}</p>
-                </div>
-                <Users className="w-8 h-8 text-blue-200" />
+        <div className="grid grid-cols-3 gap-2">
+          <Card className="bg-gradient-to-br from-blue-600 to-blue-800 border-0 shadow-xl">
+            <CardContent className="p-3">
+              <div className="text-center">
+                <Users className="w-5 h-5 text-blue-200 mx-auto mb-1" />
+                <p className="text-blue-100 text-xs">Groups</p>
+                <p className="text-white text-lg font-bold">{userGroups.length}</p>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-br from-green-600 to-green-800 border-gray-600/50">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-green-100 text-sm">Total Savings</p>
-                  <p className="text-white text-2xl font-bold">
-                    MWK {userGroups.reduce((sum, group) => sum + group.totalSavings, 0).toLocaleString()}
-                  </p>
+          <Card className="bg-gradient-to-br from-green-600 to-green-800 border-0 shadow-xl">
+            <CardContent className="p-3">
+              <div className="text-center">
+                <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-1">
+                  <span className="text-white font-bold text-xs">K</span>
                 </div>
-                <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
-                  <span className="text-white font-bold">K</span>
-                </div>
+                <p className="text-green-100 text-xs">Savings</p>
+                <p className="text-white text-sm font-bold">
+                  {(userGroups.reduce((sum, group) => sum + group.totalSavings, 0) / 1000).toFixed(0)}K
+                </p>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-br from-purple-600 to-purple-800 border-gray-600/50">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-purple-100 text-sm">Active Members</p>
-                  <p className="text-white text-2xl font-bold">
-                    {userGroups.reduce((sum, group) => sum + group.memberCount, 0)}
-                  </p>
-                </div>
-                <Crown className="w-8 h-8 text-purple-200" />
+          <Card className="bg-gradient-to-br from-purple-600 to-purple-800 border-0 shadow-xl">
+            <CardContent className="p-3">
+              <div className="text-center">
+                <Crown className="w-5 h-5 text-purple-200 mx-auto mb-1" />
+                <p className="text-purple-100 text-xs">Members</p>
+                <p className="text-white text-lg font-bold">
+                  {userGroups.reduce((sum, group) => sum + group.memberCount, 0)}
+                </p>
               </div>
             </CardContent>
           </Card>
         </div>
 
         {/* My Groups */}
-        <div className="space-y-4">
+        <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <h2 className="text-xl font-bold text-white">My Groups</h2>
+            <h2 className="text-base font-bold text-white">My Groups</h2>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-3">
             {userGroups.map((group) => (
-              <Card key={group.id} className="bg-gray-900/80 border-gray-700/50 hover:border-gray-600/50 transition-all">
-                <CardHeader className="p-4">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <CardTitle className="text-white text-lg mb-1">{group.name}</CardTitle>
-                      <p className="text-gray-300 text-sm">{group.description}</p>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Badge className={`${group.role === 'admin' ? 'bg-yellow-500/20 text-yellow-300' : 'bg-blue-500/20 text-blue-300'}`}>
-                        {group.role === 'admin' ? <Crown className="w-3 h-3 mr-1" /> : <User className="w-3 h-3 mr-1" />}
-                        {group.role}
-                      </Badge>
-                      <Badge className="bg-green-500/20 text-green-300">
-                        {group.status}
-                      </Badge>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="p-4 pt-0 space-y-4">
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <p className="text-gray-400">Members</p>
-                      <p className="text-white font-semibold">{group.memberCount}</p>
-                    </div>
-                    <div>
-                      <p className="text-gray-400">Total Savings</p>
-                      <p className="text-white font-semibold">MWK {group.totalSavings.toLocaleString()}</p>
-                    </div>
-                    <div>
-                      <p className="text-gray-400">Contribution</p>
-                      <p className="text-white font-semibold">MWK {group.contributionAmount.toLocaleString()}</p>
-                    </div>
-                    <div>
-                      <p className="text-gray-400">Frequency</p>
-                      <p className="text-white font-semibold capitalize">{group.frequency}</p>
-                    </div>
-                  </div>
-
-                  {group.targetAmount > 0 && (
-                    <div>
-                      <div className="flex justify-between text-sm mb-1">
-                        <span className="text-gray-400">Progress</span>
-                        <span className="text-white">{Math.round((group.totalSavings / group.targetAmount) * 100)}%</span>
+              <Card key={group.id} className="bg-gray-900/90 border-gray-700/50 hover:border-gray-600/50 transition-all shadow-xl">
+                <CardContent className="p-4">
+                  <div className="space-y-3">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <h3 className="text-white text-base font-semibold mb-1">{group.name}</h3>
+                        <p className="text-gray-300 text-sm">{group.description}</p>
                       </div>
-                      <div className="w-full bg-gray-700 rounded-full h-2">
-                        <div 
-                          className="bg-gradient-to-r from-blue-500 to-green-500 h-2 rounded-full transition-all"
-                          style={{ width: `${Math.min((group.totalSavings / group.targetAmount) * 100, 100)}%` }}
-                        ></div>
+                      <div className="flex items-center space-x-2">
+                        <Badge className={`${group.role === 'admin' ? 'bg-yellow-500/20 text-yellow-300' : 'bg-blue-500/20 text-blue-300'} text-xs border-0`}>
+                          {group.role === 'admin' ? <Crown className="w-3 h-3 mr-1" /> : <User className="w-3 h-3 mr-1" />}
+                          {group.role}
+                        </Badge>
                       </div>
                     </div>
-                  )}
 
-                  <div className="flex space-x-2">
-                    {group.role === 'admin' && (
-                      <Button
-                        size="sm"
-                        onClick={() => {
-                          setSelectedGroup(group);
-                          setShowInviteMember(true);
-                        }}
-                        className="flex-1 bg-blue-600 hover:bg-blue-700"
-                      >
-                        <UserPlus className="w-3 h-3 mr-1" />
-                        Invite
-                      </Button>
+                    <div className="grid grid-cols-2 gap-3 text-sm">
+                      <div className="bg-gray-800/50 p-2 rounded-lg">
+                        <p className="text-gray-400 text-xs">Members</p>
+                        <p className="text-white font-semibold">{group.memberCount}</p>
+                      </div>
+                      <div className="bg-gray-800/50 p-2 rounded-lg">
+                        <p className="text-gray-400 text-xs">Total Savings</p>
+                        <p className="text-white font-semibold text-sm">MWK {group.totalSavings.toLocaleString()}</p>
+                      </div>
+                      <div className="bg-gray-800/50 p-2 rounded-lg">
+                        <p className="text-gray-400 text-xs">Contribution</p>
+                        <p className="text-white font-semibold text-sm">MWK {group.contributionAmount.toLocaleString()}</p>
+                      </div>
+                      <div className="bg-gray-800/50 p-2 rounded-lg">
+                        <p className="text-gray-400 text-xs">Frequency</p>
+                        <p className="text-white font-semibold capitalize text-sm">{group.frequency}</p>
+                      </div>
+                    </div>
+
+                    {group.targetAmount > 0 && (
+                      <div>
+                        <div className="flex justify-between text-sm mb-1">
+                          <span className="text-gray-400">Progress</span>
+                          <span className="text-white">{Math.round((group.totalSavings / group.targetAmount) * 100)}%</span>
+                        </div>
+                        <div className="w-full bg-gray-700 rounded-full h-2">
+                          <div 
+                            className="bg-gradient-to-r from-blue-500 to-green-500 h-2 rounded-full transition-all"
+                            style={{ width: `${Math.min((group.totalSavings / group.targetAmount) * 100, 100)}%` }}
+                          ></div>
+                        </div>
+                      </div>
                     )}
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => shareGroup(group)}
-                      className="flex-1 border-gray-600 text-gray-300 hover:bg-gray-700/50"
-                    >
-                      <Share2 className="w-3 h-3 mr-1" />
-                      Share
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="border-gray-600 text-gray-300 hover:bg-gray-700/50"
-                    >
-                      <MessageCircle className="w-3 h-3" />
-                    </Button>
-                  </div>
 
-                  {group.inviteCode && (
-                    <div className="flex items-center space-x-2 p-2 bg-gray-800/50 rounded-lg">
-                      <span className="text-xs text-gray-400">Invite Code:</span>
-                      <code className="text-sm text-white font-mono">{group.inviteCode}</code>
+                    <div className="flex space-x-2">
+                      {group.role === 'admin' && (
+                        <Button
+                          size="sm"
+                          onClick={() => {
+                            setSelectedGroup(group);
+                            setShowInviteMember(true);
+                          }}
+                          className="flex-1 bg-blue-600 hover:bg-blue-700 text-xs"
+                        >
+                          <UserPlus className="w-3 h-3 mr-1" />
+                          Invite
+                        </Button>
+                      )}
                       <Button
                         size="sm"
-                        variant="ghost"
-                        onClick={() => copyInviteCode(group.inviteCode)}
-                        className="ml-auto"
+                        variant="outline"
+                        onClick={() => shareGroup(group)}
+                        className="flex-1 border-gray-600 text-gray-300 hover:bg-gray-700/50 text-xs"
                       >
-                        <Copy className="w-3 h-3" />
+                        <Share2 className="w-3 h-3 mr-1" />
+                        Share
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="border-gray-600 text-gray-300 hover:bg-gray-700/50 text-xs px-2"
+                      >
+                        <MessageCircle className="w-3 h-3" />
                       </Button>
                     </div>
-                  )}
+
+                    {group.inviteCode && (
+                      <div className="flex items-center space-x-2 p-2 bg-gray-800/50 rounded-lg">
+                        <span className="text-xs text-gray-400">Code:</span>
+                        <code className="text-sm text-white font-mono">{group.inviteCode}</code>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => copyInviteCode(group.inviteCode)}
+                          className="ml-auto p-1 h-auto"
+                        >
+                          <Copy className="w-3 h-3" />
+                        </Button>
+                      </div>
+                    )}
+                  </div>
                 </CardContent>
               </Card>
             ))}
@@ -394,13 +418,13 @@ export const VillageBankManagement = ({ villageBank, onBack, onCreateGroup, onIn
 
         {/* Create Group Modal */}
         <Dialog open={showCreateGroup} onOpenChange={setShowCreateGroup}>
-          <DialogContent className="bg-gray-900 border-gray-700 text-white max-w-md mx-auto max-h-[80vh] overflow-y-auto">
+          <DialogContent className="bg-gray-900 border-gray-700 text-white max-w-sm mx-auto max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>Create Village Bank Group</DialogTitle>
+              <DialogTitle className="text-base">Create Village Bank Group</DialogTitle>
             </DialogHeader>
-            <div className="space-y-4">
+            <div className="space-y-3">
               <div>
-                <Label className="text-white">Group Name *</Label>
+                <Label className="text-white text-sm">Group Name *</Label>
                 <Input
                   value={groupForm.name}
                   onChange={(e) => setGroupForm({...groupForm, name: e.target.value})}
@@ -410,18 +434,18 @@ export const VillageBankManagement = ({ villageBank, onBack, onCreateGroup, onIn
               </div>
 
               <div>
-                <Label className="text-white">Description *</Label>
+                <Label className="text-white text-sm">Description *</Label>
                 <Textarea
                   value={groupForm.description}
                   onChange={(e) => setGroupForm({...groupForm, description: e.target.value})}
                   className="bg-gray-800 border-gray-600 text-white mt-1"
                   placeholder="Describe the purpose of your group"
-                  rows={3}
+                  rows={2}
                 />
               </div>
 
               <div>
-                <Label className="text-white">Group Type</Label>
+                <Label className="text-white text-sm">Group Type</Label>
                 <Select value={groupForm.type} onValueChange={(value) => setGroupForm({...groupForm, type: value})}>
                   <SelectTrigger className="bg-gray-800 border-gray-600 text-white mt-1">
                     <SelectValue />
@@ -430,7 +454,7 @@ export const VillageBankManagement = ({ villageBank, onBack, onCreateGroup, onIn
                     {groupTypes.map((type) => (
                       <SelectItem key={type.value} value={type.value} className="text-white">
                         <div>
-                          <div className="font-medium">{type.label}</div>
+                          <div className="font-medium text-sm">{type.label}</div>
                           <div className="text-xs text-gray-400">{type.description}</div>
                         </div>
                       </SelectItem>
@@ -439,9 +463,9 @@ export const VillageBankManagement = ({ villageBank, onBack, onCreateGroup, onIn
                 </Select>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <Label className="text-white">Contribution Amount (MWK) *</Label>
+                  <Label className="text-white text-sm">Contribution (MWK) *</Label>
                   <Input
                     type="number"
                     value={groupForm.contributionAmount}
@@ -451,7 +475,7 @@ export const VillageBankManagement = ({ villageBank, onBack, onCreateGroup, onIn
                   />
                 </div>
                 <div>
-                  <Label className="text-white">Frequency</Label>
+                  <Label className="text-white text-sm">Frequency</Label>
                   <Select value={groupForm.contributionFrequency} onValueChange={(value) => setGroupForm({...groupForm, contributionFrequency: value})}>
                     <SelectTrigger className="bg-gray-800 border-gray-600 text-white mt-1">
                       <SelectValue />
@@ -468,7 +492,7 @@ export const VillageBankManagement = ({ villageBank, onBack, onCreateGroup, onIn
               </div>
 
               <div>
-                <Label className="text-white">Target Amount (MWK)</Label>
+                <Label className="text-white text-sm">Target Amount (MWK)</Label>
                 <Input
                   type="number"
                   value={groupForm.targetAmount}
@@ -478,17 +502,17 @@ export const VillageBankManagement = ({ villageBank, onBack, onCreateGroup, onIn
                 />
               </div>
 
-              <div className="flex space-x-2 pt-4">
+              <div className="flex space-x-2 pt-3">
                 <Button
                   variant="outline"
                   onClick={() => setShowCreateGroup(false)}
-                  className="flex-1 border-gray-600 text-white hover:bg-gray-700"
+                  className="flex-1 border-gray-600 text-white hover:bg-gray-700 text-sm"
                 >
                   Cancel
                 </Button>
                 <Button
                   onClick={handleCreateGroup}
-                  className="flex-1 bg-blue-600 hover:bg-blue-700"
+                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-sm"
                 >
                   Create Group
                 </Button>
@@ -499,13 +523,33 @@ export const VillageBankManagement = ({ villageBank, onBack, onCreateGroup, onIn
 
         {/* Invite Member Modal */}
         <Dialog open={showInviteMember} onOpenChange={setShowInviteMember}>
-          <DialogContent className="bg-gray-900 border-gray-700 text-white max-w-md mx-auto">
+          <DialogContent className="bg-gray-900 border-gray-700 text-white max-w-sm mx-auto">
             <DialogHeader>
-              <DialogTitle>Invite Member to {selectedGroup?.name}</DialogTitle>
+              <DialogTitle className="text-base">Invite Member to {selectedGroup?.name}</DialogTitle>
             </DialogHeader>
-            <div className="space-y-4">
+            <div className="space-y-3">
               <div>
-                <Label className="text-white">Email</Label>
+                <Label className="text-white text-sm">Member Name *</Label>
+                <Input
+                  value={inviteForm.name}
+                  onChange={(e) => setInviteForm({...inviteForm, name: e.target.value})}
+                  className="bg-gray-800 border-gray-600 text-white mt-1"
+                  placeholder="Full name"
+                />
+              </div>
+
+              <div>
+                <Label className="text-white text-sm">Phone Number</Label>
+                <Input
+                  value={inviteForm.phone}
+                  onChange={(e) => setInviteForm({...inviteForm, phone: e.target.value})}
+                  className="bg-gray-800 border-gray-600 text-white mt-1"
+                  placeholder="+265 xxx xxx xxx"
+                />
+              </div>
+
+              <div>
+                <Label className="text-white text-sm">Email</Label>
                 <Input
                   type="email"
                   value={inviteForm.email}
@@ -516,17 +560,7 @@ export const VillageBankManagement = ({ villageBank, onBack, onCreateGroup, onIn
               </div>
 
               <div>
-                <Label className="text-white">Phone Number</Label>
-                <Input
-                  value={inviteForm.phone}
-                  onChange={(e) => setInviteForm({...inviteForm, phone: e.target.value})}
-                  className="bg-gray-800 border-gray-600 text-white mt-1"
-                  placeholder="+265 xxx xxx xxx"
-                />
-              </div>
-
-              <div>
-                <Label className="text-white">Role</Label>
+                <Label className="text-white text-sm">Role</Label>
                 <Select value={inviteForm.role} onValueChange={(value) => setInviteForm({...inviteForm, role: value})}>
                   <SelectTrigger className="bg-gray-800 border-gray-600 text-white mt-1">
                     <SelectValue />
@@ -539,27 +573,27 @@ export const VillageBankManagement = ({ villageBank, onBack, onCreateGroup, onIn
               </div>
 
               <div>
-                <Label className="text-white">Personal Message (Optional)</Label>
+                <Label className="text-white text-sm">Personal Message (Optional)</Label>
                 <Textarea
                   value={inviteForm.message}
                   onChange={(e) => setInviteForm({...inviteForm, message: e.target.value})}
                   className="bg-gray-800 border-gray-600 text-white mt-1"
-                  placeholder="Add a personal message to the invitation..."
-                  rows={3}
+                  placeholder="Add a personal message..."
+                  rows={2}
                 />
               </div>
 
-              <div className="flex space-x-2 pt-4">
+              <div className="flex space-x-2 pt-3">
                 <Button
                   variant="outline"
                   onClick={() => setShowInviteMember(false)}
-                  className="flex-1 border-gray-600 text-white hover:bg-gray-700"
+                  className="flex-1 border-gray-600 text-white hover:bg-gray-700 text-sm"
                 >
                   Cancel
                 </Button>
                 <Button
                   onClick={handleInviteMember}
-                  className="flex-1 bg-blue-600 hover:bg-blue-700"
+                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-sm"
                 >
                   Send Invitation
                 </Button>
