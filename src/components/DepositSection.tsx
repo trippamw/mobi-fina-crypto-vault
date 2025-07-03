@@ -6,6 +6,8 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { CreditCard, Smartphone, Building, User, CheckCircle, QrCode, Link, Share2, Copy, ArrowLeft } from 'lucide-react';
+import { TransactionConfirmation } from './TransactionConfirmation';
+import { useLanguage } from '@/utils/languageApi';
 
 interface DepositSectionProps {
   onBalanceUpdate?: (currency: string, amount: number) => void;
@@ -14,6 +16,7 @@ interface DepositSectionProps {
 }
 
 export const DepositSection = ({ onBalanceUpdate, onTransactionUpdate, onBack }: DepositSectionProps) => {
+  const { t } = useLanguage();
   const [amount, setAmount] = useState('');
   const [selectedMethod, setSelectedMethod] = useState('');
   const [paymentLink, setPaymentLink] = useState('');
@@ -26,6 +29,12 @@ export const DepositSection = ({ onBalanceUpdate, onTransactionUpdate, onBack }:
   const [expiryDate, setExpiryDate] = useState('');
   const [cvv, setCvv] = useState('');
   const [loading, setLoading] = useState(false);
+
+  const [transactionModal, setTransactionModal] = useState({
+    isOpen: false,
+    showSuccess: false,
+    transaction: null as any
+  });
 
   const mobileMoneyProviders = [
     { name: 'TNM Mpamba', fee: '1%', logo: '📱', prefix: '088' },
@@ -50,6 +59,26 @@ export const DepositSection = ({ onBalanceUpdate, onTransactionUpdate, onBack }:
       return;
     }
 
+    const depositAmount = parseFloat(amount);
+    const fee = depositAmount * 0.01; // 1% fee
+    const total = depositAmount + fee;
+
+    // Show transaction confirmation
+    setTransactionModal({
+      isOpen: true,
+      showSuccess: false,
+      transaction: {
+        type: t('deposit'),
+        amount: `MWK ${depositAmount.toLocaleString()}`,
+        recipient: method,
+        reference: `DEP${Date.now()}`,
+        fee: fee > 0 ? `MWK ${fee.toLocaleString()}` : 'FREE',
+        total: `MWK ${total.toLocaleString()}`
+      }
+    });
+  };
+
+  const confirmTransaction = () => {
     setLoading(true);
     
     // Simulate processing delay
@@ -64,9 +93,9 @@ export const DepositSection = ({ onBalanceUpdate, onTransactionUpdate, onBack }:
       // Add to transaction history
       if (onTransactionUpdate) {
         onTransactionUpdate({
-          type: 'Deposit',
+          type: t('deposit'),
           amount: `+MWK ${depositAmount.toLocaleString()}`,
-          description: `Deposit via ${method}`,
+          description: `${t('deposit')} via ${selectedMethod}`,
           time: 'Just now',
           status: 'completed'
         });
@@ -74,8 +103,8 @@ export const DepositSection = ({ onBalanceUpdate, onTransactionUpdate, onBack }:
       
       setLoading(false);
       
-      // Show success message
-      alert(`Successfully deposited MWK ${depositAmount.toLocaleString()} via ${method}`);
+      // Show success
+      setTransactionModal(prev => ({ ...prev, showSuccess: true }));
       
       // Reset form
       setAmount('');
@@ -88,6 +117,14 @@ export const DepositSection = ({ onBalanceUpdate, onTransactionUpdate, onBack }:
       setCvv('');
       setAgentAccount('');
     }, 2000);
+  };
+
+  const closeTransactionModal = () => {
+    setTransactionModal({
+      isOpen: false,
+      showSuccess: false,
+      transaction: null
+    });
   };
 
   const generatePaymentLink = () => {
@@ -112,7 +149,7 @@ export const DepositSection = ({ onBalanceUpdate, onTransactionUpdate, onBack }:
           >
             <ArrowLeft className="w-4 h-4" />
           </Button>
-          <h2 className="text-2xl font-bold text-white">Deposit Money</h2>
+          <h2 className="text-2xl font-bold text-white">{t('deposit')} {t('currency')}</h2>
         </div>
       )}
 
@@ -122,16 +159,16 @@ export const DepositSection = ({ onBalanceUpdate, onTransactionUpdate, onBack }:
             <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
               <CreditCard className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
             </div>
-            <span>Deposit Money</span>
+            <span>{t('deposit')} {t('currency')}</span>
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
-            <Label htmlFor="amount" className="text-sm text-white">Amount to Deposit</Label>
+            <Label htmlFor="amount" className="text-sm text-white">{t('amount')} to {t('deposit')}</Label>
             <Input
               id="amount"
               type="number"
-              placeholder="Enter amount in MWK"
+              placeholder={`${t('enterAmount')} in MWK`}
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
               className="text-base sm:text-lg font-semibold bg-gray-800/60 border-gray-600/50 text-white placeholder-gray-400 mt-1"
@@ -188,7 +225,7 @@ export const DepositSection = ({ onBalanceUpdate, onTransactionUpdate, onBack }:
                 onClick={() => processDeposit(`Mobile Money (${selectedMethod})`)}
                 disabled={!selectedMethod || !mobileNumber || !amount || loading}
               >
-                {loading ? 'Processing...' : 'Continue with Mobile Money'}
+                {loading ? t('processing') : 'Continue with Mobile Money'}
               </Button>
             </TabsContent>
 
@@ -221,7 +258,7 @@ export const DepositSection = ({ onBalanceUpdate, onTransactionUpdate, onBack }:
                 onClick={() => processDeposit(`Bank Transfer (${selectedBank})`)}
                 disabled={!selectedBank || !bankAccount || !amount || loading}
               >
-                {loading ? 'Processing...' : 'Initiate Bank Transfer'}
+                {loading ? t('processing') : 'Initiate Bank Transfer'}
               </Button>
             </TabsContent>
 
@@ -257,7 +294,7 @@ export const DepositSection = ({ onBalanceUpdate, onTransactionUpdate, onBack }:
                 onClick={() => processDeposit('Agent Deposit')}
                 disabled={!agentAccount || !amount || loading}
               >
-                {loading ? 'Processing...' : 'Deposit via Agent'}
+                {loading ? t('processing') : 'Deposit via Agent'}
               </Button>
             </TabsContent>
 
@@ -305,7 +342,7 @@ export const DepositSection = ({ onBalanceUpdate, onTransactionUpdate, onBack }:
                 onClick={() => processDeposit('Card Deposit')}
                 disabled={!cardNumber || !expiryDate || !cvv || !amount || loading}
               >
-                {loading ? 'Processing...' : 'Add Card & Deposit'}
+                {loading ? t('processing') : 'Add Card & Deposit'}
               </Button>
             </TabsContent>
 
@@ -376,7 +413,7 @@ export const DepositSection = ({ onBalanceUpdate, onTransactionUpdate, onBack }:
                     className="mt-4"
                     onClick={() => setShowQRCode(false)}
                   >
-                    Close
+                    {t('close')}
                   </Button>
                 </Card>
               )}
@@ -384,6 +421,16 @@ export const DepositSection = ({ onBalanceUpdate, onTransactionUpdate, onBack }:
           </Tabs>
         </CardContent>
       </Card>
+
+      {/* Transaction Confirmation Modal */}
+      <TransactionConfirmation
+        isOpen={transactionModal.isOpen}
+        onClose={closeTransactionModal}
+        onConfirm={confirmTransaction}
+        onSuccess={closeTransactionModal}
+        transaction={transactionModal.transaction}
+        showSuccess={transactionModal.showSuccess}
+      />
     </div>
   );
 };

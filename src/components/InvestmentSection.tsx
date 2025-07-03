@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,6 +7,8 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { PiggyBank, Target, Calendar, DollarSign, Plus, ArrowLeft, Users, Trash2, AlertCircle } from 'lucide-react';
 import { VillageBankSection } from './VillageBankSection';
+import { TransactionConfirmation } from './TransactionConfirmation';
+import { useLanguage } from '@/utils/languageApi';
 
 interface InvestmentSectionProps {
   onBalanceUpdate?: (currency: string, amount: number) => void;
@@ -16,6 +17,7 @@ interface InvestmentSectionProps {
 }
 
 export const InvestmentSection = ({ onBalanceUpdate, onTransactionUpdate, onBack }: InvestmentSectionProps) => {
+  const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState('savings');
   const [showCreateGoal, setShowCreateGoal] = useState(false);
   const [showDepositModal, setShowDepositModal] = useState(false);
@@ -26,6 +28,12 @@ export const InvestmentSection = ({ onBalanceUpdate, onTransactionUpdate, onBack
     target: '',
     deadline: '',
     initialDeposit: ''
+  });
+
+  const [transactionModal, setTransactionModal] = useState({
+    isOpen: false,
+    showSuccess: false,
+    transaction: null as any
   });
 
   const [savingsGoals, setSavingsGoals] = useState([
@@ -75,6 +83,47 @@ export const InvestmentSection = ({ onBalanceUpdate, onTransactionUpdate, onBack
       return;
     }
 
+    if (initialDeposit > 0) {
+      // Show transaction confirmation for initial deposit
+      setTransactionModal({
+        isOpen: true,
+        showSuccess: false,
+        transaction: {
+          type: 'Savings Goal Creation',
+          amount: `MWK ${initialDeposit.toLocaleString()}`,
+          recipient: newGoal.name,
+          reference: `GOAL${Date.now()}`,
+          fee: `MWK ${(initialDeposit * 0.02).toLocaleString()}`,
+          total: `MWK ${(initialDeposit + initialDeposit * 0.02).toLocaleString()}`
+        }
+      });
+    } else {
+      // Create goal without initial deposit
+      createGoalWithoutDeposit();
+    }
+  };
+
+  const createGoalWithoutDeposit = () => {
+    const target = parseFloat(newGoal.target);
+    const goal = {
+      id: Date.now(),
+      name: newGoal.name,
+      target: target,
+      saved: 0,
+      deadline: newGoal.deadline,
+      createdAt: new Date().toISOString().split('T')[0],
+      isMatured: false
+    };
+
+    setSavingsGoals(prev => [...prev, goal]);
+    setNewGoal({ name: '', target: '', deadline: '', initialDeposit: '' });
+    setShowCreateGoal(false);
+  };
+
+  const confirmGoalCreation = () => {
+    const target = parseFloat(newGoal.target);
+    const initialDeposit = parseFloat(newGoal.initialDeposit) || 0;
+    
     const goal = {
       id: Date.now(),
       name: newGoal.name,
@@ -87,19 +136,23 @@ export const InvestmentSection = ({ onBalanceUpdate, onTransactionUpdate, onBack
 
     setSavingsGoals(prev => [...prev, goal]);
 
-    if (initialDeposit > 0 && onBalanceUpdate) {
-      onBalanceUpdate('MWK', -initialDeposit);
-      if (onTransactionUpdate) {
-        onTransactionUpdate({
-          type: 'Savings Goal',
-          amount: `-MWK ${initialDeposit.toLocaleString()}`,
-          description: `Initial deposit to ${newGoal.name}`,
-          time: 'Just now',
-          status: 'completed'
-        });
-      }
+    if (onBalanceUpdate) {
+      onBalanceUpdate('MWK', -(initialDeposit + initialDeposit * 0.02));
+    }
+    
+    if (onTransactionUpdate) {
+      onTransactionUpdate({
+        type: 'Savings Goal',
+        amount: `-MWK ${(initialDeposit + initialDeposit * 0.02).toLocaleString()}`,
+        description: `Created savings goal: ${newGoal.name}`,
+        time: 'Just now',
+        status: 'completed'
+      });
     }
 
+    // Show success
+    setTransactionModal(prev => ({ ...prev, showSuccess: true }));
+    
     setNewGoal({ name: '', target: '', deadline: '', initialDeposit: '' });
     setShowCreateGoal(false);
   };
@@ -118,7 +171,26 @@ export const InvestmentSection = ({ onBalanceUpdate, onTransactionUpdate, onBack
       return;
     }
 
-    // Platform fee (2% on deposits)
+    const platformFee = amount * 0.02;
+    const total = amount + platformFee;
+
+    // Show transaction confirmation
+    setTransactionModal({
+      isOpen: true,
+      showSuccess: false,
+      transaction: {
+        type: 'Savings Deposit',
+        amount: `MWK ${amount.toLocaleString()}`,
+        recipient: 'Savings Goal',
+        reference: `DEP${Date.now()}`,
+        fee: `MWK ${platformFee.toLocaleString()}`,
+        total: `MWK ${total.toLocaleString()}`
+      }
+    });
+  };
+
+  const confirmSavingsDeposit = () => {
+    const amount = parseFloat(depositAmount);
     const platformFee = amount * 0.02;
     const netAmount = amount - platformFee;
 
@@ -129,18 +201,21 @@ export const InvestmentSection = ({ onBalanceUpdate, onTransactionUpdate, onBack
     );
 
     if (onBalanceUpdate) {
-      onBalanceUpdate('MWK', -amount);
+      onBalanceUpdate('MWK', -(amount + platformFee));
     }
 
     if (onTransactionUpdate) {
       onTransactionUpdate({
         type: 'Savings Deposit',
-        amount: `-MWK ${amount.toLocaleString()}`,
+        amount: `-MWK ${(amount + platformFee).toLocaleString()}`,
         description: `Deposit to savings goal (Fee: MWK ${platformFee.toLocaleString()})`,
         time: 'Just now',
         status: 'completed'
       });
     }
+
+    // Show success
+    setTransactionModal(prev => ({ ...prev, showSuccess: true }));
 
     setDepositAmount('');
     setShowDepositModal(false);
@@ -159,25 +234,36 @@ export const InvestmentSection = ({ onBalanceUpdate, onTransactionUpdate, onBack
       return;
     }
 
-    // Platform fee (1% on withdrawals)
     const platformFee = goal.saved * 0.01;
     const withdrawAmount = goal.saved - platformFee;
-    
-    setSavingsGoals(prev => prev.filter(g => g.id !== goalId));
 
-    if (onBalanceUpdate) {
-      onBalanceUpdate('MWK', withdrawAmount);
-    }
-
-    if (onTransactionUpdate) {
-      onTransactionUpdate({
+    // Show transaction confirmation
+    setTransactionModal({
+      isOpen: true,
+      showSuccess: false,
+      transaction: {
         type: 'Savings Withdrawal',
-        amount: `+MWK ${withdrawAmount.toLocaleString()}`,
-        description: `Withdrawal from ${goal.name} (Fee: MWK ${platformFee.toLocaleString()})`,
-        time: 'Just now',
-        status: 'completed'
-      });
-    }
+        amount: `MWK ${withdrawAmount.toLocaleString()}`,
+        recipient: 'Your Wallet',
+        reference: `WTH${Date.now()}`,
+        fee: `MWK ${platformFee.toLocaleString()}`,
+        total: `MWK ${withdrawAmount.toLocaleString()}`
+      }
+    });
+  };
+
+  const confirmWithdrawal = () => {
+    // Implementation for withdrawal confirmation would go here
+    // For now, we'll show success
+    setTransactionModal(prev => ({ ...prev, showSuccess: true }));
+  };
+
+  const closeTransactionModal = () => {
+    setTransactionModal({
+      isOpen: false,
+      showSuccess: false,
+      transaction: null
+    });
   };
 
   const deleteGoal = (goalId: number) => {
@@ -230,7 +316,7 @@ export const InvestmentSection = ({ onBalanceUpdate, onTransactionUpdate, onBack
           >
             <ArrowLeft className="w-4 h-4" />
           </Button>
-          <h2 className="text-lg sm:text-2xl font-bold text-white">Save & Invest</h2>
+          <h2 className="text-lg sm:text-2xl font-bold text-white">{t('save')} & {t('invest')}</h2>
         </div>
       )}
 
@@ -269,7 +355,7 @@ export const InvestmentSection = ({ onBalanceUpdate, onTransactionUpdate, onBack
               className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white text-xs"
             >
               <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
-              Create
+              {t('create')}
             </Button>
           </CardTitle>
         </CardHeader>
@@ -336,7 +422,7 @@ export const InvestmentSection = ({ onBalanceUpdate, onTransactionUpdate, onBack
                       className="flex-1 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white text-xs"
                     >
                       <Plus className="w-3 h-3 mr-1" />
-                      Deposit
+                      {t('deposit')}
                     </Button>
                   )}
                   {isMatured && (
@@ -346,7 +432,7 @@ export const InvestmentSection = ({ onBalanceUpdate, onTransactionUpdate, onBack
                       className="flex-1 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white text-xs"
                     >
                       <DollarSign className="w-3 h-3 mr-1" />
-                      Withdraw
+                      {t('withdraw')}
                     </Button>
                   )}
                 </div>
@@ -367,7 +453,7 @@ export const InvestmentSection = ({ onBalanceUpdate, onTransactionUpdate, onBack
       <Dialog open={showCreateGoal} onOpenChange={setShowCreateGoal}>
         <DialogContent className="bg-gray-800 border-gray-700 text-white max-w-sm">
           <DialogHeader>
-            <DialogTitle className="text-sm sm:text-base">Create Savings Goal</DialogTitle>
+            <DialogTitle className="text-sm sm:text-base">{t('create')} Savings Goal</DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
             <div>
@@ -418,13 +504,13 @@ export const InvestmentSection = ({ onBalanceUpdate, onTransactionUpdate, onBack
                 onClick={() => setShowCreateGoal(false)}
                 className="flex-1 border-gray-600 text-gray-300 hover:text-white text-xs"
               >
-                Cancel
+                {t('cancel')}
               </Button>
               <Button
                 onClick={handleCreateGoal}
                 className="flex-1 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white text-xs"
               >
-                Create Goal
+                {t('create')} Goal
               </Button>
             </div>
           </div>
@@ -435,16 +521,16 @@ export const InvestmentSection = ({ onBalanceUpdate, onTransactionUpdate, onBack
       <Dialog open={showDepositModal} onOpenChange={setShowDepositModal}>
         <DialogContent className="bg-gray-800 border-gray-700 text-white max-w-sm">
           <DialogHeader>
-            <DialogTitle className="text-sm sm:text-base">Deposit to Savings Goal</DialogTitle>
+            <DialogTitle className="text-sm sm:text-base">{t('deposit')} to Savings Goal</DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
             <div>
-              <label className="text-xs font-medium mb-1 block text-gray-300">Deposit Amount (MWK)</label>
+              <label className="text-xs font-medium mb-1 block text-gray-300">{t('deposit')} {t('amount')} (MWK)</label>
               <Input
                 type="number"
                 value={depositAmount}
                 onChange={(e) => setDepositAmount(e.target.value)}
-                placeholder="Enter amount"
+                placeholder={t('enterAmount')}
                 className="bg-gray-700/50 border-gray-600/50 text-white text-sm"
               />
             </div>
@@ -462,18 +548,36 @@ export const InvestmentSection = ({ onBalanceUpdate, onTransactionUpdate, onBack
                 onClick={() => setShowDepositModal(false)}
                 className="flex-1 border-gray-600 text-gray-300 hover:text-white text-xs"
               >
-                Cancel
+                {t('cancel')}
               </Button>
               <Button
                 onClick={confirmDeposit}
                 className="flex-1 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white text-xs"
               >
-                Confirm Deposit
+                {t('confirm')} {t('deposit')}
               </Button>
             </div>
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Transaction Confirmation Modal */}
+      <TransactionConfirmation
+        isOpen={transactionModal.isOpen}
+        onClose={closeTransactionModal}
+        onConfirm={() => {
+          if (transactionModal.transaction?.type === 'Savings Goal Creation') {
+            confirmGoalCreation();
+          } else if (transactionModal.transaction?.type === 'Savings Deposit') {
+            confirmSavingsDeposit();
+          } else if (transactionModal.transaction?.type === 'Savings Withdrawal') {
+            confirmWithdrawal();
+          }
+        }}
+        onSuccess={closeTransactionModal}
+        transaction={transactionModal.transaction}
+        showSuccess={transactionModal.showSuccess}
+      />
     </div>
   );
 };

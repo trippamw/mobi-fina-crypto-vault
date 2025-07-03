@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,6 +5,8 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ArrowUpDown, TrendingUp, TrendingDown, ArrowLeft, RefreshCw } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { TransactionConfirmation } from './TransactionConfirmation';
+import { useLanguage } from '@/utils/languageApi';
 
 interface ExchangeSectionProps {
   onBalanceUpdate?: (currency: string, amount: number) => void;
@@ -14,6 +15,7 @@ interface ExchangeSectionProps {
 }
 
 export const ExchangeSection: React.FC<ExchangeSectionProps> = ({ onBalanceUpdate, onTransactionUpdate, onBack }) => {
+  const { t } = useLanguage();
   const [fromCurrency, setFromCurrency] = useState('');
   const [toCurrency, setToCurrency] = useState('');
   const [amount, setAmount] = useState('');
@@ -23,6 +25,12 @@ export const ExchangeSection: React.FC<ExchangeSectionProps> = ({ onBalanceUpdat
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
   const [exchangeRates, setExchangeRates] = useState<any>({});
   const [cryptoRates, setCryptoRates] = useState<any>({});
+
+  const [transactionModal, setTransactionModal] = useState({
+    isOpen: false,
+    showSuccess: false,
+    transaction: null as any
+  });
 
   const fiatCurrencies = [
     { code: 'MWK', name: 'Malawian Kwacha', flag: '🇲🇼' },
@@ -151,7 +159,27 @@ export const ExchangeSection: React.FC<ExchangeSectionProps> = ({ onBalanceUpdat
     }
 
     const fee = parseFloat(amount) * 0.005; // 0.5% fee
-    const netAmount = parseFloat(amount) + fee;
+    const total = parseFloat(amount) + fee;
+
+    // Show transaction confirmation
+    setTransactionModal({
+      isOpen: true,
+      showSuccess: false,
+      transaction: {
+        type: t('exchange'),
+        amount: `${amount} ${fromCurrency} → ${convertedAmount.toFixed(6)} ${toCurrency}`,
+        recipient: `${fromCurrency} to ${toCurrency}`,
+        reference: `EXC${Date.now()}`,
+        fee: `${fee.toFixed(6)} ${fromCurrency}`,
+        total: `${total.toFixed(6)} ${fromCurrency}`
+      }
+    });
+  };
+
+  const confirmTransaction = () => {
+    const depositAmount = parseFloat(amount);
+    const fee = depositAmount * 0.005;
+    const netAmount = depositAmount + fee;
 
     // Update balances
     if (onBalanceUpdate) {
@@ -162,7 +190,7 @@ export const ExchangeSection: React.FC<ExchangeSectionProps> = ({ onBalanceUpdat
     // Add to transaction history
     if (onTransactionUpdate) {
       onTransactionUpdate({
-        type: 'Exchange',
+        type: t('exchange'),
         amount: `${amount} ${fromCurrency} → ${convertedAmount.toFixed(6)} ${toCurrency}`,
         description: `Currency exchange from ${fromCurrency} to ${toCurrency}`,
         time: 'Just now',
@@ -170,14 +198,23 @@ export const ExchangeSection: React.FC<ExchangeSectionProps> = ({ onBalanceUpdat
       });
     }
 
+    // Show success
+    setTransactionModal(prev => ({ ...prev, showSuccess: true }));
+
     // Reset form
     setFromCurrency('');
     setToCurrency('');
     setAmount('');
     setExchangeRate(0);
     setConvertedAmount(0);
+  };
 
-    alert(`Exchange successful! ${fee.toFixed(6)} ${fromCurrency} fee applied.`);
+  const closeTransactionModal = () => {
+    setTransactionModal({
+      isOpen: false,
+      showSuccess: false,
+      transaction: null
+    });
   };
 
   const swapCurrencies = () => {
@@ -206,7 +243,7 @@ export const ExchangeSection: React.FC<ExchangeSectionProps> = ({ onBalanceUpdat
           >
             <ArrowLeft className="w-4 h-4" />
           </Button>
-          <h2 className="text-2xl font-bold text-white">Currency Exchange</h2>
+          <h2 className="text-2xl font-bold text-white">{t('exchange')} {t('currency')}</h2>
         </div>
       )}
 
@@ -269,7 +306,7 @@ export const ExchangeSection: React.FC<ExchangeSectionProps> = ({ onBalanceUpdat
       {/* Exchange Form */}
       <Card className="bg-gray-900/80 backdrop-blur-xl border-gray-700/50 shadow-2xl">
         <CardHeader>
-          <CardTitle className="text-white">Currency Exchange</CardTitle>
+          <CardTitle className="text-white">{t('exchange')} {t('currency')}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-5 gap-4 items-end">
@@ -333,11 +370,11 @@ export const ExchangeSection: React.FC<ExchangeSectionProps> = ({ onBalanceUpdat
           {exchangeRate > 0 && (
             <div className="bg-gray-800/60 p-3 rounded-lg border border-gray-600/30">
               <div className="flex justify-between text-sm">
-                <span className="text-gray-300">Exchange Rate:</span>
+                <span className="text-gray-300">{t('exchangeRate')}:</span>
                 <span className="text-white">1 {fromCurrency} = {exchangeRate.toFixed(8)} {toCurrency}</span>
               </div>
               <div className="flex justify-between text-sm">
-                <span className="text-gray-300">Fee (0.5%):</span>
+                <span className="text-gray-300">{t('fee')} (0.5%):</span>
                 <span className="text-white">{(parseFloat(amount || '0') * 0.005).toFixed(8)} {fromCurrency}</span>
               </div>
             </div>
@@ -348,10 +385,20 @@ export const ExchangeSection: React.FC<ExchangeSectionProps> = ({ onBalanceUpdat
             className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold"
             disabled={!fromCurrency || !toCurrency || !amount || isLoading}
           >
-            {isLoading ? 'Updating Rates...' : 'Exchange Currency'}
+            {isLoading ? 'Updating Rates...' : `${t('exchange')} ${t('currency')}`}
           </Button>
         </CardContent>
       </Card>
+
+      {/* Transaction Confirmation Modal */}
+      <TransactionConfirmation
+        isOpen={transactionModal.isOpen}
+        onClose={closeTransactionModal}
+        onConfirm={confirmTransaction}
+        onSuccess={closeTransactionModal}
+        transaction={transactionModal.transaction}
+        showSuccess={transactionModal.showSuccess}
+      />
     </div>
   );
 };
