@@ -15,7 +15,7 @@ interface VillageBankSectionProps {
 }
 
 export const VillageBankSection = ({ onBack, onBalanceUpdate, onTransactionUpdate }: VillageBankSectionProps) => {
-  const [selectedGroup, setSelectedGroup] = useState<string | null>(null);
+  const [selectedGroup, setSelectedGroup] = useState<any | null>(null);
   const [showDetails, setShowDetails] = useState(false);
   const [activeSection, setActiveSection] = useState('groups');
 
@@ -149,7 +149,7 @@ export const VillageBankSection = ({ onBack, onBalanceUpdate, onTransactionUpdat
         onTransactionUpdate({
           type: 'Loan Approved',
           amount: `+MWK ${netAmount.toLocaleString()}`,
-          description: `Loan approved from ${request.groupId} (Fee: MWK ${platformFee.toLocaleString()})`,
+          description: `Loan approved from group (Fee: MWK ${platformFee.toLocaleString()})`,
           time: 'Just now',
           status: 'completed'
         });

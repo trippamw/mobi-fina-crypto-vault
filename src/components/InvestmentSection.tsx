@@ -214,7 +214,7 @@ export const InvestmentSection = ({ onBalanceUpdate, onTransactionUpdate, onBack
   };
 
   if (activeTab === 'village-bank') {
-    return <VillageBankSection onBack={() => setActiveTab('savings')} />;
+    return <VillageBankSection onBack={() => setActiveTab('savings')} onBalanceUpdate={onBalanceUpdate} onTransactionUpdate={onTransactionUpdate} />;
   }
 
   return (
@@ -300,7 +300,7 @@ export const InvestmentSection = ({ onBalanceUpdate, onTransactionUpdate, onBack
                       </Button>
                     )}
                     {!canDelete && (
-                      <AlertCircle className="w-3 h-3 text-yellow-400" title="Cannot delete active goal" />
+                      <AlertCircle className="w-3 h-3 text-yellow-400" aria-label="Cannot delete active goal" />
                     )}
                   </div>
                 </div>
