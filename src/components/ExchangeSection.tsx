@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -47,30 +48,30 @@ export const ExchangeSection: React.FC<ExchangeSectionProps> = ({ onBalanceUpdat
 
   const allCurrencies = [...fiatCurrencies, ...cryptoCurrencies];
 
-  // Fetch live exchange rates from exchangerate-api.com
+  // Mock exchange rates (increased fees will be applied separately)
   const fetchFiatRates = async () => {
     try {
-      const response = await fetch(`https://v6.exchangerate-api.com/v6/d207f2d63914bbf2254a0652/latest/USD`);
-      const data = await response.json();
-      
-      if (data.result === 'success') {
-        setExchangeRates(data.conversion_rates);
-        return true;
-      }
-      return false;
+      // Simulated rates
+      const mockRates = {
+        USD: 1,
+        MWK: 1695,
+        GBP: 0.79,
+        EUR: 0.85,
+        ZAR: 18.5
+      };
+      setExchangeRates(mockRates);
+      return true;
     } catch (error) {
       console.error('Failed to fetch fiat rates:', error);
       return false;
     }
   };
 
-  // Fetch crypto rates (simulated since we don't have a crypto API key)
   const fetchCryptoRates = async () => {
     try {
-      // Simulated crypto rates - in production, use a real crypto API
       const cryptoData = {
-        BTC: 67500, // BTC price in USD
-        ETH: 3800,  // ETH price in USD
+        BTC: 67500,
+        ETH: 3800,
       };
       setCryptoRates(cryptoData);
       return true;
@@ -92,7 +93,6 @@ export const ExchangeSection: React.FC<ExchangeSectionProps> = ({ onBalanceUpdat
         setLastUpdated(new Date());
       }
       
-      // Recalculate if exchange is already set up
       if (fromCurrency && toCurrency && amount) {
         calculateExchange();
       }
@@ -103,7 +103,6 @@ export const ExchangeSection: React.FC<ExchangeSectionProps> = ({ onBalanceUpdat
     }
   };
 
-  // Load rates on component mount
   useEffect(() => {
     fetchAllRates();
   }, []);
@@ -111,28 +110,24 @@ export const ExchangeSection: React.FC<ExchangeSectionProps> = ({ onBalanceUpdat
   const getExchangeRate = (from: string, to: string): number => {
     if (from === to) return 1;
 
-    // Handle fiat to fiat
     if (fiatCurrencies.find(c => c.code === from) && fiatCurrencies.find(c => c.code === to)) {
       const fromRate = exchangeRates[from] || 1;
       const toRate = exchangeRates[to] || 1;
       return toRate / fromRate;
     }
 
-    // Handle crypto to fiat
     if (cryptoCurrencies.find(c => c.code === from) && fiatCurrencies.find(c => c.code === to)) {
       const cryptoUsdPrice = cryptoRates[from] || 0;
       const fiatUsdRate = exchangeRates[to] || 1;
       return cryptoUsdPrice * fiatUsdRate;
     }
 
-    // Handle fiat to crypto
     if (fiatCurrencies.find(c => c.code === from) && cryptoCurrencies.find(c => c.code === to)) {
       const fiatUsdRate = exchangeRates[from] || 1;
       const cryptoUsdPrice = cryptoRates[to] || 0;
       return fiatUsdRate / cryptoUsdPrice;
     }
 
-    // Handle crypto to crypto
     if (cryptoCurrencies.find(c => c.code === from) && cryptoCurrencies.find(c => c.code === to)) {
       const fromUsdPrice = cryptoRates[from] || 0;
       const toUsdPrice = cryptoRates[to] || 0;
@@ -158,10 +153,9 @@ export const ExchangeSection: React.FC<ExchangeSectionProps> = ({ onBalanceUpdat
       return;
     }
 
-    const fee = parseFloat(amount) * 0.005; // 0.5% fee
+    const fee = parseFloat(amount) * 0.0085; // 0.85% fee (increased by 70% from 0.5%)
     const total = parseFloat(amount) + fee;
 
-    // Show transaction confirmation
     setTransactionModal({
       isOpen: true,
       showSuccess: false,
@@ -178,16 +172,14 @@ export const ExchangeSection: React.FC<ExchangeSectionProps> = ({ onBalanceUpdat
 
   const confirmTransaction = () => {
     const depositAmount = parseFloat(amount);
-    const fee = depositAmount * 0.005;
+    const fee = depositAmount * 0.0085;
     const netAmount = depositAmount + fee;
 
-    // Update balances
     if (onBalanceUpdate) {
       onBalanceUpdate(fromCurrency, -netAmount);
       onBalanceUpdate(toCurrency, convertedAmount);
     }
 
-    // Add to transaction history
     if (onTransactionUpdate) {
       onTransactionUpdate({
         type: t('exchange'),
@@ -198,10 +190,8 @@ export const ExchangeSection: React.FC<ExchangeSectionProps> = ({ onBalanceUpdat
       });
     }
 
-    // Show success
     setTransactionModal(prev => ({ ...prev, showSuccess: true }));
 
-    // Reset form
     setFromCurrency('');
     setToCurrency('');
     setAmount('');
@@ -232,7 +222,6 @@ export const ExchangeSection: React.FC<ExchangeSectionProps> = ({ onBalanceUpdat
 
   return (
     <div className="space-y-6 pb-24">
-      {/* Header with Back Button */}
       {onBack && (
         <div className="flex items-center space-x-3">
           <Button
@@ -247,7 +236,6 @@ export const ExchangeSection: React.FC<ExchangeSectionProps> = ({ onBalanceUpdat
         </div>
       )}
 
-      {/* Live Rates Display */}
       <Card className="bg-gray-900/80 backdrop-blur-xl border-gray-700/50 shadow-2xl">
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="text-white">Live Exchange Rates</CardTitle>
@@ -268,7 +256,6 @@ export const ExchangeSection: React.FC<ExchangeSectionProps> = ({ onBalanceUpdat
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-            {/* Fiat Currencies */}
             {fiatCurrencies.filter(c => c.code !== 'USD').map((currency) => {
               const rate = exchangeRates[currency.code];
               return (
@@ -284,7 +271,6 @@ export const ExchangeSection: React.FC<ExchangeSectionProps> = ({ onBalanceUpdat
               );
             })}
             
-            {/* Crypto Currencies */}
             {cryptoCurrencies.map((currency) => {
               const rate = cryptoRates[currency.code];
               return (
@@ -303,14 +289,12 @@ export const ExchangeSection: React.FC<ExchangeSectionProps> = ({ onBalanceUpdat
         </CardContent>
       </Card>
 
-      {/* Exchange Form */}
       <Card className="bg-gray-900/80 backdrop-blur-xl border-gray-700/50 shadow-2xl">
         <CardHeader>
           <CardTitle className="text-white">{t('exchange')} {t('currency')}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-5 gap-4 items-end">
-            {/* From Currency */}
             <div className="col-span-2">
               <label className="block text-sm font-medium text-white mb-2">From</label>
               <Select value={fromCurrency} onValueChange={setFromCurrency}>
@@ -334,7 +318,6 @@ export const ExchangeSection: React.FC<ExchangeSectionProps> = ({ onBalanceUpdat
               />
             </div>
 
-            {/* Swap Button */}
             <div className="col-span-1 flex justify-center">
               <Button
                 onClick={swapCurrencies}
@@ -344,7 +327,6 @@ export const ExchangeSection: React.FC<ExchangeSectionProps> = ({ onBalanceUpdat
               </Button>
             </div>
 
-            {/* To Currency */}
             <div className="col-span-2">
               <label className="block text-sm font-medium text-white mb-2">To</label>
               <Select value={toCurrency} onValueChange={setToCurrency}>
@@ -374,8 +356,8 @@ export const ExchangeSection: React.FC<ExchangeSectionProps> = ({ onBalanceUpdat
                 <span className="text-white">1 {fromCurrency} = {exchangeRate.toFixed(8)} {toCurrency}</span>
               </div>
               <div className="flex justify-between text-sm">
-                <span className="text-gray-300">{t('fee')} (0.5%):</span>
-                <span className="text-white">{(parseFloat(amount || '0') * 0.005).toFixed(8)} {fromCurrency}</span>
+                <span className="text-gray-300">{t('fee')} (0.85%):</span>
+                <span className="text-white">{(parseFloat(amount || '0') * 0.0085).toFixed(8)} {fromCurrency}</span>
               </div>
             </div>
           )}
@@ -390,7 +372,6 @@ export const ExchangeSection: React.FC<ExchangeSectionProps> = ({ onBalanceUpdat
         </CardContent>
       </Card>
 
-      {/* Transaction Confirmation Modal */}
       <TransactionConfirmation
         isOpen={transactionModal.isOpen}
         onClose={closeTransactionModal}

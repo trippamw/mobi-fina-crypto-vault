@@ -37,9 +37,9 @@ export const DepositSection = ({ onBalanceUpdate, onTransactionUpdate, onBack }:
   });
 
   const mobileMoneyProviders = [
-    { name: 'TNM Mpamba', fee: '1%', logo: '📱', prefix: '088' },
-    { name: 'Airtel Money', fee: '1.2%', logo: '📱', prefix: '099' },
-    { name: 'MO626', fee: '0.8%', logo: '🏦', prefix: '085' }
+    { name: 'TNM Mpamba', fee: '1.7%', logo: '📱', prefix: '088' },
+    { name: 'Airtel Money', fee: '2.04%', logo: '📱', prefix: '099' },
+    { name: 'MO626', fee: '1.36%', logo: '🏦', prefix: '085' }
   ];
 
   const banks = [
@@ -60,10 +60,9 @@ export const DepositSection = ({ onBalanceUpdate, onTransactionUpdate, onBack }:
     }
 
     const depositAmount = parseFloat(amount);
-    const fee = depositAmount * 0.01; // 1% fee
+    const fee = depositAmount * 0.017;
     const total = depositAmount + fee;
 
-    // Show transaction confirmation
     setTransactionModal({
       isOpen: true,
       showSuccess: false,
@@ -81,16 +80,13 @@ export const DepositSection = ({ onBalanceUpdate, onTransactionUpdate, onBack }:
   const confirmTransaction = () => {
     setLoading(true);
     
-    // Simulate processing delay
     setTimeout(() => {
       const depositAmount = parseFloat(amount);
       
-      // Update wallet balance
       if (onBalanceUpdate) {
         onBalanceUpdate('MWK', depositAmount);
       }
 
-      // Add to transaction history
       if (onTransactionUpdate) {
         onTransactionUpdate({
           type: t('deposit'),
@@ -103,10 +99,8 @@ export const DepositSection = ({ onBalanceUpdate, onTransactionUpdate, onBack }:
       
       setLoading(false);
       
-      // Show success
       setTransactionModal(prev => ({ ...prev, showSuccess: true }));
       
-      // Reset form
       setAmount('');
       setSelectedMethod('');
       setMobileNumber('');
@@ -138,7 +132,6 @@ export const DepositSection = ({ onBalanceUpdate, onTransactionUpdate, onBack }:
 
   return (
     <div className="space-y-4 sm:space-y-6 pb-24">
-      {/* Header with Back Button */}
       {onBack && (
         <div className="flex items-center space-x-3">
           <Button
@@ -422,7 +415,6 @@ export const DepositSection = ({ onBalanceUpdate, onTransactionUpdate, onBack }:
         </CardContent>
       </Card>
 
-      {/* Transaction Confirmation Modal */}
       <TransactionConfirmation
         isOpen={transactionModal.isOpen}
         onClose={closeTransactionModal}
