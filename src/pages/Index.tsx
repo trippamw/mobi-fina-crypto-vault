@@ -18,10 +18,12 @@ import { SendSection } from '@/components/SendSection';
 import { MobileNavigation } from '@/components/MobileNavigation';
 import { CreateWalletModal } from '@/components/CreateWalletModal';
 import { TransactionConfirmation } from '@/components/TransactionConfirmation';
+import { WalletManagement } from '@/components/WalletManagement';
 
 const Index = () => {
   const [balanceVisible, setBalanceVisible] = useState(true);
   const [activeTab, setActiveTab] = useState('dashboard');
+  const [selectedWallet, setSelectedWallet] = useState<any>(null);
   const [notificationCount, setNotificationCount] = useState(3);
   const [recentTransactions, setRecentTransactions] = useState([
     { type: 'Received', amount: '+MWK 50,000', description: 'TNM Mobile Money', time: '2 min ago', status: 'completed' },
@@ -156,6 +158,11 @@ const Index = () => {
     });
   };
 
+  const handleWalletClick = (wallet: any) => {
+    setSelectedWallet(wallet);
+    setActiveTab('wallet-management');
+  };
+
   const quickActions = [
     { icon: Plus, label: 'Deposit', color: 'text-green-400', action: 'deposit' },
     { icon: Send, label: 'Send', color: 'text-blue-400', action: 'send' },
@@ -261,6 +268,13 @@ const Index = () => {
 
   const renderContent = () => {
     switch (activeTab) {
+      case 'wallet-management':
+        return <WalletManagement 
+          wallet={selectedWallet}
+          onBack={() => setActiveTab('dashboard')}
+          onBalanceUpdate={handleBalanceUpdate}
+          onTransactionUpdate={handleTransactionUpdate}
+        />;
       case 'deposit':
         return <DepositSection 
           onBalanceUpdate={handleBalanceUpdate} 
@@ -325,17 +339,17 @@ const Index = () => {
       default:
         return (
           <div className="space-y-4 sm:space-y-6 pb-32 sm:pb-24">
-            {/* Total Balance Card - Enhanced Design with Bold Font */}
+            {/* Total Balance Card - Mobile Optimized */}
             <Card className="bg-gradient-to-br from-slate-900/95 to-gray-800/90 backdrop-blur-2xl border-gray-600/30 card-hover shadow-2xl">
               <CardHeader className="pb-3 sm:pb-6">
                 <CardTitle className="flex items-center justify-between text-base sm:text-lg text-white">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-                      <Wallet className="w-5 h-5 text-white" />
+                  <div className="flex items-center space-x-2 sm:space-x-3">
+                    <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                      <Wallet className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                     </div>
-                    <span className="font-black text-xl tracking-tight">Total Portfolio</span>
+                    <span className="font-black text-sm sm:text-xl tracking-tight">Total Portfolio</span>
                   </div>
-                  <Badge className="bg-green-500/20 text-green-300 border-green-400/30 text-xs px-3 py-1">
+                  <Badge className="bg-green-500/20 text-green-300 border-green-400/30 text-xs px-2 sm:px-3 py-1">
                     <TrendingUp className="w-3 h-3 mr-1" />
                     +8.7%
                   </Badge>
@@ -344,32 +358,32 @@ const Index = () => {
               <CardContent className="pt-0">
                 <div className="mb-4">
                   {balanceVisible ? (
-                    <div className="space-y-2">
-                      <h2 className="text-5xl sm:text-6xl font-black tracking-tighter bg-gradient-to-r from-white via-blue-100 to-purple-200 bg-clip-text text-transparent">
+                    <div className="space-y-1 sm:space-y-2">
+                      <h2 className="text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-black tracking-tighter bg-gradient-to-r from-white via-blue-100 to-purple-200 bg-clip-text text-transparent">
                         MWK {wallets.reduce((total, wallet) => total + (wallet.currency === 'MWK' ? wallet.balance : 0), 0).toLocaleString()}
                       </h2>
-                      <p className="text-xl sm:text-2xl font-bold text-white/90 tracking-wide">
+                      <p className="text-sm sm:text-lg md:text-xl lg:text-2xl font-bold text-white/90 tracking-wide">
                         ≈ $1,625 USD
                       </p>
                     </div>
                   ) : (
-                    <div className="space-y-2">
-                      <h2 className="text-5xl sm:text-6xl font-black text-white/20 tracking-tighter">
+                    <div className="space-y-1 sm:space-y-2">
+                      <h2 className="text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-white/20 tracking-tighter">
                         ••••••••••
                       </h2>
-                      <p className="text-xl sm:text-2xl font-bold text-white/20">
+                      <p className="text-sm sm:text-lg md:text-xl lg:text-2xl font-bold text-white/20">
                         ••••••••
                       </p>
                     </div>
                   )}
                 </div>
                 <div className="flex items-center justify-between">
-                  <p className="text-sm text-white/70 font-semibold">
+                  <p className="text-xs sm:text-sm text-white/70 font-semibold">
                     🔄 Updated just now
                   </p>
                   <div className="flex items-center space-x-2 text-green-400">
-                    <span className="text-sm font-bold">+MWK 47,300</span>
-                    <span className="text-xs font-medium">Today</span>
+                    <span className="text-xs sm:text-sm font-bold">+MWK 47,300</span>
+                    <span className="text-[10px] sm:text-xs font-medium">Today</span>
                   </div>
                 </div>
               </CardContent>
@@ -439,14 +453,15 @@ const Index = () => {
               </CardContent>
             </Card>
 
-            {/* Wallets Grid */}
+            {/* Wallets Grid - Now Clickable */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
               {wallets.map((wallet, index) => (
-                <WalletCard
-                  key={index}
-                  wallet={wallet}
-                  balanceVisible={balanceVisible}
-                />
+                <div key={index} onClick={() => handleWalletClick(wallet)} className="cursor-pointer">
+                  <WalletCard
+                    wallet={wallet}
+                    balanceVisible={balanceVisible}
+                  />
+                </div>
               ))}
             </div>
 

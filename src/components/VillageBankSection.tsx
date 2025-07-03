@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,7 +7,11 @@ import { Progress } from '@/components/ui/progress';
 import { Users, Plus, TrendingUp, Banknote, UserPlus, Settings, ArrowUpRight, ArrowDownLeft, ArrowLeft } from 'lucide-react';
 import { VillageBankDetails } from './VillageBankDetails';
 
-export const VillageBankSection = () => {
+interface VillageBankSectionProps {
+  onBack?: () => void;
+}
+
+export const VillageBankSection = ({ onBack }: VillageBankSectionProps) => {
   const [selectedGroup, setSelectedGroup] = useState<string | null>(null);
   const [showDetails, setShowDetails] = useState(false);
 
@@ -85,7 +88,22 @@ export const VillageBankSection = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-24">
+      {/* Header with Back Button */}
+      {onBack && (
+        <div className="flex items-center space-x-3">
+          <Button
+            onClick={onBack}
+            variant="ghost"
+            size="sm"
+            className="text-white/70 hover:text-white hover:bg-white/10"
+          >
+            <ArrowLeft className="w-4 h-4" />
+          </Button>
+          <h2 className="text-2xl font-bold text-white">Village Bank</h2>
+        </div>
+      )}
+
       {/* My Groups Overview */}
       <Card className="bg-gray-900/80 backdrop-blur-xl border-gray-700/50 shadow-2xl">
         <CardHeader>
@@ -130,7 +148,7 @@ export const VillageBankSection = () => {
                   
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-300">My Contribution</span>
-                    <span className="font-semibold text-accent">{/* accent color styles applied elsewhere */}MWK {group.myContribution.toLocaleString()}</span>
+                    <span className="font-semibold text-accent">MWK {group.myContribution.toLocaleString()}</span>
                   </div>
                   
                   <div className="flex justify-between text-sm">
@@ -236,7 +254,7 @@ export const VillageBankSection = () => {
                     {method.description && (
                       <p className="text-xs text-gray-400">{method.description}</p>
                     )}
-                    <p className="text-sm text-accent">{/* accent color styles applied elsewhere */}Fee: {method.fee}</p>
+                    <p className="text-sm text-accent">Fee: {method.fee}</p>
                   </div>
                 </div>
                 <Button size="sm" variant="outline" className="w-full border-gray-600 text-gray-300 hover:text-white">
