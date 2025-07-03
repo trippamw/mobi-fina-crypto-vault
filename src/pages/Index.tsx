@@ -63,10 +63,10 @@ const Index = () => {
     setPurchasedCards(prev => [...prev, newCard]);
   };
 
-  const handleBalanceUpdate = (newBalance: number) => {
+  const handleBalanceUpdate = (currency: string, amount: number) => {
     setWallets(prev => prev.map(wallet => 
-      wallet.currency === selectedWallet 
-        ? { ...wallet, balance: newBalance }
+      wallet.currency === currency 
+        ? { ...wallet, balance: wallet.balance + amount }
         : wallet
     ));
   };
@@ -121,6 +121,8 @@ const Index = () => {
           <SendSection 
             onBack={() => setCurrentSection('home')}
             onTransaction={handleTransaction}
+            onBalanceUpdate={handleBalanceUpdate}
+            onTransactionUpdate={handleTransactionUpdate}
             walletBalance={currentWallet.balance}
             walletCurrency={currentWallet.currency}
           />

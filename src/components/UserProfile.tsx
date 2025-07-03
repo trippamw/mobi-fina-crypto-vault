@@ -99,11 +99,11 @@ export const UserProfile = ({ onBack }: UserProfileProps) => {
           ...prev,
           documents: {
             ...prev.documents,
-            [documentType]: { uploaded: true, verified: false, type: prev.documents[documentType].type }
+            [documentType]: { uploaded: true, verified: false, type: prev.documents[documentType as keyof typeof prev.documents].type }
           }
         }));
         setIsUploading(false);
-        alert(`${prev.documents[documentType].type} uploaded successfully! Verification in progress.`);
+        alert(`${complianceData.documents[documentType as keyof typeof complianceData.documents].type} uploaded successfully! Verification in progress.`);
       }, 2000);
     } catch (error) {
       setIsUploading(false);
@@ -246,7 +246,7 @@ export const UserProfile = ({ onBack }: UserProfileProps) => {
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <Label className="text-gray-300 text-xs">{t('dateOfBirth')}</Label>
+                <Label className="text-gray-300 text-xs">Date of Birth</Label>
                 <Input
                   type="date"
                   value={profile.dateOfBirth}
@@ -255,7 +255,7 @@ export const UserProfile = ({ onBack }: UserProfileProps) => {
                 />
               </div>
               <div>
-                <Label className="text-gray-300 text-xs">{t('nationality')}</Label>
+                <Label className="text-gray-300 text-xs">Nationality</Label>
                 <Input
                   value={profile.nationality}
                   onChange={(e) => handleInputChange('nationality', e.target.value)}
@@ -266,7 +266,7 @@ export const UserProfile = ({ onBack }: UserProfileProps) => {
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <Label className="text-gray-300 text-xs">{t('occupation')}</Label>
+                <Label className="text-gray-300 text-xs">Occupation</Label>
                 <Input
                   value={profile.occupation}
                   onChange={(e) => handleInputChange('occupation', e.target.value)}
@@ -274,7 +274,7 @@ export const UserProfile = ({ onBack }: UserProfileProps) => {
                 />
               </div>
               <div>
-                <Label className="text-gray-300 text-xs">{t('idNumber')}</Label>
+                <Label className="text-gray-300 text-xs">ID Number</Label>
                 <Input
                   value={profile.idNumber}
                   onChange={(e) => handleInputChange('idNumber', e.target.value)}

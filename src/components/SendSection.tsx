@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -10,10 +11,13 @@ import { Send, Users, Smartphone, Building, User, ArrowLeft } from 'lucide-react
 interface SendSectionProps {
   onBalanceUpdate?: (currency: string, amount: number) => void;
   onTransactionUpdate?: (transaction: any) => void;
+  onTransaction?: (details: any) => void;
   onBack?: () => void;
+  walletBalance?: number;
+  walletCurrency?: string;
 }
 
-export const SendSection = ({ onBalanceUpdate, onTransactionUpdate, onBack }: SendSectionProps) => {
+export const SendSection = ({ onBalanceUpdate, onTransactionUpdate, onTransaction, onBack, walletBalance, walletCurrency }: SendSectionProps) => {
   const [amount, setAmount] = useState('');
   const [selectedMethod, setSelectedMethod] = useState('');
   const [recipient, setRecipient] = useState('');
@@ -65,25 +69,37 @@ export const SendSection = ({ onBalanceUpdate, onTransactionUpdate, onBack }: Se
       const sendAmount = parseFloat(amount);
 
       // Update wallet balance
-      if (onBalanceUpdate) {
-        onBalanceUpdate('MWK', -totalAmount);
+      if (onBalanceUpdate && walletCurrency) {
+        onBalanceUpdate(walletCurrency, -totalAmount);
       }
 
       // Add to transaction history
       if (onTransactionUpdate) {
         onTransactionUpdate({
           type: 'Send Money',
-          amount: `-MWK ${sendAmount.toLocaleString()}`,
+          amount: `-${walletCurrency || 'MWK'} ${sendAmount.toLocaleString()}`,
           description: `Sent to ${recipient} via ${selectedMethod}`,
           time: 'Just now',
           status: 'completed'
         });
       }
 
+      // Call onTransaction if provided
+      if (onTransaction) {
+        onTransaction({
+          type: 'Send Money',
+          amount: sendAmount,
+          recipient,
+          method: selectedMethod,
+          fee: transactionFee,
+          total: totalAmount
+        });
+      }
+
       setIsProcessing(false);
 
       // Show success message
-      alert(`Successfully sent MWK ${sendAmount.toLocaleString()} to ${recipient} via ${selectedMethod}`);
+      alert(`Successfully sent ${walletCurrency || 'MWK'} ${sendAmount.toLocaleString()} to ${recipient} via ${selectedMethod}`);
 
       // Reset form
       setAmount('');
@@ -122,7 +138,7 @@ export const SendSection = ({ onBalanceUpdate, onTransactionUpdate, onBack }: Se
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
-            <Label htmlFor="amount" className="text-sm text-white">Amount to Send (MWK)</Label>
+            <Label htmlFor="amount" className="text-sm text-white">Amount to Send ({walletCurrency || 'MWK'})</Label>
             <Input
               id="amount"
               type="number"
@@ -217,11 +233,11 @@ export const SendSection = ({ onBalanceUpdate, onTransactionUpdate, onBack }: Se
             <div className="bg-gray-800/40 p-3 rounded-lg border border-gray-600/30">
               <div className="flex justify-between text-sm">
                 <span className="text-gray-300">Transaction Fee:</span>
-                <span className="text-white">MWK {transactionFee.toLocaleString()}</span>
+                <span className="text-white">{walletCurrency || 'MWK'} {transactionFee.toLocaleString()}</span>
               </div>
               <div className="flex justify-between text-base font-semibold border-t border-gray-600/30 pt-2 mt-2">
                 <span className="text-white">Total:</span>
-                <span className="text-white">MWK {totalAmount.toLocaleString()}</span>
+                <span className="text-white">{walletCurrency || 'MWK'} {totalAmount.toLocaleString()}</span>
               </div>
             </div>
           )}
