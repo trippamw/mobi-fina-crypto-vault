@@ -301,10 +301,10 @@ export const VirtualCardsSection = ({ onBack, onBalanceUpdate, onTransactionUpda
           <div key={card.id} className="space-y-3">
             {/* Card Visual */}
             <div className="relative w-full h-48 rounded-2xl p-6 text-white shadow-2xl bg-gradient-to-br from-blue-600 to-blue-800">
-              {/* Card Brand Logo and Status */}
-              <div className="flex justify-between items-start mb-4">
-                <div className="text-xl font-bold text-white">
-                  NEOVAULT
+              {/* VISA Logo and Status at Top */}
+              <div className="flex justify-between items-start mb-2">
+                <div className="text-lg font-bold italic text-white/90">
+                  VISA
                 </div>
                 <div className="flex items-center space-x-1">
                   {card.isPhysical && (
@@ -324,7 +324,12 @@ export const VirtualCardsSection = ({ onBack, onBalanceUpdate, onTransactionUpda
                 </div>
               </div>
 
-              {/* Card Number - Positioned at top */}
+              {/* NEOVAULT Brand Name */}
+              <div className="text-lg font-bold text-white mb-4">
+                NEOVAULT
+              </div>
+
+              {/* Card Number */}
               <div className="mb-4">
                 <div className="text-lg font-mono tracking-wider">
                   {showCardNumbers[card.id] ? card.number : '**** **** **** ' + card.number.slice(-4)}
@@ -352,13 +357,6 @@ export const VirtualCardsSection = ({ onBack, onBalanceUpdate, onTransactionUpda
                   <div className="text-sm font-semibold">{card.cvv}</div>
                 </div>
               )}
-
-              {/* VISA Logo at bottom right */}
-              <div className="absolute bottom-6 right-6">
-                <div className="text-lg font-bold italic text-white/90">
-                  VISA
-                </div>
-              </div>
             </div>
 
             {/* Card Info */}
