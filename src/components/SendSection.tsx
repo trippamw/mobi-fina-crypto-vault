@@ -18,6 +18,8 @@ export const SendSection = ({ onBalanceUpdate, onTransactionUpdate, onBack }: Se
   const [amount, setAmount] = useState('');
   const [selectedMethod, setSelectedMethod] = useState('');
   const [recipient, setRecipient] = useState('');
+  const [recipientPhone, setRecipientPhone] = useState('');
+  const [mobileMoneyProvider, setMobileMoneyProvider] = useState('');
   const [transactionFee, setTransactionFee] = useState(0);
   const [totalAmount, setTotalAmount] = useState(0);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -30,11 +32,14 @@ export const SendSection = ({ onBalanceUpdate, onTransactionUpdate, onBack }: Se
   ];
 
   const mobileMoneyProviders = [
-    'TNM Mpamba', 'Airtel Money', 'Mo626'
+    { name: 'TNM Mpamba', fee: '1%', prefix: '088' },
+    { name: 'Airtel Money', fee: '1.2%', prefix: '099' },
+    { name: 'MO626', fee: '0.8%', prefix: '085' }
   ];
 
   const banks = [
-    'Standard Bank', 'FDH Bank', 'NBS Bank', 'National Bank'
+    'Standard Bank', 'FDH Bank', 'NBS Bank', 'National Bank',
+    'CDH Investment Bank', 'Centenary Bank', 'FCB'
   ];
 
   const calculateFee = (amount: number) => {
@@ -54,8 +59,14 @@ export const SendSection = ({ onBalanceUpdate, onTransactionUpdate, onBack }: Se
   };
 
   const handleSendMoney = async () => {
-    if (!amount || !recipient || !selectedMethod) {
-      alert('Please fill in all fields.');
+    if (!amount || !recipient) {
+      alert('Please fill in all required fields.');
+      return;
+    }
+
+    // Validate mobile money specific fields
+    if (selectedMethod === 'mobile' && (!recipientPhone || !mobileMoneyProvider)) {
+      alert('Please enter recipient phone number and select mobile money provider.');
       return;
     }
 
@@ -72,10 +83,14 @@ export const SendSection = ({ onBalanceUpdate, onTransactionUpdate, onBack }: Se
 
       // Add to transaction history
       if (onTransactionUpdate) {
+        const description = selectedMethod === 'mobile' 
+          ? `Sent to ${recipientPhone} via ${mobileMoneyProvider}`
+          : `Sent to ${recipient} via ${selectedMethod}`;
+        
         onTransactionUpdate({
           type: 'Send Money',
           amount: `-MWK ${sendAmount.toLocaleString()}`,
-          description: `Sent to ${recipient} via ${selectedMethod}`,
+          description: description,
           time: 'Just now',
           status: 'completed'
         });
@@ -84,11 +99,17 @@ export const SendSection = ({ onBalanceUpdate, onTransactionUpdate, onBack }: Se
       setIsProcessing(false);
 
       // Show success message
-      alert(`Successfully sent MWK ${sendAmount.toLocaleString()} to ${recipient} via ${selectedMethod}`);
+      const successMessage = selectedMethod === 'mobile'
+        ? `Successfully sent MWK ${sendAmount.toLocaleString()} to ${recipientPhone} via ${mobileMoneyProvider}`
+        : `Successfully sent MWK ${sendAmount.toLocaleString()} to ${recipient}`;
+      
+      alert(successMessage);
 
       // Reset form
       setAmount('');
       setRecipient('');
+      setRecipientPhone('');
+      setMobileMoneyProvider('');
       setSelectedMethod('');
       setTransactionFee(0);
       setTotalAmount(0);
@@ -134,46 +155,66 @@ export const SendSection = ({ onBalanceUpdate, onTransactionUpdate, onBack }: Se
             />
           </div>
 
-          <Tabs defaultValue="mobile" className="w-full">
+          <Tabs value={selectedMethod} onValueChange={setSelectedMethod} className="w-full">
             <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 mb-4 h-auto bg-gray-800/60 border-gray-600/50">
-              {sendMethods.map((method) => (
-                <TabsTrigger 
-                  key={method.name} 
-                  value={method.name.toLowerCase().replace(' ', '')} 
-                  className="text-xs sm:text-sm p-2 text-white data-[state=active]:bg-gray-700/60 break-words"
-                >
-                  <span className="hidden sm:inline">{method.name}</span>
-                  <span className="sm:hidden">{method.name.split(' ')[0]}</span>
-                </TabsTrigger>
-              ))}
+              <TabsTrigger 
+                value="mobile"
+                className="text-xs sm:text-sm p-2 text-white data-[state=active]:bg-gray-700/60"
+              >
+                <span className="hidden sm:inline">Mobile Money</span>
+                <span className="sm:hidden">Mobile</span>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="neovault"
+                className="text-xs sm:text-sm p-2 text-white data-[state=active]:bg-gray-700/60"
+              >
+                <span className="hidden sm:inline">NeoVault User</span>
+                <span className="sm:hidden">NeoVault</span>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="bank"
+                className="text-xs sm:text-sm p-2 text-white data-[state=active]:bg-gray-700/60"
+              >
+                <span className="hidden sm:inline">Bank Transfer</span>
+                <span className="sm:hidden">Bank</span>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="bulk"
+                className="text-xs sm:text-sm p-2 text-white data-[state=active]:bg-gray-700/60"
+              >
+                <span className="hidden sm:inline">Bulk Transfer</span>
+                <span className="sm:hidden">Bulk</span>
+              </TabsTrigger>
             </TabsList>
 
             <TabsContent value="mobile" className="space-y-4">
               <div>
-                <Label className="text-white text-sm">Mobile Number</Label>
+                <Label className="text-white text-sm">Recipient Phone Number</Label>
                 <Input
                   placeholder="Enter recipient's mobile number"
-                  value={recipient}
-                  onChange={(e) => setRecipient(e.target.value)}
+                  value={recipientPhone}
+                  onChange={(e) => setRecipientPhone(e.target.value)}
                   className="bg-gray-800/60 border-gray-600/50 text-white placeholder-gray-400 mt-1"
                 />
               </div>
               <div>
-                <Label className="text-white text-sm">Select Provider</Label>
-                <Select onValueChange={setSelectedMethod}>
+                <Label className="text-white text-sm">Select Mobile Money Provider</Label>
+                <Select value={mobileMoneyProvider} onValueChange={setMobileMoneyProvider}>
                   <SelectTrigger className="bg-gray-800/60 border-gray-600/50 text-white mt-1">
                     <SelectValue placeholder="Choose provider" />
                   </SelectTrigger>
                   <SelectContent className="bg-gray-900 border-gray-700">
                     {mobileMoneyProviders.map((provider) => (
-                      <SelectItem key={provider} value={provider} className="text-white">{provider}</SelectItem>
+                      <SelectItem key={provider.name} value={provider.name} className="text-white">
+                        {provider.name} - Fee: {provider.fee}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
             </TabsContent>
 
-            <TabsContent value="neovaultuser" className="space-y-4">
+            <TabsContent value="neovault" className="space-y-4">
               <div>
                 <Label className="text-white text-sm">NeoVault Username/Email</Label>
                 <Input
@@ -185,7 +226,7 @@ export const SendSection = ({ onBalanceUpdate, onTransactionUpdate, onBack }: Se
               </div>
             </TabsContent>
 
-            <TabsContent value="banktransfer" className="space-y-4">
+            <TabsContent value="bank" className="space-y-4">
               <div>
                 <Label className="text-white text-sm">Bank Account Number</Label>
                 <Input
@@ -210,7 +251,7 @@ export const SendSection = ({ onBalanceUpdate, onTransactionUpdate, onBack }: Se
               </div>
             </TabsContent>
 
-            <TabsContent value="bulktransfer" className="space-y-4">
+            <TabsContent value="bulk" className="space-y-4">
               <div>
                 <Label className="text-white text-sm">Upload CSV File</Label>
                 <Input
@@ -237,7 +278,7 @@ export const SendSection = ({ onBalanceUpdate, onTransactionUpdate, onBack }: Se
           <Button
             className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold"
             onClick={handleSendMoney}
-            disabled={isProcessing || !amount || !recipient || !selectedMethod}
+            disabled={isProcessing || !amount || (selectedMethod === 'mobile' ? (!recipientPhone || !mobileMoneyProvider) : !recipient)}
           >
             {isProcessing ? 'Processing...' : 'Send Money'}
           </Button>

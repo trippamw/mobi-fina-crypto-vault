@@ -1,427 +1,222 @@
-import React from 'react';
 
-export interface LanguageTranslations {
+import React, { createContext, useContext, useState, useEffect } from 'react';
+
+interface Translations {
   [key: string]: {
     [key: string]: string;
   };
 }
 
-export const translations: LanguageTranslations = {
+const translations: Translations = {
   en: {
     // Navigation
     home: 'Home',
-    wallet: 'Wallet',
+    send: 'Send',
+    receive: 'Receive',
     exchange: 'Exchange',
-    save: 'Save',
+    cards: 'Cards',
+    deposit: 'Deposit',
+    withdraw: 'Withdraw',
+    bills: 'Bills',
+    invest: 'Invest',
+    villageBank: 'Village Bank',
     profile: 'Profile',
     
-    // Main sections
-    totalPortfolio: 'Total Portfolio',
-    deposit: 'Deposit',
-    send: 'Send',
-    withdraw: 'Withdraw',
-    receive: 'Receive',
-    cards: 'Cards',
-    invest: 'Invest',
-    invite: 'Invite',
-    
-    // Profile sections
-    personalInfo: 'Personal Information',
-    security: 'Security',
-    ekyc: 'e-KYC',
-    settings: 'Settings',
-    compliance: 'Compliance',
-    help: 'Help',
-    
-    // Form fields
-    firstName: 'First Name',
-    lastName: 'Last Name',
-    email: 'Email',
-    phone: 'Phone',
-    address: 'Address',
-    dateOfBirth: 'Date of Birth',
-    nationality: 'Nationality',
-    occupation: 'Occupation',
-    idNumber: 'ID Number',
-    language: 'Language',
-    
-    // Actions
-    saveChanges: 'Save Changes',
-    logout: 'Logout',
-    changePassword: 'Change Password',
-    uploadDocument: 'Upload Document',
-    downloadStatement: 'Download Statement',
-    
-    // Security
-    twoFactorAuth: 'Two-Factor Authentication',
-    biometricLogin: 'Biometric Login',
-    pushNotifications: 'Push Notifications',
-    loginAlerts: 'Login Alerts',
-    
-    // Transactions
-    sendMoney: 'Send Money',
+    // Common
+    balance: 'Balance',
     amount: 'Amount',
-    recipient: 'Recipient',
+    currency: 'Currency',
+    submit: 'Submit',
+    cancel: 'Cancel',
+    confirm: 'Confirm',
+    processing: 'Processing...',
+    success: 'Success',
+    error: 'Error',
+    loading: 'Loading...',
+    
+    // Send Money
+    sendMoney: 'Send Money',
+    recipientPhone: 'Recipient Phone Number',
+    selectProvider: 'Select Mobile Money Provider',
     transactionFee: 'Transaction Fee',
     total: 'Total',
-    processing: 'Processing...',
     
-    // Success messages
-    transactionSuccessful: 'Transaction Successful',
-    passwordChanged: 'Password Changed Successfully',
-    profileSaved: 'Profile Saved Successfully',
-    
-    // Crypto
-    bitcoinAddress: 'Bitcoin Address',
-    ethereumAddress: 'Ethereum Address',
-    cryptoDeposit: 'Crypto Deposit',
-    cryptoWithdraw: 'Crypto Withdraw',
-    
-    // Cards
-    virtualCard: 'Virtual Card',
-    physicalCard: 'Physical Card',
-    cardSettings: 'Card Settings',
-    addMoney: 'Add Money',
-    purchaseCard: 'Purchase Card',
-    selectCurrency: 'Select Currency',
-    cardCurrency: 'Card Currency',
-    deleteCard: 'Delete Card',
-    
-    // Compliance
-    kycVerification: 'KYC Verification',
-    complianceStatus: 'Compliance Status',
-    verified: 'Verified',
-    pending: 'Pending',
-    
-    // Village Bank
-    villageBankAdmin: 'Village Bank Admin',
-    loanRequests: 'Loan Requests',
-    approveLoan: 'Approve Loan',
-    declineLoan: 'Decline Loan',
+    // Language Settings
+    language: 'Language',
+    english: 'English',
+    chichewa: 'Chichewa',
+    tumbuka: 'Tumbuka',
+    swahili: 'Swahili',
   },
-  
   ny: { // Chichewa
     // Navigation
     home: 'Nyumba',
-    wallet: 'Chikwama',
-    exchange: 'Kusinthanitsa',
-    save: 'Kusunga',
+    send: 'Tumiza',
+    receive: 'Landila',
+    exchange: 'Sinthani',
+    cards: 'Makadi',
+    deposit: 'Yika Ndalama',
+    withdraw: 'Tulutsa',
+    bills: 'Ngongole',
+    invest: 'Yika Bizinesi',
+    villageBank: 'Banki ya Mudzi',
     profile: 'Mbiri',
     
-    // Main sections
-    totalPortfolio: 'Ndalama Zonse',
-    deposit: 'Kuyika',
-    send: 'Kutumiza',
-    withdraw: 'Kutulutsa',
-    receive: 'Kulandira',
-    cards: 'Makadi',
-    invest: 'Kusunga',
-    invite: 'Kuitana',
+    // Common
+    balance: 'Ndalama Zomwe Zili',
+    amount: 'Ndalama',
+    currency: 'Mtundu wa Ndalama',
+    submit: 'Tumiza',
+    cancel: 'Leka',
+    confirm: 'Tsimikiza',
+    processing: 'Zikuchitika...',
+    success: 'Zachitika',
+    error: 'Cholakwika',
+    loading: 'Zikukwera...',
     
-    // Profile sections
-    personalInfo: 'Zambiri Za Munthu',
-    security: 'Chitetezo',
-    ekyc: 'Kudziwa Makasitomala',
-    settings: 'Makonzedwe',
-    compliance: 'Kutsatira Malamulo',
-    help: 'Thandizo',
-    
-    // Form fields
-    firstName: 'Dzina Loyamba',
-    lastName: 'Dzina Lomaliza',
-    email: 'Imelo',
-    phone: 'Nambala Ya Foni',
-    address: 'Adilesi',
-    dateOfBirth: 'Tsiku Lobadwa',
-    nationality: 'Dziko',
-    occupation: 'Ntchito',
-    idNumber: 'Nambala Ya ID',
-    language: 'Chilankhulo',
-    
-    // Actions
-    saveChanges: 'Sunga Zosintha',
-    logout: 'Tuluka',
-    changePassword: 'Sintha Chinsinsi',
-    uploadDocument: 'Kweza Chikalata',
-    downloadStatement: 'Tsitsa Malipoti',
-    
-    // Security
-    twoFactorAuth: 'Chitetezo Cha Magawo Awiri',
-    biometricLogin: 'Kulowa Ndi Biometric',
-    pushNotifications: 'Zidziwitso',
-    loginAlerts: 'Zidziwitso Za Kulowa',
-    
-    // Transactions
+    // Send Money
     sendMoney: 'Tumiza Ndalama',
-    amount: 'Kuchuluka',
-    recipient: 'Wolandira',
-    transactionFee: 'Malipiro',
+    recipientPhone: 'Nambala ya Foni ya Wolandila',
+    selectProvider: 'Sankhani Kampani ya Mobile Money',
+    transactionFee: 'Ndalama za Ntchito',
     total: 'Zonse',
-    processing: 'Kukwaniritsa...',
     
-    // Success messages
-    transactionSuccessful: 'Kutumiza Kwatheka',
-    passwordChanged: 'Chinsinsi Chasinthidwa',
-    profileSaved: 'Mbiri Yasungidwa',
-    
-    // Crypto
-    bitcoinAddress: 'Adilesi Ya Bitcoin',
-    ethereumAddress: 'Adilesi Ya Ethereum',
-    cryptoDeposit: 'Kuyika Crypto',
-    cryptoWithdraw: 'Kutulutsa Crypto',
-    
-    // Cards
-    virtualCard: 'Kadi Yopanda Thupi',
-    physicalCard: 'Kadi Yeniyeni',
-    cardSettings: 'Makonzedwe A Kadi',
-    addMoney: 'Onjezera Ndalama',
-    purchaseCard: 'Gulani Kadi',
-    selectCurrency: 'Sankhani Ndalama',
-    cardCurrency: 'Ndalama Ya Kadi',
-    deleteCard: 'Chotsani Kadi',
-    
-    // Compliance
-    kycVerification: 'Kutsimikizira KYC',
-    complianceStatus: 'Momwe Ziliri',
-    verified: 'Wotsimikiziridwa',
-    pending: 'Akudikira',
-    
-    // Village Bank
-    villageBankAdmin: 'Woyang\'anira Banki Ya Mudzi',
-    loanRequests: 'Mapemphero A Ngongole',
-    approveLoan: 'Vomereza Ngongole',
-    declineLoan: 'Kana Ngongole',
+    // Language Settings
+    language: 'Chilankhulo',
+    english: 'Chingerezi',
+    chichewa: 'Chichewa',
+    tumbuka: 'Chitumbuka',
+    swahili: 'Chiswahili',
   },
-  
-  tu: { // Tumbuka
+  tum: { // Tumbuka
     // Navigation
-    home: 'Kaya',
-    wallet: 'Thumba',
-    exchange: 'Kusinthana',
-    save: 'Kusunga',
-    profile: 'Mbiri',
-    
-    // Main sections
-    totalPortfolio: 'Mali Ghose',
-    deposit: 'Kuvika',
-    send: 'Kutumizga',
-    withdraw: 'Kutulutsa',
-    receive: 'Kulandira',
+    home: 'Kunyumba',
+    send: 'Tuma',
+    receive: 'Poshera',
+    exchange: 'Sinthana',
     cards: 'Makadi',
-    invest: 'Kusunga',
-    invite: 'Kuyitana',
+    deposit: 'Yika Mali',
+    withdraw: 'Holola',
+    bills: 'Ngongole',
+    invest: 'Yika pa Bizinesi',
+    villageBank: 'Banki ya Mudzi',
+    profile: 'Chithunzi',
     
-    // Profile sections
-    personalInfo: 'Viyangu Vya Munthu',
-    security: 'Chitetezo',
-    ekyc: 'Kudziwa Makasitomala',
-    settings: 'Vikongolozo',
-    compliance: 'Kugonjera Malamulo',
-    help: 'Thandizo',
+    // Common
+    balance: 'Mali Ghakukhalapo',
+    amount: 'Mali',
+    currency: 'Mtundu wa Mali',
+    submit: 'Tuma',
+    cancel: 'Siya',
+    confirm: 'Chakaka',
+    processing: 'Yikuchitika...',
+    success: 'Yachitika',
+    error: 'Cholakwika',
+    loading: 'Yikukwera...',
     
-    // Form fields
-    firstName: 'Zina Lyoyamba',
-    lastName: 'Zina Lyomaliza',
-    email: 'Imelo',
-    phone: 'Nambala Ya Foni',
-    address: 'Adilesi',
-    dateOfBirth: 'Siku Lyakubadwa',
-    nationality: 'Charu',
-    occupation: 'Ntchito',
-    idNumber: 'Nambala Ya ID',
-    language: 'Chilyankhulo',
+    // Send Money
+    sendMoney: 'Tuma Mali',
+    recipientPhone: 'Nambala ya Foni ya Waposhera',
+    selectProvider: 'Sankhani Kampani ya Mobile Money',
+    transactionFee: 'Mali gha Ntchito',
+    total: 'Zose',
     
-    // Actions
-    saveChanges: 'Sunga Visintha',
-    logout: 'Tuluka',
-    changePassword: 'Sintha Chinsinsi',
-    uploadDocument: 'Kweza Chikalata',
-    downloadStatement: 'Tsitsa Malipoti',
-    
-    // Security
-    twoFactorAuth: 'Chitetezo Cha Magawo Ghawiri',
-    biometricLogin: 'Kulowa Ndi Biometric',
-    pushNotifications: 'Vidziwitso',
-    loginAlerts: 'Vidziwitso Vya Kulowa',
-    
-    // Transactions
-    sendMoney: 'Tumizga Mali',
-    amount: 'Kuchuluka',
-    recipient: 'Wolandira',
-    transactionFee: 'Malipilo',
-    total: 'Vyose',
-    processing: 'Vikukwanilitska...',
-    
-    // Success messages
-    transactionSuccessful: 'Kutumizga Kwatheka',
-    passwordChanged: 'Chinsinsi Chasinthidwa',
-    profileSaved: 'Mbiri Yasungidwa',
-    
-    // Crypto
-    bitcoinAddress: 'Adilesi Ya Bitcoin',
-    ethereumAddress: 'Adilesi Ya Ethereum',
-    cryptoDeposit: 'Kuvika Crypto',
-    cryptoWithdraw: 'Kutulutsa Crypto',
-    
-    // Cards
-    virtualCard: 'Kadi Yopanda Thupi',
-    physicalCard: 'Kadi Yeniyeni',
-    cardSettings: 'Vikongolozo Vya Kadi',
-    addMoney: 'Onjezera Mali',
-    purchaseCard: 'Gulani Kadi',
-    selectCurrency: 'Sankhani Ndalama',
-    cardCurrency: 'Ndalama Ya Kadi',
-    deleteCard: 'Fufutani Kadi',
-    
-    // Compliance
-    kycVerification: 'Kutsimikizira KYC',
-    complianceStatus: 'Momwe Viliri',
-    verified: 'Wotsimikiziridwa',
-    pending: 'Akudikira',
-    
-    // Village Bank
-    villageBankAdmin: 'Woyang\'anira Banki Ya Mudzi',
-    loanRequests: 'Mapemphero Gha Ngongole',
-    approveLoan: 'Vomereza Ngongole',
-    declineLoan: 'Kana Ngongole',
+    // Language Settings
+    language: 'Chilololo',
+    english: 'Chingerezi',
+    chichewa: 'Chichewa',
+    tumbuka: 'Chitumbuka',
+    swahili: 'Kiswahili',
   },
-  
   sw: { // Swahili
     // Navigation
     home: 'Nyumbani',
-    wallet: 'Pochi',
-    exchange: 'Kubadilishana',
-    save: 'Kuhifadhi',
+    send: 'Tuma',
+    receive: 'Pokea',
+    exchange: 'Badilisha',
+    cards: 'Kadi',
+    deposit: 'Weka Pesa',
+    withdraw: 'Toa',
+    bills: 'Bili',
+    invest: 'Wekeza',
+    villageBank: 'Benki ya Kijiji',
     profile: 'Wasifu',
     
-    // Main sections
-    totalPortfolio: 'Jumla ya Mali',
-    deposit: 'Kuweka',
-    send: 'Kutuma',
-    withdraw: 'Kutoa',
-    receive: 'Kupokea',
-    cards: 'Kadi',
-    invest: 'Kuhifadhi',
-    invite: 'Kualika',
-    
-    // Profile sections
-    personalInfo: 'Maelezo ya Kibinafsi',
-    security: 'Usalama',
-    ekyc: 'Utambulisho wa Mteja',
-    settings: 'Mipangilio',
-    compliance: 'Utii',
-    help: 'Msaada',
-    
-    // Form fields
-    firstName: 'Jina la Kwanza',
-    lastName: 'Jina la Mwisho',
-    email: 'Barua Pepe',
-    phone: 'Nambari ya Simu',
-    address: 'Anwani',
-    dateOfBirth: 'Tarehe ya Kuzaliwa',
-    nationality: 'Uraia',
-    occupation: 'Kazi',
-    idNumber: 'Nambari ya Kitambulisho',
-    language: 'Lugha',
-    
-    // Actions
-    saveChanges: 'Hifadhi Mabadiliko',
-    logout: 'Ondoka',
-    changePassword: 'Badilisha Nenosiri',
-    uploadDocument: 'Pakia Hati',
-    downloadStatement: 'Pakua Taarifa',
-    
-    // Security
-    twoFactorAuth: 'Uthibitisho wa Hatua Mbili',
-    biometricLogin: 'Kuingia kwa Biometric',
-    pushNotifications: 'Arifa za Kusonga',
-    loginAlerts: 'Arifa za Kuingia',
-    
-    // Transactions
-    sendMoney: 'Tuma Pesa',
+    // Common
+    balance: 'Salio',
     amount: 'Kiasi',
-    recipient: 'Mpokeaji',
+    currency: 'Sarafu',
+    submit: 'Wasilisha',
+    cancel: 'Ghairi',
+    confirm: 'Thibitisha',
+    processing: 'Inachakatwa...',
+    success: 'Imefanikiwa',
+    error: 'Hitilafu',
+    loading: 'Inapakia...',
+    
+    // Send Money
+    sendMoney: 'Tuma Pesa',
+    recipientPhone: 'Nambari ya Simu ya Mpokeaji',
+    selectProvider: 'Chagua Mtoa Huduma wa Mobile Money',
     transactionFee: 'Ada ya Muamala',
     total: 'Jumla',
-    processing: 'Inachakatishwa...',
     
-    // Success messages
-    transactionSuccessful: 'Muamala Umefanikiwa',
-    passwordChanged: 'Nenosiri Limebadilishwa',
-    profileSaved: 'Wasifu Umehifadhiwa',
-    
-    // Crypto
-    bitcoinAddress: 'Anwani ya Bitcoin',
-    ethereumAddress: 'Anwani ya Ethereum',
-    cryptoDeposit: 'Kuweka Crypto',
-    cryptoWithdraw: 'Kutoa Crypto',
-    
-    // Cards
-    virtualCard: 'Kadi ya Kidijitali',
-    physicalCard: 'Kadi ya Kimwili',
-    cardSettings: 'Mipangilio ya Kadi',
-    addMoney: 'Ongeza Pesa',
-    purchaseCard: 'Nunua Kadi',
-    selectCurrency: 'Chagua Sarafu',
-    cardCurrency: 'Sarafu ya Kadi',
-    deleteCard: 'Futa Kadi',
-    
-    // Compliance
-    kycVerification: 'Uthibitisho wa KYC',
-    complianceStatus: 'Hali ya Utii',
-    verified: 'Imethibitishwa',
-    pending: 'Inasubiri',
-    
-    // Village Bank
-    villageBankAdmin: 'Msimamizi wa Benki ya Kijiji',
-    loanRequests: 'Maombi ya Mkopo',
-    approveLoan: 'Idhinisha Mkopo',
-    declineLoan: 'Kataa Mkopo',
-  }
+    // Language Settings
+    language: 'Lugha',
+    english: 'Kiingereza',
+    chichewa: 'Kichewa',
+    tumbuka: 'Kitumbuka',
+    swahili: 'Kiswahili',
+  },
 };
 
-export const translateText = (key: string, language: string): string => {
-  const langCode = language.toLowerCase();
-  const translationKey = langCode === 'chichewa' ? 'ny' : 
-                        langCode === 'tumbuka' ? 'tu' : 
-                        langCode === 'swahili' ? 'sw' : 'en';
-  
-  return translations[translationKey]?.[key] || translations.en[key] || key;
-};
+interface LanguageContextType {
+  currentLanguage: string;
+  setLanguage: (lang: string) => void;
+  t: (key: string) => string;
+}
 
-export const applyLanguageToApp = (language: string) => {
-  // Store language preference
-  localStorage.setItem('preferredLanguage', language);
-  
-  // Update document language
-  const langCode = language.toLowerCase() === 'chichewa' ? 'ny' : 
-                  language.toLowerCase() === 'tumbuka' ? 'tu' : 
-                  language.toLowerCase() === 'swahili' ? 'sw' : 'en';
-  
-  document.documentElement.lang = langCode;
-  
-  // Trigger app-wide re-render by dispatching custom event
-  window.dispatchEvent(new CustomEvent('languageChanged', { detail: { language } }));
-};
+const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
-export const getCurrentLanguage = (): string => {
-  return localStorage.getItem('preferredLanguage') || 'English';
-};
+export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [currentLanguage, setCurrentLanguage] = useState<string>('en');
 
-// Hook for components to use translations
-export const useTranslation = () => {
-  const [currentLanguage, setCurrentLanguage] = React.useState(getCurrentLanguage());
-  
-  React.useEffect(() => {
-    const handleLanguageChange = (event: CustomEvent) => {
-      setCurrentLanguage(event.detail.language);
-    };
-    
-    window.addEventListener('languageChanged', handleLanguageChange as EventListener);
-    return () => window.removeEventListener('languageChanged', handleLanguageChange as EventListener);
+  useEffect(() => {
+    const savedLanguage = localStorage.getItem('app-language');
+    if (savedLanguage && translations[savedLanguage]) {
+      setCurrentLanguage(savedLanguage);
+    }
   }, []);
-  
-  const t = (key: string) => translateText(key, currentLanguage);
-  
-  return { t, currentLanguage };
+
+  const setLanguage = (lang: string) => {
+    if (translations[lang]) {
+      setCurrentLanguage(lang);
+      localStorage.setItem('app-language', lang);
+    }
+  };
+
+  const t = (key: string): string => {
+    return translations[currentLanguage]?.[key] || translations.en[key] || key;
+  };
+
+  return (
+    <LanguageContext.Provider value={{ currentLanguage, setLanguage, t }}>
+      {children}
+    </LanguageContext.Provider>
+  );
 };
+
+export const useLanguage = () => {
+  const context = useContext(LanguageContext);
+  if (context === undefined) {
+    throw new Error('useLanguage must be used within a LanguageProvider');
+  }
+  return context;
+};
+
+export const languages = [
+  { code: 'en', name: 'English', flag: '🇬🇧' },
+  { code: 'ny', name: 'Chichewa', flag: '🇲🇼' },
+  { code: 'tum', name: 'Tumbuka', flag: '🇲🇼' },
+  { code: 'sw', name: 'Swahili', flag: '🇹🇿' },
+];

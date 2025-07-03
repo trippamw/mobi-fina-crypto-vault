@@ -21,46 +21,72 @@ export const ExchangeSection: React.FC<ExchangeSectionProps> = ({ onBalanceUpdat
   const [convertedAmount, setConvertedAmount] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
-  const [recentExchanges, setRecentExchanges] = useState([
-    { id: 1, from: 'USD', to: 'MWK', amount: '100', converted: '103,000', rate: '1,030', date: '2024-01-15', status: 'Completed' },
-    { id: 2, from: 'MWK', to: 'USD', amount: '206,000', converted: '200', rate: '0.00097', date: '2024-01-14', status: 'Completed' },
-    { id: 3, from: 'GBP', to: 'MWK', amount: '50', converted: '64,500', rate: '1,290', date: '2024-01-13', status: 'Completed' }
-  ]);
+  const [exchangeRates, setExchangeRates] = useState<any>({});
+  const [cryptoRates, setCryptoRates] = useState<any>({});
 
-  const [currencies, setCurrencies] = useState([
-    { code: 'MWK', name: 'Malawian Kwacha', rate: 1, flag: '🇲🇼', change: '+0.2%' },
-    { code: 'USD', name: 'US Dollar', rate: 0.00097, flag: '🇺🇸', change: '+1.5%' },
-    { code: 'GBP', name: 'British Pound', rate: 0.00078, flag: '🇬🇧', change: '+2.1%' },
-    { code: 'EUR', name: 'Euro', rate: 0.00092, flag: '🇪🇺', change: '-0.8%' },
-    { code: 'ZAR', name: 'South African Rand', rate: 0.018, flag: '🇿🇦', change: '+0.5%' },
-    { code: 'BTC', name: 'Bitcoin', rate: 0.000000034, flag: '₿', change: '+3.2%' },
-    { code: 'ETH', name: 'Ethereum', rate: 0.00000041, flag: 'Ξ', change: '+2.8%' }
-  ]);
+  const fiatCurrencies = [
+    { code: 'MWK', name: 'Malawian Kwacha', flag: '🇲🇼' },
+    { code: 'USD', name: 'US Dollar', flag: '🇺🇸' },
+    { code: 'GBP', name: 'British Pound', flag: '🇬🇧' },
+    { code: 'EUR', name: 'Euro', flag: '🇪🇺' },
+    { code: 'ZAR', name: 'South African Rand', flag: '🇿🇦' },
+  ];
 
-  // Fetch live exchange rates (simulated)
-  const fetchExchangeRates = async () => {
+  const cryptoCurrencies = [
+    { code: 'BTC', name: 'Bitcoin', flag: '₿' },
+    { code: 'ETH', name: 'Ethereum', flag: 'Ξ' },
+  ];
+
+  const allCurrencies = [...fiatCurrencies, ...cryptoCurrencies];
+
+  // Fetch live exchange rates from exchangerate-api.com
+  const fetchFiatRates = async () => {
+    try {
+      const response = await fetch(`https://v6.exchangerate-api.com/v6/d207f2d63914bbf2254a0652/latest/USD`);
+      const data = await response.json();
+      
+      if (data.result === 'success') {
+        setExchangeRates(data.conversion_rates);
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error('Failed to fetch fiat rates:', error);
+      return false;
+    }
+  };
+
+  // Fetch crypto rates (simulated since we don't have a crypto API key)
+  const fetchCryptoRates = async () => {
+    try {
+      // Simulated crypto rates - in production, use a real crypto API
+      const cryptoData = {
+        BTC: 67500, // BTC price in USD
+        ETH: 3800,  // ETH price in USD
+      };
+      setCryptoRates(cryptoData);
+      return true;
+    } catch (error) {
+      console.error('Failed to fetch crypto rates:', error);
+      return false;
+    }
+  };
+
+  const fetchAllRates = async () => {
     setIsLoading(true);
     try {
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const [fiatSuccess, cryptoSuccess] = await Promise.all([
+        fetchFiatRates(),
+        fetchCryptoRates()
+      ]);
       
-      // Real exchange rates as of July 3, 2025 (simulated realistic rates)
-      const updatedCurrencies = [
-        { code: 'MWK', name: 'Malawian Kwacha', rate: 1, flag: '🇲🇼', change: '+0.1%' },
-        { code: 'USD', name: 'US Dollar', rate: 0.00096, flag: '🇺🇸', change: '+1.2%' },
-        { code: 'GBP', name: 'British Pound', rate: 0.00076, flag: '🇬🇧', change: '+1.8%' },
-        { code: 'EUR', name: 'Euro', rate: 0.00089, flag: '🇪🇺', change: '-0.5%' },
-        { code: 'ZAR', name: 'South African Rand', rate: 0.0175, flag: '🇿🇦', change: '+0.3%' },
-        { code: 'BTC', name: 'Bitcoin', rate: 0.000000032, flag: '₿', change: '+4.5%' },
-        { code: 'ETH', name: 'Ethereum', rate: 0.00000038, flag: 'Ξ', change: '+3.1%' }
-      ];
-      
-      setCurrencies(updatedCurrencies);
-      setLastUpdated(new Date());
+      if (fiatSuccess || cryptoSuccess) {
+        setLastUpdated(new Date());
+      }
       
       // Recalculate if exchange is already set up
       if (fromCurrency && toCurrency && amount) {
-        calculateExchange(updatedCurrencies);
+        calculateExchange();
       }
     } catch (error) {
       console.error('Failed to fetch exchange rates:', error);
@@ -71,28 +97,47 @@ export const ExchangeSection: React.FC<ExchangeSectionProps> = ({ onBalanceUpdat
 
   // Load rates on component mount
   useEffect(() => {
-    fetchExchangeRates();
+    fetchAllRates();
   }, []);
 
-  const handleCurrencyChange = (type: 'from' | 'to', value: string) => {
-    if (type === 'from') {
-      setFromCurrency(value);
-    } else {
-      setToCurrency(value);
+  const getExchangeRate = (from: string, to: string): number => {
+    if (from === to) return 1;
+
+    // Handle fiat to fiat
+    if (fiatCurrencies.find(c => c.code === from) && fiatCurrencies.find(c => c.code === to)) {
+      const fromRate = exchangeRates[from] || 1;
+      const toRate = exchangeRates[to] || 1;
+      return toRate / fromRate;
     }
 
-    if ((type === 'from' ? value : fromCurrency) && (type === 'to' ? value : toCurrency) && amount) {
-      setTimeout(() => calculateExchange(), 100);
+    // Handle crypto to fiat
+    if (cryptoCurrencies.find(c => c.code === from) && fiatCurrencies.find(c => c.code === to)) {
+      const cryptoUsdPrice = cryptoRates[from] || 0;
+      const fiatUsdRate = exchangeRates[to] || 1;
+      return cryptoUsdPrice * fiatUsdRate;
     }
+
+    // Handle fiat to crypto
+    if (fiatCurrencies.find(c => c.code === from) && cryptoCurrencies.find(c => c.code === to)) {
+      const fiatUsdRate = exchangeRates[from] || 1;
+      const cryptoUsdPrice = cryptoRates[to] || 0;
+      return fiatUsdRate / cryptoUsdPrice;
+    }
+
+    // Handle crypto to crypto
+    if (cryptoCurrencies.find(c => c.code === from) && cryptoCurrencies.find(c => c.code === to)) {
+      const fromUsdPrice = cryptoRates[from] || 0;
+      const toUsdPrice = cryptoRates[to] || 0;
+      return fromUsdPrice / toUsdPrice;
+    }
+
+    return 0;
   };
 
-  const calculateExchange = (currencyData = currencies) => {
+  const calculateExchange = () => {
     if (!fromCurrency || !toCurrency || !amount) return;
 
-    const fromRate = currencyData.find(c => c.code === fromCurrency)?.rate || 1;
-    const toRate = currencyData.find(c => c.code === toCurrency)?.rate || 1;
-    
-    const rate = toRate / fromRate;
+    const rate = getExchangeRate(fromCurrency, toCurrency);
     const converted = parseFloat(amount) * rate;
     
     setExchangeRate(rate);
@@ -108,20 +153,6 @@ export const ExchangeSection: React.FC<ExchangeSectionProps> = ({ onBalanceUpdat
     const fee = parseFloat(amount) * 0.005; // 0.5% fee
     const netAmount = parseFloat(amount) + fee;
 
-    // Add to recent exchanges
-    const newExchange = {
-      id: Date.now(),
-      from: fromCurrency,
-      to: toCurrency,
-      amount: amount,
-      converted: convertedAmount.toFixed(2),
-      rate: exchangeRate.toFixed(6),
-      date: new Date().toISOString().split('T')[0],
-      status: 'Completed'
-    };
-
-    setRecentExchanges(prev => [newExchange, ...prev.slice(0, 4)]);
-
     // Update balances
     if (onBalanceUpdate) {
       onBalanceUpdate(fromCurrency, -netAmount);
@@ -132,7 +163,7 @@ export const ExchangeSection: React.FC<ExchangeSectionProps> = ({ onBalanceUpdat
     if (onTransactionUpdate) {
       onTransactionUpdate({
         type: 'Exchange',
-        amount: `${amount} ${fromCurrency} → ${convertedAmount.toFixed(2)} ${toCurrency}`,
+        amount: `${amount} ${fromCurrency} → ${convertedAmount.toFixed(6)} ${toCurrency}`,
         description: `Currency exchange from ${fromCurrency} to ${toCurrency}`,
         time: 'Just now',
         status: 'completed'
@@ -146,7 +177,7 @@ export const ExchangeSection: React.FC<ExchangeSectionProps> = ({ onBalanceUpdat
     setExchangeRate(0);
     setConvertedAmount(0);
 
-    alert(`Exchange successful! ${fee.toFixed(2)} ${fromCurrency} fee applied.`);
+    alert(`Exchange successful! ${fee.toFixed(6)} ${fromCurrency} fee applied.`);
   };
 
   const swapCurrencies = () => {
@@ -157,10 +188,10 @@ export const ExchangeSection: React.FC<ExchangeSectionProps> = ({ onBalanceUpdat
   };
 
   useEffect(() => {
-    if (fromCurrency && toCurrency && amount) {
+    if (fromCurrency && toCurrency && amount && (Object.keys(exchangeRates).length > 0 || Object.keys(cryptoRates).length > 0)) {
       calculateExchange();
     }
-  }, [fromCurrency, toCurrency, amount]);
+  }, [fromCurrency, toCurrency, amount, exchangeRates, cryptoRates]);
 
   return (
     <div className="space-y-6 pb-24">
@@ -179,13 +210,13 @@ export const ExchangeSection: React.FC<ExchangeSectionProps> = ({ onBalanceUpdat
         </div>
       )}
 
-      {/* Exchange Rates */}
+      {/* Live Rates Display */}
       <Card className="bg-gray-900/80 backdrop-blur-xl border-gray-700/50 shadow-2xl">
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="text-white">Live Exchange Rates</CardTitle>
           <div className="flex items-center space-x-2">
             <Button
-              onClick={fetchExchangeRates}
+              onClick={fetchAllRates}
               disabled={isLoading}
               size="sm"
               variant="outline"
@@ -199,20 +230,38 @@ export const ExchangeSection: React.FC<ExchangeSectionProps> = ({ onBalanceUpdat
           </div>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {currencies.slice(1).map((currency) => (
-              <div key={currency.code} className="bg-gray-800/60 p-3 rounded-lg border border-gray-600/50">
-                <div className="flex items-center space-x-2 mb-1">
-                  <span className="text-lg">{currency.flag}</span>
-                  <span className="font-medium text-white">{currency.code}</span>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            {/* Fiat Currencies */}
+            {fiatCurrencies.filter(c => c.code !== 'USD').map((currency) => {
+              const rate = exchangeRates[currency.code];
+              return (
+                <div key={currency.code} className="bg-gray-800/60 p-3 rounded-lg border border-gray-600/50">
+                  <div className="flex items-center space-x-2 mb-1">
+                    <span className="text-lg">{currency.flag}</span>
+                    <span className="font-medium text-white">{currency.code}</span>
+                  </div>
+                  <p className="text-sm text-white/60">
+                    1 USD = {rate ? rate.toFixed(2) : 'Loading...'} {currency.code}
+                  </p>
                 </div>
-                <p className="text-sm text-white/60">1 {currency.code} = {(1/currency.rate).toLocaleString()} MWK</p>
-                <Badge className={`mt-1 ${currency.change.startsWith('+') ? 'bg-green-500/20 text-green-300 border-green-400/30' : 'bg-red-500/20 text-red-300 border-red-400/30'} text-xs`}>
-                  {currency.change.startsWith('+') ? <TrendingUp className="w-3 h-3 mr-1" /> : <TrendingDown className="w-3 h-3 mr-1" />}
-                  {currency.change}
-                </Badge>
-              </div>
-            ))}
+              );
+            })}
+            
+            {/* Crypto Currencies */}
+            {cryptoCurrencies.map((currency) => {
+              const rate = cryptoRates[currency.code];
+              return (
+                <div key={currency.code} className="bg-gray-800/60 p-3 rounded-lg border border-gray-600/50">
+                  <div className="flex items-center space-x-2 mb-1">
+                    <span className="text-lg">{currency.flag}</span>
+                    <span className="font-medium text-white">{currency.code}</span>
+                  </div>
+                  <p className="text-sm text-white/60">
+                    1 {currency.code} = ${rate ? rate.toLocaleString() : 'Loading...'} USD
+                  </p>
+                </div>
+              );
+            })}
           </div>
         </CardContent>
       </Card>
@@ -227,12 +276,12 @@ export const ExchangeSection: React.FC<ExchangeSectionProps> = ({ onBalanceUpdat
             {/* From Currency */}
             <div className="col-span-2">
               <label className="block text-sm font-medium text-white mb-2">From</label>
-              <Select value={fromCurrency} onValueChange={(value) => handleCurrencyChange('from', value)}>
+              <Select value={fromCurrency} onValueChange={setFromCurrency}>
                 <SelectTrigger className="bg-gray-800/60 border-gray-600/50 text-white">
                   <SelectValue placeholder="Select currency" />
                 </SelectTrigger>
                 <SelectContent className="bg-gray-900 border-gray-700">
-                  {currencies.map((currency) => (
+                  {allCurrencies.map((currency) => (
                     <SelectItem key={currency.code} value={currency.code} className="text-white">
                       {currency.flag} {currency.code} - {currency.name}
                     </SelectItem>
@@ -261,12 +310,12 @@ export const ExchangeSection: React.FC<ExchangeSectionProps> = ({ onBalanceUpdat
             {/* To Currency */}
             <div className="col-span-2">
               <label className="block text-sm font-medium text-white mb-2">To</label>
-              <Select value={toCurrency} onValueChange={(value) => handleCurrencyChange('to', value)}>
+              <Select value={toCurrency} onValueChange={setToCurrency}>
                 <SelectTrigger className="bg-gray-800/60 border-gray-600/50 text-white">
                   <SelectValue placeholder="Select currency" />
                 </SelectTrigger>
                 <SelectContent className="bg-gray-900 border-gray-700">
-                  {currencies.map((currency) => (
+                  {allCurrencies.map((currency) => (
                     <SelectItem key={currency.code} value={currency.code} className="text-white">
                       {currency.flag} {currency.code} - {currency.name}
                     </SelectItem>
@@ -275,7 +324,7 @@ export const ExchangeSection: React.FC<ExchangeSectionProps> = ({ onBalanceUpdat
               </Select>
               <div className="mt-2 p-3 bg-gray-800/60 rounded-lg border border-gray-600/50">
                 <p className="text-white font-medium">
-                  {convertedAmount > 0 ? convertedAmount.toLocaleString() : '0'} {toCurrency || ''}
+                  {convertedAmount > 0 ? convertedAmount.toFixed(8) : '0'} {toCurrency || ''}
                 </p>
               </div>
             </div>
@@ -285,11 +334,11 @@ export const ExchangeSection: React.FC<ExchangeSectionProps> = ({ onBalanceUpdat
             <div className="bg-gray-800/60 p-3 rounded-lg border border-gray-600/30">
               <div className="flex justify-between text-sm">
                 <span className="text-gray-300">Exchange Rate:</span>
-                <span className="text-white">1 {fromCurrency} = {exchangeRate.toFixed(6)} {toCurrency}</span>
+                <span className="text-white">1 {fromCurrency} = {exchangeRate.toFixed(8)} {toCurrency}</span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-gray-300">Fee (0.5%):</span>
-                <span className="text-white">{(parseFloat(amount || '0') * 0.005).toFixed(2)} {fromCurrency}</span>
+                <span className="text-white">{(parseFloat(amount || '0') * 0.005).toFixed(8)} {fromCurrency}</span>
               </div>
             </div>
           )}
@@ -301,33 +350,6 @@ export const ExchangeSection: React.FC<ExchangeSectionProps> = ({ onBalanceUpdat
           >
             {isLoading ? 'Updating Rates...' : 'Exchange Currency'}
           </Button>
-        </CardContent>
-      </Card>
-
-      {/* Recent Exchanges */}
-      <Card className="bg-gray-900/80 backdrop-blur-xl border-gray-700/50 shadow-2xl">
-        <CardHeader>
-          <CardTitle className="text-white">Recent Exchanges</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            {recentExchanges.map((exchange) => (
-              <div key={exchange.id} className="flex items-center justify-between p-3 rounded-lg bg-gray-800/50 hover:bg-gray-700/50 transition-colors border border-gray-600/30">
-                <div className="min-w-0 flex-1">
-                  <p className="font-medium text-sm text-white truncate">
-                    {exchange.amount} {exchange.from} → {exchange.converted} {exchange.to}
-                  </p>
-                  <p className="text-xs text-gray-300 truncate">Rate: {exchange.rate}</p>
-                </div>
-                <div className="text-right ml-2">
-                  <p className="text-xs text-gray-300">{exchange.date}</p>
-                  <Badge className="bg-green-500/20 text-green-300 border-green-400/30 text-xs">
-                    {exchange.status}
-                  </Badge>
-                </div>
-              </div>
-            ))}
-          </div>
         </CardContent>
       </Card>
     </div>

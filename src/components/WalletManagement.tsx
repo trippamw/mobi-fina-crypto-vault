@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,7 +5,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Plus, Send, ArrowDownLeft, Settings, Trash2, AlertTriangle, Eye, EyeOff } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { ArrowLeft, Plus, Send, Settings, Trash2, AlertTriangle, Eye, EyeOff } from 'lucide-react';
 import { TransactionConfirmation } from '@/components/TransactionConfirmation';
 
 interface WalletManagementProps {
@@ -21,6 +21,10 @@ export const WalletManagement = ({ wallet, onBack, onBalanceUpdate, onTransactio
   const [depositAmount, setDepositAmount] = useState('');
   const [sendAmount, setSendAmount] = useState('');
   const [recipientAddress, setRecipientAddress] = useState('');
+  const [selectedDepositMethod, setSelectedDepositMethod] = useState('');
+  const [selectedSendMethod, setSelectedSendMethod] = useState('');
+  const [mobileNumber, setMobileNumber] = useState('');
+  const [selectedBank, setSelectedBank] = useState('');
   const [isWalletFrozen, setIsWalletFrozen] = useState(false);
   const [dailyLimit, setDailyLimit] = useState('100000');
   const [monthlyLimit, setMonthlyLimit] = useState('1000000');
@@ -32,9 +36,39 @@ export const WalletManagement = ({ wallet, onBack, onBalanceUpdate, onTransactio
     transaction: null as any
   });
 
+  const mobileMoneyProviders = [
+    { name: 'TNM Mpamba', fee: '1%' },
+    { name: 'Airtel Money', fee: '1.2%' },
+    { name: 'MO626', fee: '0.8%' }
+  ];
+
+  const banks = [
+    'Standard Bank', 'FDH Bank', 'NBS Bank', 'National Bank',
+    'CDH Investment Bank', 'Centenary Bank', 'FCB'
+  ];
+
+  const isCrypto = wallet.currency === 'BTC' || wallet.currency === 'ETH';
+
   const handleDeposit = () => {
     const amount = parseFloat(depositAmount);
     if (amount > 0) {
+      if (!isCrypto && !selectedDepositMethod) {
+        alert('Please select a deposit method');
+        return;
+      }
+      
+      if (selectedDepositMethod === 'mobile' && !mobileNumber) {
+        alert('Please enter your mobile number');
+        return;
+      }
+      
+      if (selectedDepositMethod === 'bank' && !selectedBank) {
+        alert('Please select a bank');
+        return;
+      }
+
+      const method = isCrypto ? 'Crypto Wallet Address' : selectedDepositMethod;
+      
       setTransactionModal({
         isOpen: true,
         showSuccess: false,
@@ -42,7 +76,8 @@ export const WalletManagement = ({ wallet, onBack, onBalanceUpdate, onTransactio
           type: 'Deposit',
           amount: `+${wallet.currency} ${amount.toLocaleString()}`,
           recipient: `${wallet.currency} Wallet`,
-          fee: 'FREE',
+          method: method,
+          fee: isCrypto ? '0.001 ETH' : 'FREE',
           total: `${wallet.currency} ${amount.toLocaleString()}`
         }
       });
@@ -52,6 +87,18 @@ export const WalletManagement = ({ wallet, onBack, onBalanceUpdate, onTransactio
   const handleSend = () => {
     const amount = parseFloat(sendAmount);
     if (amount > 0 && recipientAddress) {
+      if (!isCrypto && !selectedSendMethod) {
+        alert('Please select a send method');
+        return;
+      }
+      
+      if (amount > wallet.balance) {
+        alert('Insufficient balance');
+        return;
+      }
+
+      const method = isCrypto ? 'Crypto Address' : selectedSendMethod;
+      
       setTransactionModal({
         isOpen: true,
         showSuccess: false,
@@ -59,7 +106,8 @@ export const WalletManagement = ({ wallet, onBack, onBalanceUpdate, onTransactio
           type: 'Send',
           amount: `-${wallet.currency} ${amount.toLocaleString()}`,
           recipient: recipientAddress,
-          fee: wallet.currency === 'BTC' || wallet.currency === 'ETH' ? '0.001 ETH' : 'FREE',
+          method: method,
+          fee: isCrypto ? '0.001 ETH' : 'FREE',
           total: `-${wallet.currency} ${amount.toLocaleString()}`
         }
       });
@@ -72,16 +120,20 @@ export const WalletManagement = ({ wallet, onBack, onBalanceUpdate, onTransactio
       if (transaction.type === 'Deposit') {
         onBalanceUpdate(wallet.currency, parseFloat(depositAmount));
         setDepositAmount('');
+        setSelectedDepositMethod('');
+        setMobileNumber('');
+        setSelectedBank('');
       } else if (transaction.type === 'Send') {
         onBalanceUpdate(wallet.currency, -parseFloat(sendAmount));
         setSendAmount('');
         setRecipientAddress('');
+        setSelectedSendMethod('');
       }
       
       onTransactionUpdate({
         type: transaction.type,
         amount: transaction.amount,
-        description: `${transaction.type} - ${wallet.currency} Wallet`,
+        description: `${transaction.type} - ${wallet.currency} Wallet via ${transaction.method}`,
         time: 'Just now',
         status: 'completed'
       });
@@ -273,6 +325,73 @@ export const WalletManagement = ({ wallet, onBack, onBalanceUpdate, onTransactio
                 className="bg-gray-800/60 border-gray-600/50 text-white placeholder-gray-400"
               />
             </div>
+            
+            {!isCrypto && (
+              <>
+                <div>
+                  <Label className="text-white">Deposit Method</Label>
+                  <Select value={selectedDepositMethod} onValueChange={setSelectedDepositMethod}>
+                    <SelectTrigger className="bg-gray-800/60 border-gray-600/50 text-white">
+                      <SelectValue placeholder="Select deposit method" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-gray-900 border-gray-700">
+                      <SelectItem value="mobile" className="text-white">Mobile Money</SelectItem>
+                      <SelectItem value="bank" className="text-white">Bank Transfer</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {selectedDepositMethod === 'mobile' && (
+                  <>
+                    <div>
+                      <Label className="text-white">Mobile Number</Label>
+                      <Input
+                        placeholder="Enter your mobile number"
+                        value={mobileNumber}
+                        onChange={(e) => setMobileNumber(e.target.value)}
+                        className="bg-gray-800/60 border-gray-600/50 text-white placeholder-gray-400"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      {mobileMoneyProviders.map((provider) => (
+                        <div key={provider.name} className="p-3 bg-gray-800/40 rounded-lg border border-gray-600/50">
+                          <div className="flex justify-between items-center">
+                            <span className="text-white">{provider.name}</span>
+                            <span className="text-gray-300 text-sm">Fee: {provider.fee}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                )}
+
+                {selectedDepositMethod === 'bank' && (
+                  <div>
+                    <Label className="text-white">Select Bank</Label>
+                    <Select value={selectedBank} onValueChange={setSelectedBank}>
+                      <SelectTrigger className="bg-gray-800/60 border-gray-600/50 text-white">
+                        <SelectValue placeholder="Choose your bank" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-gray-900 border-gray-700">
+                        {banks.map((bank) => (
+                          <SelectItem key={bank} value={bank} className="text-white">{bank}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+              </>
+            )}
+
+            {isCrypto && (
+              <div className="p-4 bg-blue-500/10 border border-blue-400/30 rounded-lg">
+                <p className="text-blue-300 text-sm">
+                  For crypto deposits, send {wallet.currency} to your wallet address. 
+                  Network fees may apply and vary based on network congestion.
+                </p>
+              </div>
+            )}
+
             <Button 
               onClick={handleDeposit}
               disabled={!depositAmount || parseFloat(depositAmount) <= 0}
@@ -303,15 +422,34 @@ export const WalletManagement = ({ wallet, onBack, onBalanceUpdate, onTransactio
               />
             </div>
             <div>
-              <Label htmlFor="recipientAddress" className="text-white">Recipient Address</Label>
+              <Label htmlFor="recipientAddress" className="text-white">
+                {isCrypto ? 'Recipient Wallet Address' : 'Recipient'}
+              </Label>
               <Input
                 id="recipientAddress"
-                placeholder="Enter wallet address or phone number"
+                placeholder={isCrypto ? 'Enter wallet address' : 'Enter phone number or account'}
                 value={recipientAddress}
                 onChange={(e) => setRecipientAddress(e.target.value)}
                 className="bg-gray-800/60 border-gray-600/50 text-white placeholder-gray-400"
               />
             </div>
+
+            {!isCrypto && (
+              <div>
+                <Label className="text-white">Send Method</Label>
+                <Select value={selectedSendMethod} onValueChange={setSelectedSendMethod}>
+                  <SelectTrigger className="bg-gray-800/60 border-gray-600/50 text-white">
+                    <SelectValue placeholder="Select send method" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-gray-900 border-gray-700">
+                    <SelectItem value="mobile" className="text-white">Mobile Money</SelectItem>
+                    <SelectItem value="bank" className="text-white">Bank Transfer</SelectItem>
+                    <SelectItem value="neovault" className="text-white">NeoVault User</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
             <Button 
               onClick={handleSend}
               disabled={!sendAmount || !recipientAddress || parseFloat(sendAmount) <= 0 || parseFloat(sendAmount) > wallet.balance}
