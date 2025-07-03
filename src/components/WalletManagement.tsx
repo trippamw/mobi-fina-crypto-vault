@@ -211,13 +211,14 @@ export const WalletManagement = ({ wallet, onBack, onBalanceUpdate, onTransactio
         let convertedAmount = parseFloat(depositAmount);
         
         if (isCrypto && sourceWallet) {
-          // Deduct from source wallet (simulate conversion)
-          const rates: { [key: string]: number } = {
+          // Define conversion rates properly
+          const conversionRates: { [key: string]: { [key: string]: number } } = {
             'BTC': { 'MWK': 0.000000015, 'USD': 0.000025 },
             'ETH': { 'MWK': 0.0000003, 'USD': 0.0005 }
           };
           
-          const sourceAmount = convertedAmount / (rates[wallet.currency]?.[sourceWallet] || 1);
+          const rate = conversionRates[wallet.currency]?.[sourceWallet] || 1;
+          const sourceAmount = convertedAmount / rate;
           // In a real app, you would deduct from the source wallet here
         }
         
