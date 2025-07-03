@@ -38,24 +38,27 @@ export const AddMoneyToCard: React.FC<AddMoneyToCardProps> = ({
   const [amount, setAmount] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
 
-  // Exchange rates (simplified - in production would be fetched from API)
+  // Exchange rates (corrected - shows how much target currency you get for 1 unit of source currency)
   const getExchangeRate = (from: string, to: string): number => {
     if (from === to) return 1;
     
+    // Base rates against USD (1 USD = X units of currency)
     const rates: { [key: string]: number } = {
       'USD': 1,
-      'MWK': 0.00061,
-      'GBP': 1.27,
-      'EUR': 1.09,
-      'ZAR': 0.055,
-      'BTC': 67500,
-      'ETH': 3800
+      'MWK': 1751,      // 1 USD = 1751 MWK
+      'GBP': 0.79,      // 1 USD = 0.79 GBP
+      'EUR': 0.92,      // 1 USD = 0.92 EUR
+      'ZAR': 18.2,      // 1 USD = 18.2 ZAR
+      'BTC': 0.000015,  // 1 USD = 0.000015 BTC
+      'ETH': 0.00026,   // 1 USD = 0.00026 ETH
+      'USDT': 1,        // 1 USD = 1 USDT
+      'USDC': 1         // 1 USD = 1 USDC
     };
     
-    const fromRate = rates[from] || 1;
-    const toRate = rates[to] || 1;
+    const fromToUsd = 1 / rates[from];  // Convert from currency to USD
+    const usdToTarget = rates[to];      // Convert from USD to target currency
     
-    return toRate / fromRate;
+    return fromToUsd * usdToTarget;     // Direct conversion rate
   };
 
   const calculateConversion = () => {
