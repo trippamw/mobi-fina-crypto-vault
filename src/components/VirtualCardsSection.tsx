@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -13,9 +12,10 @@ import { useLanguage } from '@/utils/languageApi';
 interface VirtualCardsSectionProps {
   onBack?: () => void;
   onTransactionUpdate?: (transaction: any) => void;
+  onBalanceUpdate?: (currency: string, amount: number) => void;
 }
 
-export const VirtualCardsSection = ({ onBack, onTransactionUpdate }: VirtualCardsSectionProps) => {
+export const VirtualCardsSection = ({ onBack, onTransactionUpdate, onBalanceUpdate }: VirtualCardsSectionProps) => {
   const { t } = useLanguage();
   const [showCreateCard, setShowCreateCard] = useState(false);
   const [showAddMoney, setShowAddMoney] = useState(false);
