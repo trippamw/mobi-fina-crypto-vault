@@ -5,21 +5,26 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { CreditCard, Plus, Settings, Eye, EyeOff, Copy, Check, Lock, Trash2, DollarSign } from 'lucide-react';
 
 interface VirtualCardsSectionProps {
   onCardPurchase?: (cardType: string) => void;
   purchasedCards?: any[];
+  wallets?: any[];
 }
 
-export const VirtualCardsSection = ({ onCardPurchase, purchasedCards = [] }: VirtualCardsSectionProps) => {
+export const VirtualCardsSection = ({ onCardPurchase, purchasedCards = [], wallets = [] }: VirtualCardsSectionProps) => {
   const [showCardDetails, setShowCardDetails] = useState(false);
   const [selectedCard, setSelectedCard] = useState<any>(null);
   const [showPurchaseModal, setShowPurchaseModal] = useState(false);
   const [showCustomerDetails, setShowCustomerDetails] = useState(false);
   const [showCardSettings, setShowCardSettings] = useState(false);
+  const [showAddMoney, setShowAddMoney] = useState(false);
   const [selectedCardType, setSelectedCardType] = useState<any>(null);
   const [copiedField, setCopiedField] = useState('');
+  const [addMoneyAmount, setAddMoneyAmount] = useState('');
+  const [selectedWallet, setSelectedWallet] = useState('');
   const [customerDetails, setCustomerDetails] = useState({
     fullName: '',
     email: '',
@@ -40,15 +45,15 @@ export const VirtualCardsSection = ({ onCardPurchase, purchasedCards = [] }: Vir
     },
     {
       type: 'Gold',
-      price: 15000,
+      price: 25000,
       features: ['All Standard features', 'Higher limits', 'Priority support', 'Cashback rewards'],
       gradient: 'bg-gradient-to-br from-yellow-600 to-yellow-800',
       textColor: 'text-white',
-      brand: 'MASTERCARD'
+      brand: 'VISA'
     },
     {
       type: 'Platinum',
-      price: 35000,
+      price: 45000,
       features: ['All Gold features', 'Premium support', 'Travel insurance', 'Airport lounge access'],
       gradient: 'bg-gradient-to-br from-gray-400 to-gray-600',
       textColor: 'text-white',
@@ -70,18 +75,20 @@ export const VirtualCardsSection = ({ onCardPurchase, purchasedCards = [] }: Vir
       holderName: 'John Doe',
       brand: 'VISA',
       isBlocked: false,
-      spendingLimit: 500000
+      spendingLimit: 500000,
+      linkedWallet: 'MWK'
     },
     ...purchasedCards.slice(0, 2).map(card => ({
       ...card,
       gradient: availableCards.find(ac => ac.type === card.type)?.gradient || 'bg-gradient-to-br from-slate-800 to-slate-900',
       textColor: availableCards.find(ac => ac.type === card.type)?.textColor || 'text-white',
-      brand: availableCards.find(ac => ac.type === card.type)?.brand || 'VISA',
+      brand: 'VISA',
       cvv: '123',
       expiry: '12/26',
       holderName: customerDetails.fullName || 'John Doe',
       isBlocked: false,
-      spendingLimit: card.type === 'Gold' ? 1000000 : 2000000
+      spendingLimit: card.type === 'Gold' ? 1000000 : 2000000,
+      linkedWallet: 'MWK'
     }))
   ];
 
@@ -121,13 +128,31 @@ export const VirtualCardsSection = ({ onCardPurchase, purchasedCards = [] }: Vir
     setCustomerDetails({ fullName: '', email: '', phone: '', address: '', idNumber: '' });
   };
 
+  const handleAddMoney = () => {
+    const amount = parseFloat(addMoneyAmount);
+    if (!amount || amount <= 0) {
+      alert('Please enter a valid amount');
+      return;
+    }
+
+    if (!selectedWallet) {
+      alert('Please select a wallet');
+      return;
+    }
+
+    // Simulate adding money to card
+    alert(`MWK ${amount.toLocaleString()} added to ${selectedCard?.type} card from ${selectedWallet} wallet successfully!`);
+    setShowAddMoney(false);
+    setAddMoneyAmount('');
+    setSelectedWallet('');
+  };
+
   const handleCardAction = (cardId: string, action: string) => {
     const cardIndex = myCards.findIndex(card => card.id === cardId);
     if (cardIndex === -1) return;
 
     switch (action) {
       case 'freeze':
-        // Toggle card status
         myCards[cardIndex].isBlocked = !myCards[cardIndex].isBlocked;
         alert(`Card ${myCards[cardIndex].isBlocked ? 'frozen' : 'unfrozen'} successfully`);
         break;
@@ -136,8 +161,7 @@ export const VirtualCardsSection = ({ onCardPurchase, purchasedCards = [] }: Vir
           alert('Cannot delete the standard card');
           return;
         }
-        if (confirm('Are you sure you want to delete this card?')) {
-          // Remove from purchased cards array
+        if (confirm('Are you sure you want to delete this card? This action cannot be undone.')) {
           alert('Card deleted successfully');
         }
         break;
@@ -147,6 +171,9 @@ export const VirtualCardsSection = ({ onCardPurchase, purchasedCards = [] }: Vir
           myCards[cardIndex].spendingLimit = Number(newLimit);
           alert('Spending limit updated successfully');
         }
+        break;
+      case 'wallet':
+        // Handle wallet linking
         break;
     }
     setShowCardSettings(false);
@@ -166,65 +193,67 @@ export const VirtualCardsSection = ({ onCardPurchase, purchasedCards = [] }: Vir
           <CardTitle className="text-white">My Virtual Cards ({myCards.length}/3)</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
             {myCards.map((card) => (
               <div
                 key={card.id}
-                className={`relative p-6 rounded-xl ${card.gradient} cursor-pointer transform transition-all duration-300 hover:scale-105 hover:shadow-2xl`}
+                className={`relative p-4 sm:p-6 rounded-xl ${card.gradient} cursor-pointer transform transition-all duration-300 hover:scale-105 hover:shadow-2xl aspect-[1.6/1]`}
                 onClick={() => {
                   setSelectedCard(card);
                   setShowCardDetails(true);
                 }}
               >
-                {/* Brand Logo */}
-                <div className="absolute top-4 right-4">
-                  <div className="bg-white/20 px-2 py-1 rounded text-xs font-bold text-white">
-                    {card.brand}
+                {/* VISA Logo */}
+                <div className="absolute top-3 right-3">
+                  <div className="bg-white px-2 py-1 rounded text-xs font-bold text-blue-600">
+                    VISA
                   </div>
                 </div>
 
-                <div className="flex justify-between items-start mb-8">
-                  <div>
-                    <Badge className="bg-white/20 text-white border-white/30 text-xs">
-                      {card.type}
-                    </Badge>
-                    <Badge className={`ml-2 text-xs ${
-                      card.isBlocked 
-                        ? 'bg-red-500/20 text-red-300 border-red-400/30'
-                        : card.status === 'Active' 
-                        ? 'bg-green-500/20 text-green-300 border-green-400/30'
-                        : 'bg-gray-500/20 text-gray-300 border-gray-400/30'
-                    }`}>
-                      {card.isBlocked ? 'Frozen' : card.status}
-                    </Badge>
-                  </div>
-                  <CreditCard className={`w-8 h-8 ${card.textColor}`} />
-                </div>
-                
-                <div className="space-y-4">
-                  <div>
-                    <p className={`text-lg font-mono ${card.textColor}`}>
-                      {card.number}
-                    </p>
+                <div className="flex flex-col h-full justify-between">
+                  <div className="flex justify-between items-start">
+                    <div className="space-y-1">
+                      <Badge className="bg-white/20 text-white border-white/30 text-xs">
+                        {card.type}
+                      </Badge>
+                      <Badge className={`text-xs ${
+                        card.isBlocked 
+                          ? 'bg-red-500/20 text-red-300 border-red-400/30'
+                          : card.status === 'Active' 
+                          ? 'bg-green-500/20 text-green-300 border-green-400/30'
+                          : 'bg-gray-500/20 text-gray-300 border-gray-400/30'
+                      }`}>
+                        {card.isBlocked ? 'Frozen' : card.status}
+                      </Badge>
+                    </div>
+                    <CreditCard className={`w-6 h-6 ${card.textColor}`} />
                   </div>
                   
-                  <div className="flex justify-between items-end">
+                  <div className="space-y-3">
                     <div>
-                      <p className={`text-xs ${card.textColor} opacity-70`}>Balance</p>
-                      <p className={`text-lg font-semibold ${card.textColor}`}>
-                        MWK {card.balance.toLocaleString()}
+                      <p className={`text-base sm:text-lg font-mono ${card.textColor} tracking-wider`}>
+                        {card.number}
                       </p>
                     </div>
-                    <div className="text-right">
-                      <p className={`text-xs ${card.textColor} opacity-70`}>Valid Thru</p>
-                      <p className={`text-sm ${card.textColor}`}>{card.expiry}</p>
+                    
+                    <div className="flex justify-between items-end">
+                      <div>
+                        <p className={`text-xs ${card.textColor} opacity-70`}>Balance</p>
+                        <p className={`text-sm sm:text-lg font-semibold ${card.textColor}`}>
+                          MWK {card.balance.toLocaleString()}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className={`text-xs ${card.textColor} opacity-70`}>Valid Thru</p>
+                        <p className={`text-sm ${card.textColor}`}>{card.expiry}</p>
+                      </div>
                     </div>
-                  </div>
 
-                  <div className="pt-2">
-                    <p className={`text-sm ${card.textColor} opacity-90 font-medium`}>
-                      {card.holderName.toUpperCase()}
-                    </p>
+                    <div>
+                      <p className={`text-xs sm:text-sm ${card.textColor} opacity-90 font-medium uppercase tracking-wide`}>
+                        {card.holderName}
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -426,7 +455,58 @@ export const VirtualCardsSection = ({ onCardPurchase, purchasedCards = [] }: Vir
         </DialogContent>
       </Dialog>
 
-      {/* Card Details Modal */}
+      {/* Add Money Modal */}
+      <Dialog open={showAddMoney} onOpenChange={setShowAddMoney}>
+        <DialogContent className="bg-gray-800 border-gray-700 text-white max-w-md">
+          <DialogHeader>
+            <DialogTitle>Add Money to Card</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label className="text-gray-300">Select Wallet</Label>
+              <Select value={selectedWallet} onValueChange={setSelectedWallet}>
+                <SelectTrigger className="bg-gray-700/50 border-gray-600/50 text-white">
+                  <SelectValue placeholder="Choose wallet" />
+                </SelectTrigger>
+                <SelectContent className="bg-gray-900 border-gray-700">
+                  <SelectItem value="MWK">MWK Wallet</SelectItem>
+                  <SelectItem value="USD">USD Wallet</SelectItem>
+                  <SelectItem value="EUR">EUR Wallet</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label className="text-gray-300">Amount</Label>
+              <Input
+                type="number"
+                value={addMoneyAmount}
+                onChange={(e) => setAddMoneyAmount(e.target.value)}
+                className="bg-gray-700/50 border-gray-600/50 text-white"
+                placeholder="Enter amount"
+              />
+            </div>
+
+            <div className="flex space-x-3">
+              <Button
+                variant="outline"
+                onClick={() => setShowAddMoney(false)}
+                className="flex-1 border-gray-600 text-gray-300 hover:text-white"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleAddMoney}
+                className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+              >
+                Add Money
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Enhanced Card Details Modal */}
       <Dialog open={showCardDetails} onOpenChange={setShowCardDetails}>
         <DialogContent className="bg-gray-800 border-gray-700 text-white max-w-md">
           <DialogHeader>
@@ -434,32 +514,33 @@ export const VirtualCardsSection = ({ onCardPurchase, purchasedCards = [] }: Vir
           </DialogHeader>
           {selectedCard && (
             <div className="space-y-4">
-              <div className={`p-6 rounded-xl ${selectedCard.gradient} relative`}>
-                <div className="absolute top-4 right-4 bg-white/20 px-2 py-1 rounded text-xs font-bold text-white">
-                  {selectedCard.brand}
+              {/* Card Preview */}
+              <div className={`p-4 rounded-xl ${selectedCard.gradient} relative aspect-[1.6/1]`}>
+                <div className="absolute top-3 right-3 bg-white px-2 py-1 rounded text-xs font-bold text-blue-600">
+                  VISA
                 </div>
-                <div className="flex justify-between items-start mb-8">
-                  <Badge className="bg-white/20 text-white border-white/30">
-                    {selectedCard.type}
-                  </Badge>
-                  <CreditCard className="w-8 h-8 text-white" />
-                </div>
-                
-                <div className="space-y-4">
-                  <div>
-                    <p className="text-lg font-mono text-white">
-                      {selectedCard.number}
-                    </p>
+                <div className="flex flex-col h-full justify-between">
+                  <div className="flex justify-between items-start">
+                    <Badge className="bg-white/20 text-white border-white/30 text-xs">
+                      {selectedCard.type}
+                    </Badge>
+                    <CreditCard className="w-6 h-6 text-white" />
                   </div>
                   
-                  <div className="flex justify-between">
-                    <div>
-                      <p className="text-xs text-white opacity-70">Card Holder</p>
-                      <p className="text-sm text-white font-medium">{selectedCard.holderName.toUpperCase()}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-white opacity-70">Valid Thru</p>
-                      <p className="text-sm text-white">{selectedCard.expiry}</p>
+                  <div className="space-y-2">
+                    <p className="text-base font-mono text-white tracking-wider">
+                      {selectedCard.number}
+                    </p>
+                    
+                    <div className="flex justify-between">
+                      <div>
+                        <p className="text-xs text-white opacity-70">Card Holder</p>
+                        <p className="text-sm text-white font-medium uppercase">{selectedCard.holderName}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-white opacity-70">Valid Thru</p>
+                        <p className="text-sm text-white">{selectedCard.expiry}</p>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -511,6 +592,13 @@ export const VirtualCardsSection = ({ onCardPurchase, purchasedCards = [] }: Vir
                     {copiedField === 'expiry' ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
                   </Button>
                 </div>
+
+                <div className="p-3 bg-gray-700/50 rounded-lg">
+                  <div className="flex justify-between">
+                    <span className="text-sm text-gray-300">Linked Wallet:</span>
+                    <span className="text-white font-medium">{selectedCard.linkedWallet}</span>
+                  </div>
+                </div>
               </div>
               
               {/* Action Buttons */}
@@ -518,11 +606,8 @@ export const VirtualCardsSection = ({ onCardPurchase, purchasedCards = [] }: Vir
                 <Button
                   className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700"
                   onClick={() => {
-                    const amount = prompt('Enter amount to add to card:');
-                    if (amount && parseFloat(amount) > 0) {
-                      alert(`MWK ${parseFloat(amount).toLocaleString()} added to card successfully!`);
-                      setShowCardDetails(false);
-                    }
+                    setShowCardDetails(false);
+                    setShowAddMoney(true);
                   }}
                 >
                   <DollarSign className="w-4 h-4 mr-2" />
@@ -545,7 +630,7 @@ export const VirtualCardsSection = ({ onCardPurchase, purchasedCards = [] }: Vir
         </DialogContent>
       </Dialog>
 
-      {/* Card Settings Modal */}
+      {/* Enhanced Card Settings Modal */}
       <Dialog open={showCardSettings} onOpenChange={setShowCardSettings}>
         <DialogContent className="bg-gray-800 border-gray-700 text-white max-w-md">
           <DialogHeader>
@@ -555,8 +640,40 @@ export const VirtualCardsSection = ({ onCardPurchase, purchasedCards = [] }: Vir
             <div className="space-y-4">
               <div className="p-4 bg-gray-700/50 rounded-lg">
                 <h4 className="font-medium text-white mb-2">{selectedCard.type} Card</h4>
-                <p className="text-sm text-gray-300">Current Status: {selectedCard.isBlocked ? 'Frozen' : 'Active'}</p>
-                <p className="text-sm text-gray-300">Spending Limit: MWK {selectedCard.spendingLimit.toLocaleString()}</p>
+                <div className="space-y-1 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-gray-300">Status:</span>
+                    <span className="text-white">{selectedCard.isBlocked ? 'Frozen' : 'Active'}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-300">Spending Limit:</span>
+                    <span className="text-white">MWK {selectedCard.spendingLimit.toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-300">Linked Wallet:</span>
+                    <span className="text-white">{selectedCard.linkedWallet}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <Label className="text-gray-300 mb-2">Link to Wallet</Label>
+                <Select 
+                  value={selectedCard.linkedWallet} 
+                  onValueChange={(value) => {
+                    selectedCard.linkedWallet = value;
+                    alert(`Card linked to ${value} wallet successfully!`);
+                  }}
+                >
+                  <SelectTrigger className="bg-gray-700/50 border-gray-600/50 text-white">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-gray-900 border-gray-700">
+                    <SelectItem value="MWK">MWK Wallet</SelectItem>
+                    <SelectItem value="USD">USD Wallet</SelectItem>
+                    <SelectItem value="EUR">EUR Wallet</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="space-y-3">
