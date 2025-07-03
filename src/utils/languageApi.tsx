@@ -21,7 +21,7 @@ export const translations: LanguageTranslations = {
     withdraw: 'Withdraw',
     receive: 'Receive',
     cards: 'Cards',
-    invest: 'Save',
+    invest: 'Invest',
     invite: 'Invite',
     
     // Profile sections
@@ -45,7 +45,7 @@ export const translations: LanguageTranslations = {
     language: 'Language',
     
     // Actions
-    save: 'Save Changes',
+    saveChanges: 'Save Changes',
     logout: 'Logout',
     changePassword: 'Change Password',
     uploadDocument: 'Upload Document',
@@ -134,7 +134,7 @@ export const translations: LanguageTranslations = {
     language: 'Chilankhulo',
     
     // Actions
-    save: 'Sunga Zosintha',
+    saveChanges: 'Sunga Zosintha',
     logout: 'Tuluka',
     changePassword: 'Sintha Chinsinsi',
     uploadDocument: 'Kweza Chikalata',
@@ -223,7 +223,7 @@ export const translations: LanguageTranslations = {
     language: 'Chilyankhulo',
     
     // Actions
-    save: 'Sunga Visintha',
+    saveChanges: 'Sunga Visintha',
     logout: 'Tuluka',
     changePassword: 'Sintha Chinsinsi',
     uploadDocument: 'Kweza Chikalata',
@@ -242,6 +242,35 @@ export const translations: LanguageTranslations = {
     transactionFee: 'Malipilo',
     total: 'Vyose',
     processing: 'Vikukwanilitska...',
+    
+    // Success messages
+    transactionSuccessful: 'Kutumizga Kwatheka',
+    passwordChanged: 'Chinsinsi Chasinthidwa',
+    profileSaved: 'Mbiri Yasungidwa',
+    
+    // Crypto
+    bitcoinAddress: 'Adilesi Ya Bitcoin',
+    ethereumAddress: 'Adilesi Ya Ethereum',
+    cryptoDeposit: 'Kuvika Crypto',
+    cryptoWithdraw: 'Kutulutsa Crypto',
+    
+    // Cards
+    virtualCard: 'Kadi Yopanda Thupi',
+    physicalCard: 'Kadi Yeniyeni',
+    cardSettings: 'Vikongolozo Vya Kadi',
+    addMoney: 'Onjezera Mali',
+    
+    // Compliance
+    kycVerification: 'Kutsimikizira KYC',
+    complianceStatus: 'Momwe Viliri',
+    verified: 'Wotsimikiziridwa',
+    pending: 'Akudikira',
+    
+    // Village Bank
+    villageBankAdmin: 'Woyang\'anira Banki Ya Mudzi',
+    loanRequests: 'Mapemphero Gha Ngongole',
+    approveLoan: 'Vomereza Ngongole',
+    declineLoan: 'Kana Ngongole',
   },
   
   sw: { // Swahili
@@ -283,7 +312,7 @@ export const translations: LanguageTranslations = {
     language: 'Lugha',
     
     // Actions
-    save: 'Hifadhi Mabadiliko',
+    saveChanges: 'Hifadhi Mabadiliko',
     logout: 'Ondoka',
     changePassword: 'Badilisha Nenosiri',
     uploadDocument: 'Pakia Hati',
@@ -302,6 +331,35 @@ export const translations: LanguageTranslations = {
     transactionFee: 'Ada ya Muamala',
     total: 'Jumla',
     processing: 'Inachakatishwa...',
+    
+    // Success messages
+    transactionSuccessful: 'Muamala Umefanikiwa',
+    passwordChanged: 'Nenosiri Limebadilishwa',
+    profileSaved: 'Wasifu Umehifadhiwa',
+    
+    // Crypto
+    bitcoinAddress: 'Anwani ya Bitcoin',
+    ethereumAddress: 'Anwani ya Ethereum',
+    cryptoDeposit: 'Kuweka Crypto',
+    cryptoWithdraw: 'Kutoa Crypto',
+    
+    // Cards
+    virtualCard: 'Kadi ya Kidijitali',
+    physicalCard: 'Kadi ya Kimwili',
+    cardSettings: 'Mipangilio ya Kadi',
+    addMoney: 'Ongeza Pesa',
+    
+    // Compliance
+    kycVerification: 'Uthibitisho wa KYC',
+    complianceStatus: 'Hali ya Utii',
+    verified: 'Imethibitishwa',
+    pending: 'Inasubiri',
+    
+    // Village Bank
+    villageBankAdmin: 'Msimamizi wa Benki ya Kijiji',
+    loanRequests: 'Maombi ya Mkopo',
+    approveLoan: 'Idhinisha Mkopo',
+    declineLoan: 'Kataa Mkopo',
   }
 };
 
