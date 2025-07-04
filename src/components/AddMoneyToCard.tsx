@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { TransactionConfirmation } from './TransactionConfirmation';
-import { getExchangeRate } from '@/utils/currencyService';
+// Currency service removed - using simplified rates
 
 interface AddMoneyToCardProps {
   card: {
@@ -57,7 +57,14 @@ export const AddMoneyToCard: React.FC<AddMoneyToCardProps> = ({
     setIsLoadingRate(true);
     
     try {
-      const liveExchangeRate = await getExchangeRate(selectedWallet, card.currency);
+      // Use static exchange rates
+      const exchangeRates: { [key: string]: number } = {
+        USD: 1.0, EUR: 0.85, GBP: 0.73, MWK: 1635.50, ZAR: 18.45
+      };
+      const fromRate = exchangeRates[selectedWallet] || 1;
+      const toRate = exchangeRates[card.currency] || 1;
+      const liveExchangeRate = toRate / fromRate;
+      
       setExchangeRate(liveExchangeRate);
       
       const convertedAmount = inputAmount * liveExchangeRate;

@@ -25,21 +25,28 @@ import { WalletManagement } from '@/components/WalletManagement';
 import { VillageBankManagement } from '@/components/VillageBankManagement';
 import { VillageBankGroupCreation } from '@/components/VillageBankGroupCreation';
 import { useLanguage } from '@/utils/languageApi';
+import { useUserData } from '@/hooks/useUserData';
+import { apiService } from '@/lib/api';
 
 const Index = () => {
   const { t } = useLanguage();
   const { user, signOut } = useAuth();
+  const { userData, loading, error, refreshData, wallets: userWallets, transactions: userTransactions } = useUserData();
   const [balanceVisible, setBalanceVisible] = useState(true);
   const [activeTab, setActiveTab] = useState('dashboard');
   const [selectedWallet, setSelectedWallet] = useState<any>(null);
   const [currentLanguage, setCurrentLanguage] = useState('English');
-  const [recentTransactions, setRecentTransactions] = useState([
-    { type: t('received'), amount: '+MWK 50,000', description: 'TNM Mobile Money', time: '2 min ago', status: 'completed' },
-    { type: t('exchange'), amount: '0.001 BTC → MWK 294,000', description: 'Crypto Exchange', time: '1 hour ago', status: 'completed' },
-    { type: t('investment'), amount: '+MWK 25,000', description: 'Savings Goal', time: '3 hours ago', status: 'pending' }
-  ]);
-  
-  const [wallets, setWallets] = useState([
+
+  // Use real data from API or fallback to mock data
+  const wallets = userWallets.length > 0 ? userWallets.map(wallet => ({
+    ...wallet,
+    icon: wallet.wallet_type === 'crypto' ? 'bitcoin' : 'wallet',
+    gradient: wallet.wallet_type === 'crypto' 
+      ? 'bg-gradient-to-br from-yellow-700 to-orange-800' 
+      : 'bg-gradient-to-br from-slate-800 to-slate-900',
+    change: '+0.0%',
+    isDefault: wallet.is_primary
+  })) : [
     {
       currency: 'MWK',
       balance: 1250000,
@@ -54,59 +61,22 @@ const Index = () => {
       icon: 'dollar',
       gradient: 'bg-gradient-to-br from-emerald-800 to-emerald-900',
       change: '+2.1%'
-    },
-    {
-      currency: 'GBP',
-      balance: 3250,
-      icon: 'pound',
-      gradient: 'bg-gradient-to-br from-purple-800 to-purple-900',
-      change: '+1.8%'
-    },
-    {
-      currency: 'EUR',
-      balance: 4180,
-      icon: 'euro',
-      gradient: 'bg-gradient-to-br from-amber-800 to-amber-900',
-      change: '+2.5%'
-    },
-    {
-      currency: 'ZAR',
-      balance: 82500,
-      icon: 'rand',
-      gradient: 'bg-gradient-to-br from-orange-800 to-orange-900',
-      change: '+3.1%'
-    },
-    {
-      currency: 'BTC',
-      balance: 0.0453,
-      icon: 'bitcoin',
-      gradient: 'bg-gradient-to-br from-yellow-700 to-orange-800',
-      change: '+12.8%',
-      usdValue: 2890
-    },
-    {
-      currency: 'ETH',
-      balance: 1.2567,
-      icon: 'ethereum',
-      gradient: 'bg-gradient-to-br from-blue-800 to-indigo-900',
-      change: '+8.4%',
-      usdValue: 3150
-    },
-    {
-      currency: 'USDT',
-      balance: 8750,
-      icon: 'usdt',
-      gradient: 'bg-gradient-to-br from-green-800 to-teal-900',
-      change: '+0.1%'
-    },
-    {
-      currency: 'USDC',
-      balance: 6430,
-      icon: 'usdc',
-      gradient: 'bg-gradient-to-br from-blue-700 to-cyan-800',
-      change: '+0.1%'
     }
-  ]);
+  ];
+
+  const recentTransactions = userTransactions.length > 0 
+    ? userTransactions.slice(0, 5).map(tx => ({
+        type: tx.transaction_type,
+        amount: `${tx.amount > 0 ? '+' : ''}${tx.currency_code} ${Math.abs(tx.amount).toLocaleString()}`,
+        description: tx.description || 'Transaction',
+        time: new Date(tx.created_at).toLocaleString(),
+        status: tx.status
+      }))
+    : [
+        { type: t('received'), amount: '+MWK 50,000', description: 'TNM Mobile Money', time: '2 min ago', status: 'completed' },
+        { type: t('exchange'), amount: '0.001 BTC → MWK 294,000', description: 'Crypto Exchange', time: '1 hour ago', status: 'completed' },
+        { type: t('investment'), amount: '+MWK 25,000', description: 'Savings Goal', time: '3 hours ago', status: 'pending' }
+      ];
 
   const [purchasedCards, setPurchasedCards] = useState([]);
 
@@ -117,17 +87,13 @@ const Index = () => {
   });
 
   const handleBalanceUpdate = (currency: string, amount: number) => {
-    setWallets(prevWallets => 
-      prevWallets.map(wallet => 
-        wallet.currency === currency 
-          ? { ...wallet, balance: Math.max(0, wallet.balance + amount) }
-          : wallet
-      )
-    );
+    // Refresh data from API after balance update
+    refreshData();
   };
 
   const handleTransactionUpdate = (transaction: any) => {
-    setRecentTransactions(prev => [transaction, ...prev.slice(0, 4)]);
+    // Refresh data from API after transaction update
+    refreshData();
   };
 
   const handleCardPurchase = (cardType: string) => {
@@ -169,15 +135,8 @@ const Index = () => {
   };
 
   const handleCreateWallet = (newWallet: any) => {
-    const walletToAdd = {
-      currency: newWallet.currency,
-      balance: 0,
-      icon: newWallet.type === 'crypto' ? 'bitcoin' : 'wallet',
-      gradient: newWallet.type === 'crypto' ? 'bg-gradient-to-br from-yellow-700 to-orange-800' : 'bg-gradient-to-br from-slate-800 to-slate-900',
-      change: '+0.0%',
-      isDefault: false
-    };
-    setWallets(prevWallets => [...prevWallets, walletToAdd]);
+    // Refresh data after wallet creation
+    refreshData();
   };
 
   const handleTransaction = (transactionDetails: any) => {

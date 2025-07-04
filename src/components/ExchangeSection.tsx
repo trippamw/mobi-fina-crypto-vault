@@ -7,7 +7,7 @@ import { ArrowUpDown, TrendingUp, TrendingDown, ArrowLeft, RefreshCw } from 'luc
 import { Badge } from '@/components/ui/badge';
 import { TransactionConfirmation } from './TransactionConfirmation';
 import { useLanguage } from '@/utils/languageApi';
-import { fetchLiveExchangeRates, getExchangeRate, convertCurrency } from '@/utils/currencyService';
+// Currency service removed - using simplified rates
 
 interface ExchangeSectionProps {
   onBalanceUpdate?: (currency: string, amount: number) => void;

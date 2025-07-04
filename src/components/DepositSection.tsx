@@ -8,6 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { CreditCard, Smartphone, Building, User, CheckCircle, QrCode, Link, Share2, Copy, ArrowLeft } from 'lucide-react';
 import { TransactionConfirmation } from './TransactionConfirmation';
 import { useLanguage } from '@/utils/languageApi';
+import { useUserData } from '@/hooks/useUserData';
+import { apiService } from '@/lib/api';
 
 interface DepositSectionProps {
   onBalanceUpdate?: (currency: string, amount: number) => void;
@@ -17,6 +19,7 @@ interface DepositSectionProps {
 
 export const DepositSection = ({ onBalanceUpdate, onTransactionUpdate, onBack }: DepositSectionProps) => {
   const { t } = useLanguage();
+  const { wallets, refreshData } = useUserData();
   const [amount, setAmount] = useState('');
   const [selectedMethod, setSelectedMethod] = useState('');
   const [paymentLink, setPaymentLink] = useState('');

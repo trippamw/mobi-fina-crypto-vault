@@ -1,6 +1,6 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { translateText, translateMultipleTexts, getLanguageCode } from './translationAPI';
+// Simplified translation service - removed external API dependency
 
 interface Translations {
   [key: string]: {
@@ -139,15 +139,8 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   }, []);
 
   const translateDynamically = async (text: string, targetLang: string): Promise<string> => {
-    if (targetLang === 'en') return text;
-    
-    try {
-      const translatedText = await translateText(text, getLanguageCode(targetLang));
-      return translatedText;
-    } catch (error) {
-      console.error('Dynamic translation error:', error);
-      return text;
-    }
+    // Simplified - return original text
+    return text;
   };
 
   const setLanguage = async (lang: string) => {
@@ -157,23 +150,9 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     setCurrentLanguage(lang);
     localStorage.setItem('app-language', lang);
 
-    // If switching to non-English, translate all base texts
+    // If switching to non-English, use English as fallback (translation service removed)
     if (lang !== 'en' && !dynamicTranslations[lang]) {
-      try {
-        const englishTexts = Object.values(baseTranslations.en);
-        const translatedTexts = await translateMultipleTexts(englishTexts, getLanguageCode(lang));
-        
-        const translatedMap: { [key: string]: string } = {};
-        Object.keys(baseTranslations.en).forEach((key, index) => {
-          translatedMap[key] = translatedTexts[index] || baseTranslations.en[key];
-        });
-        
-        dynamicTranslations[lang] = translatedMap;
-      } catch (error) {
-        console.error('Bulk translation error:', error);
-        // Fallback to English
-        dynamicTranslations[lang] = { ...baseTranslations.en };
-      }
+      dynamicTranslations[lang] = { ...baseTranslations.en };
     }
 
     setIsTranslating(false);
