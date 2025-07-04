@@ -2,7 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Wallet, Bitcoin, CreditCard, ArrowUpRight, ArrowDownLeft, TrendingUp, PiggyBank, Eye, EyeOff, Users, Zap, User as UserIcon, Plus, UserPlus, Send, ArrowLeft, Download } from 'lucide-react';
+import { Wallet, Bitcoin, CreditCard, ArrowUpRight, ArrowDownLeft, TrendingUp, PiggyBank, Eye, EyeOff, Users, Zap, User as UserIcon, Plus, UserPlus, Send, ArrowLeft, Download, LogOut } from 'lucide-react';
+import { ProtectedRoute } from '@/components/ProtectedRoute';
+import { useAuth } from '@/hooks/useAuth';
 import { WalletCard } from '@/components/WalletCard';
 import { ExchangeSection } from '@/components/ExchangeSection';
 import { InvestmentSection } from '@/components/InvestmentSection';
@@ -26,6 +28,7 @@ import { useLanguage } from '@/utils/languageApi';
 
 const Index = () => {
   const { t } = useLanguage();
+  const { user, signOut } = useAuth();
   const [balanceVisible, setBalanceVisible] = useState(true);
   const [activeTab, setActiveTab] = useState('dashboard');
   const [selectedWallet, setSelectedWallet] = useState<any>(null);
@@ -475,75 +478,86 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen">
-      {/* Header */}
-      <header className="bg-white/10 backdrop-blur-2xl border-b border-white/20 sticky top-0 z-40">
-        <div className="container mx-auto px-3 sm:px-4 py-3 sm:py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <div className="w-6 h-6 sm:w-10 sm:h-10 gradient-primary rounded-xl flex items-center justify-center">
-                <Wallet className="w-3 h-3 sm:w-6 sm:h-6 text-white" />
+    <ProtectedRoute>
+      <div className="min-h-screen">
+        {/* Header */}
+        <header className="bg-white/10 backdrop-blur-2xl border-b border-white/20 sticky top-0 z-40">
+          <div className="container mx-auto px-3 sm:px-4 py-3 sm:py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <div className="w-6 h-6 sm:w-10 sm:h-10 gradient-primary rounded-xl flex items-center justify-center">
+                  <Wallet className="w-3 h-3 sm:w-6 sm:h-6 text-white" />
+                </div>
+                <div>
+                  <h1 className="text-sm sm:text-2xl font-bold text-premium font-wealth">
+                    NeoVault
+                  </h1>
+                  <p className="text-[8px] sm:text-xs text-white/60">All Things Money. One App</p>
+                </div>
               </div>
-              <div>
-                <h1 className="text-sm sm:text-2xl font-bold text-premium font-wealth">
-                  NeoVault
-                </h1>
-                <p className="text-[8px] sm:text-xs text-white/60">All Things Money. One App</p>
+              <div className="flex items-center space-x-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setBalanceVisible(!balanceVisible)}
+                  className="text-white/70 hover:text-white hover:bg-white/10 rounded-full"
+                >
+                  {balanceVisible ? <Eye className="w-3 h-3 sm:w-4 sm:h-4" /> : <EyeOff className="w-3 h-3 sm:w-4 sm:h-4" />}
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={signOut}
+                  className="text-white/70 hover:text-white hover:bg-white/10 rounded-full"
+                  title="Sign Out"
+                >
+                  <LogOut className="w-3 h-3 sm:w-4 sm:h-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setActiveTab('profile')}
+                  className="w-6 h-6 sm:w-8 sm:h-8 gradient-secondary rounded-full flex items-center justify-center p-0"
+                >
+                  <UserIcon className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
+                </Button>
               </div>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setBalanceVisible(!balanceVisible)}
-                className="text-white/70 hover:text-white hover:bg-white/10 rounded-full"
-              >
-                {balanceVisible ? <Eye className="w-3 h-3 sm:w-4 sm:h-4" /> : <EyeOff className="w-3 h-3 sm:w-4 sm:h-4" />}
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setActiveTab('profile')}
-                className="w-6 h-6 sm:w-8 sm:h-8 gradient-secondary rounded-full flex items-center justify-center p-0"
-              >
-                <UserIcon className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
-              </Button>
             </div>
           </div>
+        </header>
+
+        <div className="container mx-auto px-3 sm:px-4 py-3 sm:py-6 pb-32 sm:pb-24">
+          {renderContent()}
         </div>
-      </header>
 
-      <div className="container mx-auto px-3 sm:px-4 py-3 sm:py-6 pb-32 sm:pb-24">
-        {renderContent()}
+        {/* Mobile Navigation */}
+        <MobileNavigation 
+          activeTab={activeTab} 
+          onTabChange={(tab) => {
+            if (tab === 'home') {
+              setActiveTab('dashboard');
+            } else if (tab === 'wallet') {
+              setActiveTab('cards');
+            } else if (tab === 'save') {
+              setActiveTab('invest');
+            } else {
+              setActiveTab(tab);
+            }
+          }}
+          notificationCount={0}
+        />
+
+        {/* Transaction Confirmation Modal */}
+        <TransactionConfirmation
+          isOpen={transactionModal.isOpen}
+          onClose={closeTransactionModal}
+          onConfirm={confirmTransaction}
+          onSuccess={closeTransactionModal}
+          transaction={transactionModal.transaction}
+          showSuccess={transactionModal.showSuccess}
+        />
       </div>
-
-      {/* Mobile Navigation */}
-      <MobileNavigation 
-        activeTab={activeTab} 
-        onTabChange={(tab) => {
-          if (tab === 'home') {
-            setActiveTab('dashboard');
-          } else if (tab === 'wallet') {
-            setActiveTab('cards');
-          } else if (tab === 'save') {
-            setActiveTab('invest');
-          } else {
-            setActiveTab(tab);
-          }
-        }}
-        notificationCount={0}
-      />
-
-      {/* Transaction Confirmation Modal */}
-      <TransactionConfirmation
-        isOpen={transactionModal.isOpen}
-        onClose={closeTransactionModal}
-        onConfirm={confirmTransaction}
-        onSuccess={closeTransactionModal}
-        transaction={transactionModal.transaction}
-        showSuccess={transactionModal.showSuccess}
-      />
-    </div>
+    </ProtectedRoute>
   );
 };
 
