@@ -234,7 +234,7 @@ export const ExchangeSection: React.FC<ExchangeSectionProps> = ({ onBalanceUpdat
                     <span className="font-medium text-white">{currency}</span>
                   </div>
                   <p className="text-sm text-white/60">
-                    1 USD = {typeof rate === 'number' ? rate.toFixed(2) : rate} {currency}
+                    1 USD = {typeof rate === 'number' ? rate.toFixed(2) : String(rate)} {currency}
                   </p>
                 </div>
               );
