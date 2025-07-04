@@ -70,10 +70,10 @@ export const apiService = {
   },
 
   // Deposit money to wallet
-  deposit: async (walletId: string, amount: number, method: string) => {
+  deposit: async (walletId: string, amount: number, currency: string, paymentMethod: string) => {
     try {
       const result = await supabase.functions.invoke('wallet-deposit', {
-        body: { walletId, amount, method }
+        body: { walletId, amount, currency, paymentMethod }
       });
 
       if (result.error) {
@@ -88,10 +88,10 @@ export const apiService = {
   },
 
   // Send money
-  send: async (fromWalletId: string, toWalletId: string, amount: number, description?: string) => {
+  send: async (fromWalletId: string, toUserId: string, amount: number, currency: string, description?: string) => {
     try {
       const result = await supabase.functions.invoke('wallet-send', {
-        body: { fromWalletId, toWalletId, amount, description }
+        body: { fromWalletId, toUserId, amount, currency, description }
       });
 
       if (result.error) {
@@ -106,10 +106,10 @@ export const apiService = {
   },
 
   // Withdraw money
-  withdraw: async (walletId: string, amount: number, method: string) => {
+  withdraw: async (walletId: string, amount: number, currency: string, withdrawalMethod: string, accountDetails: any) => {
     try {
       const result = await supabase.functions.invoke('wallet-withdraw', {
-        body: { walletId, amount, method }
+        body: { walletId, amount, currency, withdrawalMethod, accountDetails }
       });
 
       if (result.error) {

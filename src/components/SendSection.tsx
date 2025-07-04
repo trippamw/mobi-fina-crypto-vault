@@ -8,6 +8,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Send, Smartphone, Building, User, ArrowLeft } from 'lucide-react';
 import { TransactionConfirmation } from './TransactionConfirmation';
+import { useUserData } from '@/hooks/useUserData';
+import { apiService } from '@/lib/api';
 
 interface SendSectionProps {
   onBalanceUpdate?: (currency: string, amount: number) => void;
@@ -16,6 +18,7 @@ interface SendSectionProps {
 }
 
 export const SendSection = ({ onBalanceUpdate, onTransactionUpdate, onBack }: SendSectionProps) => {
+  const { wallets, refreshData } = useUserData();
   const [amount, setAmount] = useState('');
   const [selectedMethod, setSelectedMethod] = useState('');
   const [recipient, setRecipient] = useState('');
@@ -120,52 +123,78 @@ export const SendSection = ({ onBalanceUpdate, onTransactionUpdate, onBack }: Se
     });
   };
 
-  const confirmTransaction = () => {
-    const sendAmount = parseFloat(amount);
-
-    // Update wallet balance
-    if (onBalanceUpdate) {
-      onBalanceUpdate('MWK', -totalAmount);
-    }
-
-    // Add to transaction history
-    if (onTransactionUpdate) {
-      let description = '';
-      switch (selectedMethod) {
-        case 'mobile':
-          description = `Sent to ${recipientPhone} via ${mobileMoneyProvider}`;
-          break;
-        case 'neovault':
-          description = `Sent to ${recipient} via NeoVault`;
-          break;
-        case 'bank':
-          description = `Sent to ${recipient} via ${selectedBank}`;
-          break;
-        default:
-          description = `Sent to ${recipient}`;
-      }
+  const confirmTransaction = async () => {
+    setIsProcessing(true);
+    
+    try {
+      const sendAmount = parseFloat(amount);
       
-      onTransactionUpdate({
-        type: 'Send Money',
-        amount: `-MWK ${sendAmount.toLocaleString()}`,
-        description: description,
-        time: 'Just now',
-        status: 'completed'
-      });
+      // Get recipient user ID - for now using a mock ID, in real app you'd lookup by email/phone
+      const toUserId = 'recipient-user-id'; // This should be looked up from recipient email/phone
+      
+      // Get sender's MWK wallet
+      const mwkWallet = wallets.find(w => w.currency_code === 'MWK');
+      if (!mwkWallet) {
+        throw new Error('MWK wallet not found');
+      }
+
+      // Call the actual backend API
+      const result = await apiService.send(
+        mwkWallet.id,
+        toUserId,
+        sendAmount,
+        'MWK',
+        `Send to ${recipient || recipientPhone}`
+      );
+
+      // Refresh user data to get updated balances
+      refreshData();
+
+      // Add to transaction history
+      if (onTransactionUpdate) {
+        let description = '';
+        switch (selectedMethod) {
+          case 'mobile':
+            description = `Sent to ${recipientPhone} via ${mobileMoneyProvider}`;
+            break;
+          case 'neovault':
+            description = `Sent to ${recipient} via NeoVault`;
+            break;
+          case 'bank':
+            description = `Sent to ${recipient} via ${selectedBank}`;
+            break;
+          default:
+            description = `Sent to ${recipient}`;
+        }
+        
+        onTransactionUpdate({
+          type: 'Send Money',
+          amount: `-MWK ${sendAmount.toLocaleString()}`,
+          description: description,
+          time: 'Just now',
+          status: 'completed'
+        });
+      }
+
+      // Show success
+      setTransactionModal(prev => ({ ...prev, showSuccess: true }));
+
+      // Reset form
+      setAmount('');
+      setRecipient('');
+      setRecipientPhone('');
+      setMobileMoneyProvider('');
+      setSelectedBank('');
+      setSelectedMethod('');
+      setTransactionFee(0);
+      setTotalAmount(0);
+      
+    } catch (error) {
+      console.error('Send error:', error);
+      alert(`Send failed: ${error.message}`);
+    } finally {
+      setIsProcessing(false);
     }
-
-    // Show success
-    setTransactionModal(prev => ({ ...prev, showSuccess: true }));
-
-    // Reset form
-    setAmount('');
-    setRecipient('');
-    setRecipientPhone('');
-    setMobileMoneyProvider('');
-    setSelectedBank('');
-    setSelectedMethod('');
-    setTransactionFee(0);
-    setTotalAmount(0);
   };
 
   const closeTransactionModal = () => {

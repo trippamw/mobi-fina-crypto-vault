@@ -7,6 +7,8 @@ import { ArrowUpDown, TrendingUp, TrendingDown, ArrowLeft, RefreshCw } from 'luc
 import { Badge } from '@/components/ui/badge';
 import { TransactionConfirmation } from './TransactionConfirmation';
 import { useLanguage } from '@/utils/languageApi';
+import { useUserData } from '@/hooks/useUserData';
+import { apiService } from '@/lib/api';
 // Currency service removed - using simplified rates
 
 interface ExchangeSectionProps {
@@ -17,6 +19,7 @@ interface ExchangeSectionProps {
 
 export const ExchangeSection: React.FC<ExchangeSectionProps> = ({ onBalanceUpdate, onTransactionUpdate, onBack }) => {
   const { t } = useLanguage();
+  const { wallets, refreshData } = useUserData();
   const [fromCurrency, setFromCurrency] = useState('');
   const [toCurrency, setToCurrency] = useState('');
   const [amount, setAmount] = useState('');
@@ -128,37 +131,60 @@ export const ExchangeSection: React.FC<ExchangeSectionProps> = ({ onBalanceUpdat
     });
   };
 
-  const confirmTransaction = () => {
-    const depositAmount = parseFloat(amount);
-    const fee = depositAmount * 0.0475; // 4.75% fee (increased by 90%)
-    const netAmount = depositAmount + fee;
+  const confirmTransaction = async () => {
+    setIsLoading(true);
+    
+    try {
+      const depositAmount = parseFloat(amount);
+      
+      // Get user's wallets
+      const fromWallet = wallets.find(w => w.currency_code === fromCurrency);
+      const toWallet = wallets.find(w => w.currency_code === toCurrency);
+      
+      if (!fromWallet) {
+        throw new Error(`${fromCurrency} wallet not found`);
+      }
+      if (!toWallet) {
+        throw new Error(`${toCurrency} wallet not found`);
+      }
 
-    // Update balances
-    if (onBalanceUpdate) {
-      onBalanceUpdate(fromCurrency, -netAmount);
-      onBalanceUpdate(toCurrency, convertedAmount);
+      // Call the actual backend API
+      const result = await apiService.exchange(
+        fromWallet.id,
+        toWallet.id,
+        depositAmount
+      );
+
+      // Refresh user data to get updated balances
+      refreshData();
+
+      // Add to transaction history
+      if (onTransactionUpdate) {
+        onTransactionUpdate({
+          type: 'Exchange',
+          amount: `${amount} ${fromCurrency} → ${convertedAmount.toFixed(6)} ${toCurrency}`,
+          description: `Currency exchange from ${fromCurrency} to ${toCurrency}`,
+          time: 'Just now',
+          status: 'completed'
+        });
+      }
+
+      // Show success
+      setTransactionModal(prev => ({ ...prev, showSuccess: true }));
+
+      // Reset form
+      setFromCurrency('');
+      setToCurrency('');
+      setAmount('');
+      setExchangeRate(0);
+      setConvertedAmount(0);
+      
+    } catch (error) {
+      console.error('Exchange error:', error);
+      alert(`Exchange failed: ${error.message}`);
+    } finally {
+      setIsLoading(false);
     }
-
-    // Add to transaction history
-    if (onTransactionUpdate) {
-      onTransactionUpdate({
-        type: 'Exchange',
-        amount: `${amount} ${fromCurrency} → ${convertedAmount.toFixed(6)} ${toCurrency}`,
-        description: `Currency exchange from ${fromCurrency} to ${toCurrency}`,
-        time: 'Just now',
-        status: 'completed'
-      });
-    }
-
-    // Show success
-    setTransactionModal(prev => ({ ...prev, showSuccess: true }));
-
-    // Reset form
-    setFromCurrency('');
-    setToCurrency('');
-    setAmount('');
-    setExchangeRate(0);
-    setConvertedAmount(0);
   };
 
   const closeTransactionModal = () => {

@@ -81,17 +81,28 @@ export const DepositSection = ({ onBalanceUpdate, onTransactionUpdate, onBack }:
     });
   };
 
-  const confirmTransaction = () => {
+  const confirmTransaction = async () => {
     setLoading(true);
     
-    // Simulate processing delay
-    setTimeout(() => {
+    try {
       const depositAmount = parseFloat(amount);
       
-      // Update wallet balance
-      if (onBalanceUpdate) {
-        onBalanceUpdate('MWK', depositAmount);
+      // Find user's MWK wallet
+      const mwkWallet = wallets.find(w => w.currency_code === 'MWK');
+      if (!mwkWallet) {
+        throw new Error('MWK wallet not found');
       }
+
+      // Call the actual backend API
+      const result = await apiService.deposit(
+        mwkWallet.id, 
+        depositAmount, 
+        'MWK',
+        selectedMethod || 'mobile_money'
+      );
+
+      // Refresh user data to get updated balances
+      refreshData();
 
       // Add to transaction history
       if (onTransactionUpdate) {
@@ -103,8 +114,6 @@ export const DepositSection = ({ onBalanceUpdate, onTransactionUpdate, onBack }:
           status: 'completed'
         });
       }
-      
-      setLoading(false);
       
       // Show success
       setTransactionModal(prev => ({ ...prev, showSuccess: true }));
@@ -119,7 +128,13 @@ export const DepositSection = ({ onBalanceUpdate, onTransactionUpdate, onBack }:
       setExpiryDate('');
       setCvv('');
       setAgentAccount('');
-    }, 2000);
+      
+    } catch (error) {
+      console.error('Deposit error:', error);
+      alert(`Deposit failed: ${error.message}`);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const closeTransactionModal = () => {

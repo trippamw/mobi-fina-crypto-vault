@@ -8,6 +8,8 @@ import { ArrowLeft, Download, Building, Smartphone, User as UserIcon } from 'luc
 import { useToast } from '@/hooks/use-toast';
 import { useTranslation } from '@/utils/languageApi';
 import { TransactionConfirmation } from './TransactionConfirmation';
+import { useUserData } from '@/hooks/useUserData';
+import { apiService } from '@/lib/api';
 
 interface WithdrawSectionProps {
   onBack?: () => void;
@@ -17,6 +19,7 @@ interface WithdrawSectionProps {
 
 export const WithdrawSection = ({ onBack, onBalanceUpdate, onTransactionUpdate }: WithdrawSectionProps) => {
   const { t } = useTranslation();
+  const { wallets, refreshData } = useUserData();
   const [amount, setAmount] = useState('');
   const [selectedMethod, setSelectedMethod] = useState('');
   const [accountNumber, setAccountNumber] = useState('');
@@ -121,35 +124,61 @@ export const WithdrawSection = ({ onBack, onBalanceUpdate, onTransactionUpdate }
     });
   };
 
-  const confirmTransaction = () => {
-    const withdrawAmount = parseFloat(amount);
+  const confirmTransaction = async () => {
+    setIsProcessing(true);
+    
+    try {
+      const withdrawAmount = parseFloat(amount);
+      
+      // Get user's MWK wallet
+      const mwkWallet = wallets.find(w => w.currency_code === 'MWK');
+      if (!mwkWallet) {
+        throw new Error('MWK wallet not found');
+      }
 
-    // Update wallet balance
-    if (onBalanceUpdate) {
-      onBalanceUpdate('MWK', -totalAmount);
+      // Call the actual backend API
+      const result = await apiService.withdraw(
+        mwkWallet.id,
+        withdrawAmount,
+        'MWK',
+        selectedMethod.toLowerCase().replace(' ', '_'), // mobile_money, bank_transfer, agent_network
+        {
+          accountNumber,
+          provider: selectedProvider
+        }
+      );
+
+      // Refresh user data to get updated balances
+      refreshData();
+
+      // Add to transaction history
+      if (onTransactionUpdate) {
+        onTransactionUpdate({
+          type: 'Withdrawal',
+          amount: `-MWK ${withdrawAmount.toLocaleString()}`,
+          description: `Withdrawn via ${selectedProvider} (Fee: MWK ${transactionFee.toLocaleString()})`,
+          time: 'Just now',
+          status: 'completed'
+        });
+      }
+
+      // Show success
+      setTransactionModal(prev => ({ ...prev, showSuccess: true }));
+
+      // Reset form
+      setAmount('');
+      setAccountNumber('');
+      setSelectedMethod('');
+      setSelectedProvider('');
+      setTransactionFee(0);
+      setTotalAmount(0);
+      
+    } catch (error) {
+      console.error('Withdraw error:', error);
+      alert(`Withdrawal failed: ${error.message}`);
+    } finally {
+      setIsProcessing(false);
     }
-
-    // Add to transaction history
-    if (onTransactionUpdate) {
-      onTransactionUpdate({
-        type: 'Withdrawal',
-        amount: `-MWK ${withdrawAmount.toLocaleString()}`,
-        description: `Withdrawn via ${selectedProvider} (Fee: MWK ${transactionFee.toLocaleString()})`,
-        time: 'Just now',
-        status: 'completed'
-      });
-    }
-
-    // Show success
-    setTransactionModal(prev => ({ ...prev, showSuccess: true }));
-
-    // Reset form
-    setAmount('');
-    setAccountNumber('');
-    setSelectedMethod('');
-    setSelectedProvider('');
-    setTransactionFee(0);
-    setTotalAmount(0);
   };
 
   const closeTransactionModal = () => {
