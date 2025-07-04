@@ -7,6 +7,8 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Plus, Wallet, Bitcoin } from 'lucide-react';
 import { useLanguage } from '@/utils/languageApi';
+import { useToast } from '@/hooks/use-toast';
+import { apiService } from '@/lib/api';
 
 interface CreateWalletModalProps {
   onCreateWallet: (wallet: any) => void;
@@ -14,9 +16,11 @@ interface CreateWalletModalProps {
 
 export const CreateWalletModal = ({ onCreateWallet }: CreateWalletModalProps) => {
   const { t } = useLanguage();
+  const { toast } = useToast();
   const [isOpen, setIsOpen] = useState(false);
   const [walletType, setWalletType] = useState('');
   const [currency, setCurrency] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   const currencies = {
     fiat: [
@@ -34,25 +38,38 @@ export const CreateWalletModal = ({ onCreateWallet }: CreateWalletModalProps) =>
     ]
   };
 
-  const handleCreate = () => {
+  const handleCreate = async () => {
     if (!walletType || !currency) return;
 
-    const selectedCurrency = [...currencies.fiat, ...currencies.crypto].find(c => c.code === currency);
-    if (!selectedCurrency) return;
-
-    const newWallet = {
-      currency: selectedCurrency.code,
-      balance: 0,
-      icon: selectedCurrency.icon,
-      gradient: `gradient-${selectedCurrency.icon}`,
-      change: '+0.0%',
-      isDefault: false
-    };
-
-    onCreateWallet(newWallet);
-    setIsOpen(false);
-    setCurrency('');
-    setWalletType('');
+    try {
+      setIsLoading(true);
+      
+      // Call the backend API to create the wallet
+      const result = await apiService.createWallet(currency, walletType);
+      
+      if (result.success) {
+        // Notify parent component to refresh data
+        onCreateWallet(result.data.wallet);
+        
+        toast({
+          title: "Wallet Created",
+          description: `${currency} wallet created successfully`,
+        });
+        
+        setIsOpen(false);
+        setCurrency('');
+        setWalletType('');
+      }
+    } catch (error) {
+      console.error('Wallet creation error:', error);
+      toast({
+        title: "Creation Failed",
+        description: error.message || "Failed to create wallet",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -112,9 +129,9 @@ export const CreateWalletModal = ({ onCreateWallet }: CreateWalletModalProps) =>
           <Button 
             onClick={handleCreate} 
             className="w-full gradient-primary"
-            disabled={!walletType || !currency}
+            disabled={!walletType || !currency || isLoading}
           >
-            {t('wallet')}
+            {isLoading ? 'Creating...' : `Create ${t('wallet')}`}
           </Button>
         </div>
       </DialogContent>

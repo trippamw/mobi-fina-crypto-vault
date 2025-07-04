@@ -157,5 +157,23 @@ export const apiService = {
       console.error('Card creation error:', error);
       throw error;
     }
+  },
+
+  // Create wallet
+  createWallet: async (currency_code: string, wallet_type: string) => {
+    try {
+      const result = await supabase.functions.invoke('wallet-create', {
+        body: { currency_code, wallet_type }
+      });
+
+      if (result.error) {
+        throw new Error(result.error.message);
+      }
+
+      return result.data;
+    } catch (error) {
+      console.error('Wallet creation error:', error);
+      throw error;
+    }
   }
 };
