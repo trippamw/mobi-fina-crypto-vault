@@ -27,6 +27,7 @@ import { VillageBankGroupCreation } from '@/components/VillageBankGroupCreation'
 import { useLanguage } from '@/utils/languageApi';
 import { useUserData } from '@/hooks/useUserData';
 import { apiService } from '@/lib/api';
+import { supabase } from '@/integrations/supabase/client';
 
 const Index = () => {
   const { t } = useLanguage();
@@ -37,13 +38,93 @@ const Index = () => {
   const [selectedWallet, setSelectedWallet] = useState<any>(null);
   const [currentLanguage, setCurrentLanguage] = useState('English');
 
+  // Helper functions for wallet display
+  const getWalletIcon = (currencyCode: string, walletType: string) => {
+    if (walletType === 'crypto') {
+      switch (currencyCode) {
+        case 'BTC': return 'bitcoin';
+        case 'ETH': return 'ethereum';
+        case 'USDT': return 'usdt';
+        case 'USDC': return 'usdc';
+        default: return 'bitcoin';
+      }
+    } else {
+      switch (currencyCode) {
+        case 'USD': return 'dollar';
+        case 'GBP': return 'pound';
+        case 'EUR': return 'euro';
+        case 'ZAR': return 'rand';
+        default: return 'wallet';
+      }
+    }
+  };
+
+  const getWalletGradient = (currencyCode: string, walletType: string) => {
+    if (walletType === 'crypto') {
+      switch (currencyCode) {
+        case 'BTC': return 'bg-gradient-to-br from-yellow-700 to-orange-800';
+        case 'ETH': return 'bg-gradient-to-br from-indigo-700 to-purple-800';
+        case 'USDT': return 'bg-gradient-to-br from-green-700 to-emerald-800';
+        case 'USDC': return 'bg-gradient-to-br from-blue-700 to-cyan-800';
+        default: return 'bg-gradient-to-br from-yellow-700 to-orange-800';
+      }
+    } else {
+      switch (currencyCode) {
+        case 'USD': return 'bg-gradient-to-br from-emerald-800 to-emerald-900';
+        case 'GBP': return 'bg-gradient-to-br from-purple-800 to-purple-900';
+        case 'EUR': return 'bg-gradient-to-br from-yellow-800 to-yellow-900';
+        case 'ZAR': return 'bg-gradient-to-br from-orange-800 to-orange-900';
+        default: return 'bg-gradient-to-br from-slate-800 to-slate-900';
+      }
+    }
+  };
+
+  // Real-time updates for transactions
+  useEffect(() => {
+    if (!user) return;
+
+    const channel = supabase
+      .channel('realtime-transactions')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'transactions',
+          filter: `user_id=eq.${user.id}`
+        },
+        () => {
+          // Refresh data when transactions change
+          refreshData();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'wallets',
+          filter: `user_id=eq.${user.id}`
+        },
+        () => {
+          // Refresh data when wallets change
+          refreshData();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user, refreshData]);
+
   // Use real data from API or fallback to mock data
   const wallets = userWallets.length > 0 ? userWallets.map(wallet => ({
     ...wallet,
-    icon: wallet.wallet_type === 'crypto' ? 'bitcoin' : 'wallet',
-    gradient: wallet.wallet_type === 'crypto' 
-      ? 'bg-gradient-to-br from-yellow-700 to-orange-800' 
-      : 'bg-gradient-to-br from-slate-800 to-slate-900',
+    currency: wallet.currency_code, // Map currency_code to currency for WalletCard
+    balance: parseFloat(wallet.balance) || 0,
+    icon: getWalletIcon(wallet.currency_code, wallet.wallet_type),
+    gradient: getWalletGradient(wallet.currency_code, wallet.wallet_type),
     change: '+0.0%',
     isDefault: wallet.is_primary
   })) : [
